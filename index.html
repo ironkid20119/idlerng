@@ -1403,7 +1403,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                     const label = document.createElement("span");
                     // no min cap — scales freely with SVG size
                     const labelPx = Math.round(svgSize * 0.22);
-                    label.style.cssText = `position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:${labelPx}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000,0 1px 2px #000;z-index:${tier + 1};`;
+                    label.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:${labelPx}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000,0 1px 2px #000;z-index:${tier + 1};`;
                     label.className = `bg-gradient-to-tr ${meta.color} bg-clip-text text-transparent`;
                     label.innerText = `10^${tier}`;
 
@@ -2215,7 +2215,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:${tier};pointer-events:none;`;
                 svgWrap.innerHTML = getTierSVG(tier, svgSize);
                 const label = document.createElement('span');
-                label.style.cssText = `position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:${Math.round(svgSize*0.22)}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000;z-index:${tier+1};`;
+                label.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:${Math.round(svgSize*0.22)}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000;z-index:${tier+1};`;
                 label.className = `bg-gradient-to-tr ${meta.color} bg-clip-text text-transparent`;
                 label.innerText = `10^${tier}`;
                 svgWrap.appendChild(label);
