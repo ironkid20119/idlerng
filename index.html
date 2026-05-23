@@ -1,0 +1,2389 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <style>html { touch-action: pan-x pan-y pinch-zoom; }</style>
+    <title>10^n idleRNG</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0f19',
+                        panelBg: '#161d30',
+                        accentBlue: '#3b82f6',
+                    },
+                    fontFamily: {
+                        sans: ['Cabinet Grotesk', 'Inter', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter & Cabinet Grotesk Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        /* Custom scrollbar for game panels */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+        /* Grid Animations */
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .grid-cell-animate {
+            animation: pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        /* Glowing effects for high tiers (using inset to prevent ugly bleeds on square connected edges) */
+        .tier-glow-low {
+            box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.1);
+        }
+        .tier-glow-medium {
+            box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.5);
+            animation: pulse 1.5s infinite alternate;
+        }
+        .tier-glow-high {
+            box-shadow: inset 0 0 20px rgba(236, 72, 153, 0.8);
+            animation: pulse-high 1s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.4); }
+            100% { box-shadow: inset 0 0 16px rgba(59, 130, 246, 0.7); }
+        }
+        @keyframes pulse-high {
+            0% { box-shadow: inset 0 0 12px rgba(236, 72, 153, 0.6), inset 0 0 4px rgba(245, 158, 11, 0.4); }
+            100% { box-shadow: inset 0 0 24px rgba(236, 72, 153, 1), inset 0 0 12px rgba(245, 158, 11, 0.8); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-panelBg/80 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-900/30">
+                    <span class="font-bold text-lg tracking-tighter">10ⁿ</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">10^n idleRNG</h1>
+                    <p class="text-xs text-gray-400 font-medium flex items-center gap-1">
+                        <span>by Cameron</span>
+                        <span class="w-1 h-1 rounded-full bg-gray-600"></span>
+                        <span id="time-display">Daytime</span>
+                        <span id="tod-icon">☀️</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-4 bg-gray-950/80 px-4 py-2 rounded-xl border border-gray-800/80">
+                <div class="text-center sm:text-left">
+                    <span class="text-gray-400 text-xs block uppercase font-bold tracking-wider">Unspent Rolls</span>
+                    <span id="unspent-rolls" class="text-xl font-black text-blue-400 font-mono">0</span>
+                </div>
+                <div class="h-8 w-px bg-gray-800"></div>
+                <div class="text-center sm:text-left">
+                    <span class="text-gray-400 text-xs block uppercase font-bold tracking-wider">Roll Speed</span>
+                    <span id="roll-rate-display" class="text-sm font-semibold text-green-400 font-mono">+1.0/s</span>
+                </div>
+            </div>
+
+            <!-- Audio & Settings -->
+            <div class="flex items-center gap-2">
+                <button id="btn-mute" class="p-2.5 bg-gray-800/80 hover:bg-gray-700 text-gray-300 rounded-lg transition-all border border-gray-700/50 flex items-center gap-2 text-sm font-semibold">
+                    <span id="mute-icon">🔊</span> <span class="hidden sm:inline">Sound</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Area Navigation -->
+    <nav class="border-b border-gray-800 bg-gray-950/60 backdrop-blur-sm sticky top-[57px] z-40">
+        <div class="max-w-6xl mx-auto flex gap-1 px-4 py-1.5">
+            <button onclick="switchArea('main')" id="area-main-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white">⚡ 10^n</button>
+            <button onclick="switchArea('rng')" id="area-rng-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">RNG</button>
+            <button onclick="switchArea('annoying')" id="area-annoying-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Annoying</button>
+        </div>
+    </nav>
+    <div id="area-main">
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Panel: The Core Simulation & Active Grid (7 Cols on LG) -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            
+            <!-- Controls Card -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-200 flex items-center gap-2">
+                        <span>⚡ Simulation Core</span>
+                    </h2>
+                    <span class="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-md font-medium" id="current-slot-tag">
+                        Toy Slots
+                    </span>
+                </div>
+
+                <!-- Simulation Button -->
+                <button id="btn-simulate" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-lg py-4 px-6 rounded-xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-0.5 disabled:opacity-50 disabled:pointer-events-none">
+                    <span>SIMULATE ALL ACCUMULATED ROLLS</span>
+                    <span id="simulate-desc" class="text-xs font-normal text-blue-100 opacity-90">0 rolls pending</span>
+                </button>
+
+                <!-- Grid Details & Bonuses Info -->
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-gray-900/60 p-2.5 rounded-lg border border-gray-800">
+                        <span class="text-gray-400 block mb-0.5">Grid Size</span>
+                        <span id="grid-size-stat" class="font-bold text-gray-200">2x2 (4 cells)</span>
+                    </div>
+                    <div class="bg-gray-900/60 p-2.5 rounded-lg border border-gray-800">
+                        <span class="text-gray-400 block mb-0.5">Luck Bonus</span>
+                        <span id="luck-bonus-stat" class="font-bold text-green-400">+0%</span>
+                    </div>
+                    <div class="bg-gray-900/60 p-2.5 rounded-lg border border-gray-800">
+                        <span class="text-gray-400 block mb-0.5">Speed Bonus</span>
+                        <span id="speed-bonus-stat" class="font-bold text-blue-400">+0%</span>
+                    </div>
+                </div>
+
+                <!-- Active Buff Indicators -->
+                <div id="active-buffs-container" class="hidden flex flex-wrap gap-2 pt-1 border-t border-gray-800/80">
+                    <span class="text-[10px] uppercase font-extrabold text-gray-500 flex items-center">Active Buffs:</span>
+                    <div id="buff-badges" class="flex flex-wrap gap-1.5">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Grid Display -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Showing the top rolls of your last batch</span>
+                </div>
+
+                <!-- Actual Grid Container -->
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible">
+                        <!-- Filled dynamically by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Last Roll Highlight -->
+                <div class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                    <span>Highest roll in last batch:</span>
+                    <span id="highest-batch-roll" class="font-bold text-sm text-yellow-400 font-mono">None</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Panel: Tabs Navigation & Stats/Shop (5 Cols on LG) -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+
+            <!-- Mobile Friendly Tab Buttons -->
+            <div class="grid grid-cols-4 bg-panelBg p-1.5 rounded-xl border border-gray-800 gap-1">
+                <button onclick="switchTab('inventory')" id="tab-inventory-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all bg-gray-800 text-white shadow-sm">
+                    🗃️ Inv
+                </button>
+                <button onclick="switchTab('slots')" id="tab-slots-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
+                    🔌 Slots
+                </button>
+                <button onclick="switchTab('consumables')" id="tab-consumables-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
+                    🧪 Buffs
+                </button>
+                <button onclick="switchTab('security')" id="tab-security-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white relative">
+                    🛡️ Guard
+                    <span id="tamper-alert-dot" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden animate-ping"></span>
+                </button>
+            </div>
+
+            <!-- Tab 1: Inventory List -->
+            <div id="tab-inventory" class="tab-content bg-panelBg rounded-2xl border border-gray-800 p-5 flex flex-col gap-4 shadow-xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">Roll Tiers Discovered</h3>
+                    <span class="text-xs text-gray-400 font-semibold" id="total-rolls-count">Total Simulated: 0</span>
+                </div>
+
+                <!-- Scrollable list of 10^n elements -->
+                <div class="space-y-2 max-h-[460px] overflow-y-auto custom-scroll pr-1" id="inventory-list">
+                    <!-- Dynamic Tier Items (10^0 to 10^21) -->
+                </div>
+            </div>
+
+            <!-- Tab 2: Slots Shop / Items -->
+            <div id="tab-slots" class="tab-content hidden bg-panelBg rounded-2xl border border-gray-800 p-5 flex flex-col gap-4 shadow-xl">
+                <div>
+                    <h3 class="font-bold text-base text-gray-200">Equippable Slot Frameworks</h3>
+                    <p class="text-xs text-gray-400">craft new frameworks to permanently own them, altering your simulation stats.</p>
+                </div>
+
+                <!-- Slots List -->
+                <div class="space-y-3 max-h-[460px] overflow-y-auto custom-scroll pr-1" id="slots-list">
+                    <!-- Loaded dynamically from config -->
+                </div>
+            </div>
+
+            <!-- Tab 3: Consumables Buffs Section -->
+            <div id="tab-consumables" class="tab-content hidden bg-panelBg rounded-2xl border border-gray-800 p-5 flex flex-col gap-4 shadow-xl">
+                <div>
+                    <h3 class="font-bold text-base text-gray-200">Temporary Alchemy Boosters</h3>
+                    <p class="text-xs text-gray-400">craft and activate boosters that apply until your next simulate action.</p>
+                </div>
+
+                <!-- Consumables List -->
+                <div class="space-y-3 max-h-[460px] overflow-y-auto custom-scroll pr-1" id="consumables-list">
+                    <!-- Loaded dynamically from config -->
+                </div>
+            </div>
+
+            <!-- Tab 4: Security & Clock Audit Console -->
+            <div id="tab-security" class="tab-content hidden bg-panelBg rounded-2xl border border-gray-800 p-5 flex flex-col gap-4 shadow-xl">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                    <div>
+                        <h3 class="font-bold text-base text-gray-200">Temporal Watchdog</h3>
+                        <p class="text-xs text-gray-400">Compares Cloudflare server clock to user hardware clock</p>
+                    </div>
+                    <span id="network-status" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/15 text-green-400 border border-green-500/20 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> CloudSync
+                    </span>
+                </div>
+
+                <!-- Clock Drift Metrics -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 text-center">
+                        <span class="text-[10px] text-gray-500 block uppercase font-semibold">Verified Global Secs</span>
+                        <span id="sec-cloud" class="font-mono text-base font-bold text-indigo-400">-</span>
+                    </div>
+                    <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 text-center">
+                        <span class="text-[10px] text-gray-500 block uppercase font-semibold">Hardware Drift Delta</span>
+                        <span id="sec-drift" class="font-mono text-base font-bold text-green-400">0.00s</span>
+                    </div>
+                </div>
+
+                <!-- Tampering Status -->
+                <div id="tamper-warning-box" class="p-3.5 rounded-xl bg-green-500/5 border border-green-500/20 text-xs flex gap-3 items-start">
+                    <span class="text-lg">🛡️</span>
+                    <div>
+                        <p class="font-bold text-green-400" id="tampering-status-title">System Time Integrity Intact</p>
+                        <p class="text-gray-400 mt-0.5" id="tampering-status-desc">No time abnormalities detected. Offline progression permitted.</p>
+                    </div>
+                </div>
+
+                <!-- Audit Log -->
+                <div class="flex flex-col gap-2">
+                    <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Sync Audit Feed:</span>
+                    <div id="tamper-logs" class="bg-gray-950/80 rounded-xl p-3 h-44 font-mono text-[10px] text-blue-300 overflow-y-auto custom-scroll space-y-1">
+                        <div>[SYSTEM] initialized secure handshake</div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+    </div><!-- end area-main -->
+
+    <!-- RNG AREA -->
+    <div id="area-rng" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Roll core + grid -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-200">Pure RNG</h2>
+                    <span class="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded-md font-mono">1 / Math.random()</span>
+                </div>
+                <button onclick="doRNGRoll()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all">
+                    ROLL
+                </button>
+                <div id="rng-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
+            </div>
+            <!-- RNG Visual Grid -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Last roll visualized</span>
+                </div>
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="rng-result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                    <span>Last value:</span>
+                    <span id="rng-last-value" class="font-bold text-sm text-purple-400 font-mono">None</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: History -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <h3 class="font-bold text-base text-gray-200">Roll History</h3>
+                <div id="rng-history" class="space-y-1 max-h-[600px] overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ANNOYING AREA -->
+    <div id="area-annoying" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Roll core + grid -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-200">Annoying</h2>
+                    <span class="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded-md font-mono">5 tiers. Good luck.</span>
+                </div>
+                <button onclick="doAnnoyingRoll()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all">
+                    ROLL
+                </button>
+                <div id="annoying-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
+            </div>
+            <!-- Annoying Visual Grid -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Last roll visualized</span>
+                </div>
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="annoying-result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                    <span>Last result:</span>
+                    <span id="annoying-last-value" class="font-bold text-sm text-yellow-400 font-mono">None</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Tier list + history -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <h3 class="font-bold text-base text-gray-200">Tiers</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center gap-3 bg-gray-900/60 rounded-lg px-3 py-2 border border-gray-800">
+                        <div class="w-8 h-8 flex-shrink-0" id="annoying-svg-0"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-gray-300 text-xs">🟫 Loser Square</div>
+                            <div class="font-mono text-[10px] text-gray-500">1/1 (always)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20">
+                        <div class="w-8 h-8 flex-shrink-0" id="annoying-svg-1"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-red-400 text-xs">🟥 Evil Square</div>
+                            <div class="font-mono text-[10px] text-gray-500">1 / 5,000,000</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-yellow-500/10 rounded-lg px-3 py-2 border border-yellow-500/20">
+                        <div class="w-8 h-8 flex-shrink-0" id="annoying-svg-2"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-yellow-300 text-xs">🥚 AMAZING EGG</div>
+                            <div class="font-mono text-[10px] text-gray-500">1 / 200,000,000</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-purple-500/10 rounded-lg px-3 py-2 border border-purple-500/20">
+                        <div class="w-8 h-8 flex-shrink-0" id="annoying-svg-3"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-purple-300 text-xs">🏆 "totally real 10^21"</div>
+                            <div class="font-mono text-[10px] text-gray-500">1 / 21,000,000,000</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-blue-500/10 rounded-lg px-3 py-2 border border-blue-500/20">
+                        <div class="w-8 h-8 flex-shrink-0" id="annoying-svg-4"></div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-blue-300 text-xs">🔺 ANNOYING STUPID 3D TRIANGLE</div>
+                            <div class="font-mono text-[10px] text-gray-500">1 / 100,000,000,000,000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <h3 class="font-bold text-base text-gray-200">History</h3>
+                <div id="annoying-history" class="space-y-1 max-h-64 overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Global Time Tamper Intercept Modal (Popup Overlay) -->
+    <div id="tamper-blocker" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-md w-full bg-panelBg border border-red-500/40 rounded-3xl p-6 shadow-2xl text-center flex flex-col items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-3xl animate-bounce">
+                ⏳
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-red-400 tracking-tight">TIME TAMPERING DETECTED</h2>
+                <p class="text-sm text-gray-400 mt-2">
+                    We detected a mismatch between your local hardware calendar clock and the global clock networks.
+                </p>
+                <div class="bg-gray-950/80 p-3 rounded-xl border border-gray-800 font-mono text-xs text-red-300 mt-3 flex flex-col gap-1 text-left">
+                    <div>Mismatch detected: <span id="blocker-drift-amount">0</span>s</div>
+                    <div>Offline AFK state is temporarily frozen.</div>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-3 italic">
+                    Restore your machine's clock to the current automatic internet timezone to unlock game loop.
+                </p>
+            </div>
+            <button onclick="requestClockRevalidation()" class="w-full py-3 bg-red-600/25 hover:bg-red-600/40 text-red-200 border border-red-500/50 rounded-xl font-bold transition-all text-sm">
+                🔄 Revalidate System Sync
+            </button>
+        </div>
+    </div>
+
+    <!-- Dynamic Offline Progression Modal -->
+    <div id="offline-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-40 flex items-center justify-center p-4 hidden">
+        <div class="max-w-sm w-full bg-panelBg border border-blue-500/30 rounded-3xl p-6 shadow-2xl text-center flex flex-col items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-2xl">
+                💤
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-blue-400">Welcome Back!</h2>
+                <p class="text-xs text-gray-400 mt-1">You accumulated rolls while offline.</p>
+                
+                <div class="grid grid-cols-2 gap-2 my-4">
+                    <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-500 block uppercase">Away Duration</span>
+                        <span id="away-time" class="font-bold text-gray-200 font-mono text-sm">0s</span>
+                    </div>
+                    <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-500 block uppercase">Rolls Gained</span>
+                        <span id="away-rolls" class="font-bold text-green-400 font-mono text-sm">+0</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="closeOfflineModal()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all text-sm">
+                Claim Accumulated Rolls
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer Status -->
+    <footer class="bg-panelBg/40 border-t border-gray-900/60 py-3 px-4 text-center text-[11px] text-gray-500">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>10^n idleRNG Version 1</span>
+            <span class="flex items-center gap-1.5 font-mono">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> active item: <span id="footer-active-slot">toy slots</span>
+            </span>
+        </div>
+    </footer>
+
+    <!-- Audio Synthesizer Logic & Gameplay Logic -->
+    <script>
+        // --- GAME DESIGN CONFIGURATION & STATE ---
+        const GAME_VERSION = "1";
+        const TIERS_COUNT = 22; // 10^0 up to 10^21
+
+        // Initialize user data & metrics
+        let state = {
+            unspentRolls: 0,
+            totalSimulated: 0,
+            activeSlotId: 'toy',
+            unlockedSlots: ['toy'], // tracking permanently crafted slots
+            discoveredTiers: {}, // stores count for 0 to 21
+            lastTickTime: Date.now(),
+            accumulatedSecs: 0,
+            isMuted: false,
+            timeDriftErrorSecs: 0,
+            antiTamperFrozenSecs: 0,
+            consumables: {
+                gloves: { owned: 0, active: 0 },
+                powder: { owned: 0, active: 0 },
+                grabber: { owned: 0, active: 0 },
+                explosion: { owned: 0, active: 0 },
+                grandfather: { owned: 0, active: 0 },
+                ultimateOne: { owned: 0, active: 0 },
+                fireBomb: { owned: 0, active: 0 }
+            }
+        };
+
+        // Initialize state arrays
+        for (let i = 0; i <= 21; i++) {
+            state.discoveredTiers[i] = 0;
+        }
+
+        // Tier styling dictionary (name, label, color code, glowing tier rank)
+        const TIER_META = {
+            0:  { name: "Common",       color: "from-gray-500 to-gray-600",       glow: "low", bg: "bg-gray-900/40" },
+            1:  { name: "Uncommon",     color: "from-slate-400 to-slate-500",     glow: "low", bg: "bg-slate-900/40" },
+            2:  { name: "Unusual",      color: "from-blue-400 to-blue-500",       glow: "low", bg: "bg-blue-900/10" },
+            3:  { name: "Rare",         color: "from-green-500 to-emerald-500",   glow: "low", bg: "bg-emerald-950/20" },
+            4:  { name: "Special",      color: "from-teal-400 to-cyan-500",       glow: "low", bg: "bg-cyan-950/20" },
+            5:  { name: "Epic",         color: "from-indigo-500 to-blue-600",     glow: "medium", bg: "bg-indigo-950/20" },
+            6:  { name: "Legendary",    color: "from-purple-500 to-violet-600",   glow: "medium", bg: "bg-purple-950/20" },
+            7:  { name: "Mythic",       color: "from-fuchsia-500 to-pink-600",    glow: "medium", bg: "bg-pink-950/20" },
+            8:  { name: "Astral",       color: "from-rose-500 to-red-500",        glow: "medium", bg: "bg-rose-950/20" },
+            9:  { name: "Cosmic",       color: "from-amber-500 to-orange-600",    glow: "medium", bg: "bg-orange-950/20" },
+            10: { name: "Celestial",    color: "from-yellow-400 to-yellow-600",   glow: "medium", bg: "bg-yellow-950/20" },
+            11: { name: "Divine",       color: "from-yellow-300 to-orange-400",   glow: "high", bg: "bg-yellow-900/20" },
+            12: { name: "Infernal",     color: "from-red-600 to-orange-700",      glow: "high", bg: "bg-red-950/30" },
+            13: { name: "Abyssal",      color: "from-indigo-900 to-purple-950",   glow: "high", bg: "bg-purple-950/40" },
+            14: { name: "Singularity",  color: "from-violet-950 to-neutral-950",  glow: "high", bg: "bg-neutral-950" },
+            15: { name: "Relic",        color: "from-amber-400 to-yellow-500",    glow: "high", bg: "bg-amber-900/20" },
+            16: { name: "Ancient",      color: "from-rose-400 to-rose-600",       glow: "high", bg: "bg-rose-900/20" },
+            17: { name: "Quantum",      color: "from-lime-400 to-emerald-500",    glow: "high", bg: "bg-lime-950/20" },
+            18: { name: "Nexus",        color: "from-cyan-400 to-teal-500",       glow: "high", bg: "bg-cyan-950/30" },
+            19: { name: "Ethereal",     color: "from-pink-400 to-purple-600",     glow: "high", bg: "bg-pink-950/30" },
+            20: { name: "Omnipotent",   color: "from-violet-400 via-pink-500 to-yellow-400", glow: "high", bg: "bg-indigo-950/40" },
+            21: { name: "Infinite",     color: "from-emerald-400 via-blue-500 to-indigo-600", glow: "high", bg: "bg-emerald-950/40" }
+        };
+
+        // Slot items specifications
+        const ITEMS = {
+            toy: {
+                name: "Toy Slots",
+                grid: 2, // 2x2
+                luck: 0.0, // +0%
+                speed: 0.0, // +0%
+                req: null,
+                desc: "just a basic slot setup to get you going. lightweight and simple."
+            },
+            battery: {
+                name: "Battery Slots",
+                grid: 3, // 3x3
+                luck: 0.20, // +20%
+                speed: 0.10, // +10%
+                req: { 0: 500, 2: 10 },
+                desc: "harness simple chemical storage to enhance luck and performance speed."
+            },
+            solarbeam: {
+                name: "Solarbeam Slots",
+                grid: 4, // 4x4
+                luck: 0.40, // +40%
+                speedSpecial: true, // +75% day, -20% night
+                req: { 0: 1000, 2: 125, 3: 5 },
+                desc: "draws strength from day/night cycles. operates insanely fast when daytime."
+            },
+            charged: {
+                name: "Charged Slots",
+                grid: 8, // 8x8
+                luck: 0.88, // +88%
+                speed: 0.88, // +88%
+                req: { 4: 50, 3: 300, 0: 100000 },
+                desc: "overclocked circuit grids emitting a bright blue discharge. highly optimized stats."
+            },
+            speed: {
+                name: "Speed Slots",
+                grid: 7, // 7x7
+                luck: -0.30, // -30%
+                speed: 0.70, // +70%
+                req: { 3: 25, 4: 5 },
+                desc: "highly pressurized components trade rolling precision for pure output speed."
+            },
+            sloth: {
+                name: "Sloth Slots",
+                grid: 5, // 5x5
+                luck: 1.50, // +150%
+                speed: -0.40, // -40%
+                req: { 3: 25, 4: 5 },
+                desc: "highly deliberate and calm machinery provides immense fortune modifiers."
+            },
+            gamble: {
+                name: "Gamble Slots",
+                grid: 9, // 9x9
+                luck: 1.00, // +100%
+                speedDynamic: true, // fluctuating via frame check
+                req: { 0: 5, 1: 5, 2: 5, 3: 5, 4: 5, 5: 5, 6: 5 }, // 5 of all up to 10^6
+                desc: "unstable casino engine core. speed fluctuations run rampant every frame."
+            },
+            seven: {
+                name: "777 Slots",
+                grid: 7, // 7x7
+                luck: -0.77, // -77%
+                speed: 7.77, // +777%
+                req: { 7: 7 },
+                desc: "chaos engines of high-speed variance. heavily reduced luck, but legendary speed."
+            },
+            mechanic: {
+                name: "Mechanic Slots",
+                grid: 11, // 11x11
+                luck: 1.75, // +175%
+                speed: 1.20, // +120%
+                req: { 7: 5, 8: 1, 1: 250000 },
+                desc: "expert gears calibrated to yield maximum luck efficiency while humming beautifully."
+            },
+            fantasy: {
+                name: "Fantasy Slots",
+                grid: 10, // 10x10
+                luck: 1.00, // +100%
+                speed: 1.25, // +125%
+                req: { 8: 1 },
+                desc: "surreal design that defies typical engineering. dual modifiers of high power."
+            },
+            colossal: {
+                name: "Colossal Slots",
+                grid: 13, // 13x13
+                luck: 1.25, // +125%
+                speed: 0.75, // +75%
+                req: { 6: 250, 7: 25, 9: 2 },
+                desc: "massive reinforced architecture. built to handle staggering luck and speed simultaneously."
+            },
+            illusory: {
+                name: "Illusory Slots",
+                grid: 15, // 15x15
+                luck: 1.80, // +180%
+                speed: 0.25, // +25%
+                req: { 9: 1, 3: 10000, 0: 10000000 },
+                desc: "phantom elements shifting in and out of dimension. wide spatial output reach."
+            },
+            devil: {
+                name: "Devil Slots",
+                grid: 16, // 16x16 (256 cells)
+                luck: 6.66, // +666%
+                speed: -0.66, // -66%
+                req: { 0: 6666666, 6: 66 },
+                desc: "a massive dark frame. incredibly slow roll rate, but luck is extremely high."
+            },
+            burnt: {
+                name: "Burnt Slots",
+                grid: 30, // 30x30
+                luckMulti: 0.0001, // x1e-4 luck
+                speed: 12.50, // +1250%
+                req: { 8: 15, 0: 1e7, 9: 5 },
+                desc: "scorched from absolute overallocation. absurd speed but catastrophically ruined luck multipliers."
+            },
+camerontest: {
+name: "test !!",
+grid: 50,
+luck: 25,
+luckMulti:25,
+speed: 100,
+req: {21: 1e303},
+desc: "you aint supposed to have this.. (stats change based off whatever i do !!)"
+}
+        };
+
+        // Consumables specifications
+        const CONSUMABLES_CONFIG = {
+            gloves: {
+                id: 'gloves',
+                name: "Lightning Gloves",
+                cost: { 4: 15, 3: 75 },
+                desc: "on use, increases roll speed by +50% (stacking positive multiplier) until you next click roll.",
+                cap: 2,
+                color: "from-blue-400 to-cyan-500"
+            },
+            powder: {
+                id: 'powder',
+                name: "Luck Powder",
+                cost: { 4: 20, 0: 10000, 3: 50 },
+                desc: "on use, grants +50% base luck but reduces roll speed by -30% until you next click roll.",
+                cap: 2,
+                color: "from-yellow-400 to-amber-500"
+            },
+            grabber: {
+                id: 'grabber',
+                name: "Grabber Hand",
+                cost: { 5: 10, 0: 50000, 3: 25 },
+                desc: "on use, expands your active grid size by +1 (e.g. 7x7 becomes 8x8) until you next click roll.",
+                cap: 3,
+                color: "from-purple-400 to-pink-500"
+            },
+            explosion: {
+                id: 'explosion',
+                name: "Slots EXPLOSION",
+                cost: { 8: 3, 9: 1, 1: 5000000 },
+                desc: "adds 10,000,000 rolls at ONCE with x12.5 luck when roll simulation is pressed.",
+                cap: 1,
+                color: "from-red-500 via-orange-500 to-yellow-400 font-extrabold tracking-widest animate-pulse"
+            },
+            grandfather: {
+                id: 'grandfather',
+                name: "Grandfather Clock",
+                cost: { 5: 5, 3: 1000, 6: 1 },
+                desc: "multiplies speed by 1.25 and adds 45 minutes worth of roll generation instantly.",
+                cap: 5,
+                color: "from-amber-600 to-orange-800"
+            },
+            ultimateOne: {
+                id: 'ultimateOne',
+                name: "Ultimate ONE",
+                cost: { 9: 10, 10: 1 },
+                desc: "on use, injects a single roll simulation with x200,000,000 luck. one shot, one chance.",
+                cap: 5,
+                color: "from-violet-400 via-fuchsia-400 to-pink-400 font-extrabold animate-pulse"
+            },
+            fireBomb: {
+                id: 'fireBomb',
+                name: "fire BOMB 🔥",
+                cost: { 2: 1000000, 11: 5, explosion: 5 },
+                desc: "on simulate, adds 1,000,000,000 bonus rolls with x3 luck on top of everything else.",
+                cap: 1,
+                color: "from-orange-400 via-red-500 to-rose-600 font-extrabold tracking-widest animate-pulse"
+            }
+        };
+
+        // gamble speed fluctuating variable (randomized smoothly on game loop frames)
+        let gambleFluctuation = 0.0;
+
+        // --- LOCAL STORAGE MANAGER ---
+        const SAVE_KEY = "10n_idleRNG_save";
+
+        function saveGame() {
+            state.lastTickTime = Date.now();
+            localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        }
+
+        function loadGame() {
+            const raw = localStorage.getItem(SAVE_KEY);
+            if (!raw) return;
+            try {
+                const parsed = JSON.parse(raw);
+                if (typeof parsed.unspentRolls === 'number') state.unspentRolls = parsed.unspentRolls;
+                if (typeof parsed.totalSimulated === 'number') state.totalSimulated = parsed.totalSimulated;
+                if (typeof parsed.activeSlotId === 'string') state.activeSlotId = parsed.activeSlotId;
+                
+                // backwards compatibility for unlocked slots list
+                if (Array.isArray(parsed.unlockedSlots)) {
+                    state.unlockedSlots = parsed.unlockedSlots;
+                } else {
+                    // if old save without permanently unlocked slots, give them toy and their currently active one
+                    state.unlockedSlots = ['toy'];
+                    if (state.activeSlotId && !state.unlockedSlots.includes(state.activeSlotId)) {
+                        state.unlockedSlots.push(state.activeSlotId);
+                    }
+                }
+
+                if (parsed.discoveredTiers) {
+                    for (let i = 0; i <= 21; i++) {
+                        if (typeof parsed.discoveredTiers[i] === 'number') {
+                            state.discoveredTiers[i] = parsed.discoveredTiers[i];
+                        }
+                    }
+                }
+                if (typeof parsed.isMuted === 'boolean') state.isMuted = parsed.isMuted;
+                if (typeof parsed.antiTamperFrozenSecs === 'number') state.antiTamperFrozenSecs = parsed.antiTamperFrozenSecs;
+                if (typeof parsed.lastTickTime === 'number') state.lastTickTime = parsed.lastTickTime;
+                
+                // load consumables securely
+                if (parsed.consumables) {
+                    for (const key in state.consumables) {
+                        if (parsed.consumables[key]) {
+                            if (typeof parsed.consumables[key].owned === 'number') {
+                                state.consumables[key].owned = parsed.consumables[key].owned;
+                            }
+                            if (typeof parsed.consumables[key].active === 'number') {
+                                state.consumables[key].active = parsed.consumables[key].active;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("corrupted save file, loaded defaults.", e);
+            }
+        }
+
+        function playChimeForTier(tier) {
+            if (state.isMuted) return;
+            triggerMP3Sound(tier);
+        }
+
+        function triggerMP3Sound(tier) {
+            let filePrefix = 0;
+            if (tier >= 21) filePrefix = 21;
+            else if (tier >= 18) filePrefix = 18;
+            else if (tier >= 15) filePrefix = 15;
+            else if (tier >= 12) filePrefix = 12;
+            else if (tier >= 9) filePrefix = 9;
+            else if (tier >= 6) filePrefix = 6;
+            else if (tier >= 3) filePrefix = 3;
+            else filePrefix = 0;
+
+            const audioFile = `10^${filePrefix}.mp3`;
+            const audio = new Audio(audioFile);
+            audio.volume = 0.25;
+            audio.play().catch(() => {});
+        }
+
+
+        // --- SECURITY / CLOCK INTEGRITY SYSTEM (ANTI TIME TAMPER) ---
+        let referenceDriftSecs = null;
+
+        function addLog(msg) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logBox = document.getElementById("tamper-logs");
+            if (!logBox) return;
+            const div = document.createElement("div");
+            div.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${msg}`;
+            logBox.appendChild(div);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        async function fetchSecureTime() {
+            try {
+                const res = await fetch("https://www.cloudflare.com/cdn-cgi/trace", { cache: "no-store" });
+                if (!res.ok) throw new Error("Cloudflare network unreachable");
+                const text = await res.text();
+                
+                const tsLine = text.split("\n").find(line => line.startsWith("ts="));
+                if (!tsLine) throw new Error("Malformed validation packet");
+                
+                const cloudEpochSecs = parseFloat(tsLine.split("=")[1]);
+                const localEpochSecs = Date.now() / 1000;
+                const calculatedDrift = localEpochSecs - cloudEpochSecs;
+
+                document.getElementById("sec-cloud").innerText = Math.round(cloudEpochSecs) + "s";
+                
+                if (referenceDriftSecs === null) {
+                    referenceDriftSecs = calculatedDrift;
+                    addLog(`<span class="text-green-400">✅ global sync successful. baseline drift initialized: ${calculatedDrift.toFixed(2)}s</span>`);
+                } else {
+                    const driftShift = Math.abs(calculatedDrift - referenceDriftSecs);
+                    document.getElementById("sec-drift").innerText = driftShift.toFixed(2) + "s";
+                    
+                    if (driftShift > 8) {
+                        flagTamper(driftShift);
+                    } else {
+                        clearTamperVisuals();
+                    }
+                }
+                
+                document.getElementById("network-status").className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500/15 text-green-400 border border-green-500/20 flex items-center gap-1";
+                document.getElementById("network-status").innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> CloudSync`;
+
+            } catch (err) {
+                console.warn("unable to check time network, secure offline validation paused:", err);
+                document.getElementById("network-status").className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20 flex items-center gap-1";
+                document.getElementById("network-status").innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Offline Valid`;
+            }
+        }
+
+        function flagTamper(shiftAmount) {
+            state.antiTamperFrozenSecs = Math.max(state.antiTamperFrozenSecs, Math.round(shiftAmount));
+            saveGame();
+            
+            document.getElementById("tamper-alert-dot").classList.remove("hidden");
+            const statusBox = document.getElementById("tamper-warning-box");
+            statusBox.className = "p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs flex gap-3 items-start";
+            
+            document.getElementById("tampering-status-title").innerText = "Temporal Invalidation Detected!";
+            document.getElementById("tampering-status-title").className = "font-bold text-red-400";
+            document.getElementById("tampering-status-desc").innerHTML = `Your computer's clock drifted from cloud clock by <b>${shiftAmount.toFixed(2)} seconds</b>. Offline idle rewards are currently frozen.`;
+            
+            if (shiftAmount > 30) {
+                document.getElementById("blocker-drift-amount").innerText = Math.round(shiftAmount);
+                document.getElementById("tamper-blocker").classList.remove("hidden");
+            }
+            
+            addLog(`<span class="text-red-400">⚠️ alarm: system clock manipulation warning. drift delta ${shiftAmount.toFixed(2)}s</span>`);
+        }
+
+        function clearTamperVisuals() {
+            // Fixes the penalty sticking bug - strictly set frozen seconds back to zero once clock is validated
+            state.antiTamperFrozenSecs = 0;
+            saveGame();
+
+            document.getElementById("tamper-alert-dot").classList.add("hidden");
+            const statusBox = document.getElementById("tamper-warning-box");
+            statusBox.className = "p-3.5 rounded-xl bg-green-500/5 border border-green-500/20 text-xs flex gap-3 items-start";
+            
+            document.getElementById("tampering-status-title").innerText = "System Time Integrity Intact";
+            document.getElementById("tampering-status-title").className = "font-bold text-green-400";
+            document.getElementById("tampering-status-desc").innerText = "No time abnormalities detected. Offline progression permitted.";
+            document.getElementById("tamper-blocker").classList.add("hidden");
+        }
+
+        async function requestClockRevalidation() {
+            addLog("starting active hardware clock audit...");
+            referenceDriftSecs = null; 
+            await fetchSecureTime();
+        }
+
+
+        // --- MODIFIERS AND CORE STAT CALCULATIONS ---
+        function checkIsDaytime() {
+            const hr = new Date().getHours();
+            return (hr >= 6 && hr < 18); 
+        }
+
+        function getActiveItemConfig() {
+            return ITEMS[state.activeSlotId] || ITEMS.toy;
+        }
+
+        function getLuckBonus() {
+            const item = getActiveItemConfig();
+            let baseLuck = item.luck || 0;
+            
+            // stack active luck powders (+50% each)
+            let powderLuckBoost = (state.consumables.powder.active) * 0.50;
+            return baseLuck + powderLuckBoost;
+        }
+
+        function getLuckMulti() {
+            const item = getActiveItemConfig();
+            return item.luckMulti !== undefined ? item.luckMulti : 1.0;
+        }
+
+        function getSpeedBonus() {
+            const item = getActiveItemConfig();
+            let baseSpeed = 0.0;
+            
+            if (item.speedDynamic) {
+                baseSpeed = gambleFluctuation;
+            } else if (item.speedSpecial) {
+                const isDay = checkIsDaytime();
+                baseSpeed = isDay ? 0.75 : -0.20;
+            } else {
+                baseSpeed = item.speed || 0.0;
+            }
+            
+            // apply active luck powder speed penalty (-30% each)
+            let powderSpeedPenalty = (state.consumables.powder.active) * -0.30;
+            return baseSpeed + powderSpeedPenalty;
+        }
+
+        function getRollRate() {
+            const item = getActiveItemConfig();
+            const speedMod = getSpeedBonus();
+            
+            // apply active grabber hands (+1 to grid width/height each)
+            let grabberBonus = state.consumables.grabber.active;
+            const finalGridWidth = item.grid + grabberBonus;
+            const gridAmount = finalGridWidth * finalGridWidth; 
+            
+            let calculatedRate = (1.0 + speedMod) * gridAmount;
+            
+            // apply active lightning gloves speed boost (+50% positive multi stacking each)
+            let glovesBoostMultiplier = 1.0 + (0.50 * state.consumables.gloves.active);
+            
+            // apply active grandfather clock speed boost (1.25x speed stacking positive multiplier)
+            let grandfatherBoostMultiplier = Math.pow(1.25, state.consumables.grandfather.active);
+            
+            return Math.max(0.1, calculatedRate * glovesBoostMultiplier * grandfatherBoostMultiplier);
+        }
+
+
+        // --- SVG BADGE GENERATOR ---
+        // All SVGs use viewBox="0 0 20 20" (normalized) so they scale crisp at any size.
+        // Root fill is always "none" — transparent background.
+        function getTierSVG(tier, size) {
+            const P = {
+                0:  ['#6b7280','#9ca3af','#d1d5db'],
+                1:  ['#94a3b8','#cbd5e1','#e2e8f0'],
+                2:  ['#60a5fa','#93c5fd','#1d4ed8'],
+                3:  ['#34d399','#6ee7b7','#059669'],
+                4:  ['#2dd4bf','#5eead4','#0e7490'],
+                5:  ['#818cf8','#a5b4fc','#4338ca'],
+                6:  ['#a78bfa','#c4b5fd','#7c3aed'],
+                7:  ['#f472b6','#f9a8d4','#be185d'],
+                8:  ['#fb7185','#fda4af','#be123c'],
+                9:  ['#fbbf24','#fde68a','#b45309'],
+                10: ['#fde047','#fef08a','#ca8a04'],
+                11: ['#fdba74','#fed7aa','#c2410c'],
+                12: ['#ef4444','#fca5a5','#dc2626'],
+                13: ['#a855f7','#d8b4fe','#6b21a8'],
+                14: ['#7c3aed','#c4b5fd','#4c1d95'],
+                15: ['#fcd34d','#fef3c7','#d97706'],
+                16: ['#fb7185','#fda4af','#f43f5e'],
+                17: ['#4ade80','#86efac','#166534'],
+                18: ['#22d3ee','#67e8f9','#0e7490'],
+                19: ['#e879f9','#f0abfc','#86198f'],
+                20: ['#f472b6','#c084fc','#fde68a'],
+                21: ['#34d399','#60a5fa','#818cf8'],
+            };
+            const [ca, cb, cc] = P[tier] || P[0];
+            const V = 20; const M = 10; // viewBox size and midpoint
+            const id = `t${tier}x${Math.random().toString(36).slice(2,5)}`;
+            const attr = `xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${V} ${V}"`;
+
+            // TIER 0 — single dim square, no detail
+            if (tier === 0) return `<svg ${attr}><rect x="5" y="5" width="10" height="10" fill="${ca}" opacity="0.5"/></svg>`;
+
+            // TIER 1 — square with a thin border
+            if (tier === 1) return `<svg ${attr}><rect x="4" y="4" width="12" height="12" fill="${ca}" opacity="0.6"/><rect x="4" y="4" width="12" height="12" fill="none" stroke="${cb}" stroke-width="0.6" opacity="0.7"/></svg>`;
+
+            // TIER 2 — two nested squares, slight glow
+            if (tier === 2) return `<svg ${attr}><rect x="3" y="3" width="14" height="14" fill="${ca}" opacity="0.55"/><rect x="6" y="6" width="8" height="8" fill="${cb}" opacity="0.5"/></svg>`;
+
+            // TIER 3 — diamond (rotated square) with border
+            if (tier === 3) {
+                return `<svg ${attr}>
+                    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></linearGradient></defs>
+                    <rect x="5.5" y="5.5" width="9" height="9" transform="rotate(45 ${M} ${M})" fill="url(#${id})" stroke="${cc}" stroke-width="0.6"/>
+                </svg>`;
+            }
+
+            // TIER 4 — cross / plus shape
+            if (tier === 4) {
+                return `<svg ${attr}>
+                    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></linearGradient></defs>
+                    <rect x="7" y="2" width="6" height="16" rx="1" fill="url(#${id})"/>
+                    <rect x="2" y="7" width="16" height="6" rx="1" fill="url(#${id})"/>
+                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.8"/>
+                </svg>`;
+            }
+
+            // TIER 5 — three concentric squares
+            if (tier === 5) {
+                return `<svg ${attr}>
+                    <rect x="2" y="2" width="16" height="16" fill="none" stroke="${ca}" stroke-width="1"/>
+                    <rect x="5" y="5" width="10" height="10" fill="${cb}" opacity="0.45" stroke="${cb}" stroke-width="0.7"/>
+                    <rect x="7.5" y="7.5" width="5" height="5" fill="${cc}" opacity="0.8"/>
+                </svg>`;
+            }
+
+            // TIER 6 — square with X + inner diamond
+            if (tier === 6) {
+                return `<svg ${attr}>
+                    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></linearGradient></defs>
+                    <rect x="2.5" y="2.5" width="15" height="15" fill="url(#${id})" opacity="0.7" stroke="${cc}" stroke-width="0.8"/>
+                    <line x1="2.5" y1="2.5" x2="17.5" y2="17.5" stroke="${cc}" stroke-width="0.7" opacity="0.6"/>
+                    <line x1="17.5" y1="2.5" x2="2.5" y2="17.5" stroke="${cc}" stroke-width="0.7" opacity="0.6"/>
+                    <rect x="7" y="7" width="6" height="6" transform="rotate(45 ${M} ${M})" fill="${cc}" opacity="0.9"/>
+                </svg>`;
+            }
+
+            // TIER 7 — 6-point star (hexagram)
+            if (tier === 7) {
+                let pts1='', pts2='';
+                for(let i=0;i<3;i++){const a=(2*Math.PI/3)*i-Math.PI/2; pts1+=`${M+7.5*Math.cos(a)},${M+7.5*Math.sin(a)} `;}
+                for(let i=0;i<3;i++){const a=(2*Math.PI/3)*i+Math.PI/6; pts2+=`${M+7.5*Math.cos(a)},${M+7.5*Math.sin(a)} `;}
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
+                    <polygon points="${pts1}" fill="url(#${id})" stroke="${cc}" stroke-width="0.5" opacity="0.9"/>
+                    <polygon points="${pts2}" fill="${cb}" stroke="${cc}" stroke-width="0.5" opacity="0.75"/>
+                    <circle cx="${M}" cy="${M}" r="2.5" fill="${cc}"/>
+                </svg>`;
+            }
+
+            // TIER 8 — 8-point starburst
+            if (tier === 8) {
+                let pts='';
+                for(let i=0;i<16;i++){const a=(Math.PI/8)*i-Math.PI/2; const r=i%2===0?8:3.5; pts+=`${M+r*Math.cos(a)},${M+r*Math.sin(a)} `;}
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
+                    <polygon points="${pts}" fill="url(#${id})" stroke="${cc}" stroke-width="0.5"/>
+                    <circle cx="${M}" cy="${M}" r="3" fill="${cc}" opacity="0.9"/>
+                    <circle cx="${M}" cy="${M}" r="1.2" fill="white" opacity="0.6"/>
+                </svg>`;
+            }
+
+            // TIER 9 — pentagon with inner pentagon
+            if (tier === 9) {
+                let outer='', inner='';
+                for(let i=0;i<5;i++){const a=(2*Math.PI/5)*i-Math.PI/2; outer+=`${M+8*Math.cos(a)},${M+8*Math.sin(a)} `; inner+=`${M+4*Math.cos(a)},${M+4*Math.sin(a)} `;}
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
+                    <polygon points="${outer}" fill="url(#${id})" stroke="${cc}" stroke-width="0.6"/>
+                    <polygon points="${inner}" fill="${cc}" opacity="0.8"/>
+                    <circle cx="${M}" cy="${M}" r="1.5" fill="white" opacity="0.7"/>
+                </svg>`;
+            }
+
+            // TIER 10 — sunburst: filled circle + radiating lines
+            if (tier === 10) {
+                let lines='';
+                for(let i=0;i<12;i++){const a=(2*Math.PI/12)*i; const r1=5.5,r2=9; lines+=`<line x1="${M+r1*Math.cos(a)}" y1="${M+r1*Math.sin(a)}" x2="${M+r2*Math.cos(a)}" y2="${M+r2*Math.sin(a)}" stroke="${i%2===0?ca:cb}" stroke-width="${i%3===0?1.2:0.6}" opacity="0.9"/>`;}
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.3"/></radialGradient></defs>
+                    ${lines}
+                    <circle cx="${M}" cy="${M}" r="5" fill="url(#${id})"/>
+                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.9"/>
+                </svg>`;
+            }
+
+            // TIER 11 — eye / vesica shape
+            if (tier === 11) {
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.4"/></radialGradient></defs>
+                    <ellipse cx="${M}" cy="${M}" rx="8.5" ry="4.5" fill="url(#${id})" stroke="${cc}" stroke-width="0.7"/>
+                    <ellipse cx="${M}" cy="${M}" rx="4" ry="4" fill="${cc}" opacity="0.8"/>
+                    <circle cx="${M}" cy="${M}" r="1.8" fill="${ca}" opacity="0.9"/>
+                    <circle cx="${M-1}" cy="${M-1}" r="0.7" fill="white" opacity="0.7"/>
+                    <path d="M3.5,${M} Q${M},${M-9} 16.5,${M} Q${M},${M+9} 3.5,${M}Z" fill="none" stroke="${cb}" stroke-width="0.5" opacity="0.6"/>
+                </svg>`;
+            }
+
+            // TIER 12 — double helix / DNA rings
+            if (tier === 12) {
+                let rings='';
+                [8,6.2,4.5,2.8].forEach((r,i)=>{ rings+=`<circle cx="${M}" cy="${M}" r="${r}" fill="none" stroke="${i%2===0?ca:cb}" stroke-width="${1.2-i*0.15}" opacity="${0.9-i*0.1}"/>`; });
+                let dots='';
+                for(let i=0;i<8;i++){const a=(2*Math.PI/8)*i; dots+=`<circle cx="${M+5.5*Math.cos(a)}" cy="${M+5.5*Math.sin(a)}" r="1.1" fill="${i%2===0?ca:cc}" opacity="0.9"/>`;}
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}" stop-opacity="0.7"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.1"/></radialGradient></defs>
+                    <circle cx="${M}" cy="${M}" r="9.5" fill="url(#${id})"/>
+                    ${rings}${dots}
+                    <circle cx="${M}" cy="${M}" r="1.5" fill="white" opacity="0.8"/>
+                </svg>`;
+            }
+
+            // TIER 13 — 12-point star with inner glow ring
+            if (tier === 13) {
+                let pts='';
+                for(let i=0;i<24;i++){const a=(Math.PI/12)*i-Math.PI/2; const r=i%2===0?8.5:4.2; pts+=`${M+r*Math.cos(a)},${M+r*Math.sin(a)} `;}
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="70%" stop-color="${cb}"/><stop offset="100%" stop-color="${cc}" stop-opacity="0.3"/></radialGradient></defs>
+                    <polygon points="${pts}" fill="url(#${id})" stroke="${cc}" stroke-width="0.4" opacity="0.95"/>
+                    <circle cx="${M}" cy="${M}" r="4" fill="none" stroke="${ca}" stroke-width="1" opacity="0.7"/>
+                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.9"/>
+                    <circle cx="${M}" cy="${M}" r="0.8" fill="white" opacity="0.9"/>
+                </svg>`;
+            }
+
+            // TIER 14 — hexagon tile with inner fractal hexagons
+            if (tier === 14) {
+                let hex=(cx,cy,r,fill,sw,so)=>{let p=''; for(let i=0;i<6;i++){const a=(Math.PI/3)*i-Math.PI/6; p+=`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)} `;} return `<polygon points="${p}" fill="${fill}" stroke="${cc}" stroke-width="${sw}" opacity="${so}"/>`;};
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.5"/></radialGradient></defs>
+                    ${hex(M,M,8.5,`url(#${id})`,0.6,0.95)}
+                    ${hex(M,M,5.5,'none',0.8,0.7)}
+                    ${hex(M,M,3,cc,0.4,0.8)}
+                    <circle cx="${M}" cy="${M}" r="1.3" fill="white" opacity="0.8"/>
+                </svg>`;
+            }
+
+            // TIER 15 — ornate compass rose (N/S/E/W points + diagonals)
+            if (tier === 15) {
+                let pts1='',pts2='';
+                [0,90,180,270].forEach(d=>{const a=d*Math.PI/180; pts1+=`${M+9*Math.cos(a)},${M+9*Math.sin(a)} ${M+2.5*Math.cos(a+Math.PI/6)},${M+2.5*Math.sin(a+Math.PI/6)} `;});
+                [45,135,225,315].forEach(d=>{const a=d*Math.PI/180; pts2+=`${M+6*Math.cos(a)},${M+6*Math.sin(a)} ${M+2*Math.cos(a+Math.PI/6)},${M+2*Math.sin(a+Math.PI/6)} `;});
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
+                    <polygon points="${pts1}" fill="url(#${id})" stroke="${cc}" stroke-width="0.5"/>
+                    <polygon points="${pts2}" fill="${cb}" opacity="0.8" stroke="${cc}" stroke-width="0.4"/>
+                    <circle cx="${M}" cy="${M}" r="2.5" fill="${cc}"/>
+                    <circle cx="${M}" cy="${M}" r="1" fill="white" opacity="0.9"/>
+                </svg>`;
+            }
+
+            // TIER 16 — atom: nucleus + 3 orbital ellipses
+            if (tier === 16) {
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.2"/></radialGradient></defs>
+                    <ellipse cx="${M}" cy="${M}" rx="9" ry="3.5" fill="none" stroke="${ca}" stroke-width="0.8" opacity="0.8"/>
+                    <ellipse cx="${M}" cy="${M}" rx="9" ry="3.5" fill="none" stroke="${cb}" stroke-width="0.8" opacity="0.8" transform="rotate(60 ${M} ${M})"/>
+                    <ellipse cx="${M}" cy="${M}" rx="9" ry="3.5" fill="none" stroke="${cc}" stroke-width="0.8" opacity="0.8" transform="rotate(120 ${M} ${M})"/>
+                    <circle cx="${M}" cy="${M}" r="2.8" fill="url(#${id})"/>
+                    <circle cx="${M}" cy="${M}" r="1.1" fill="white" opacity="0.85"/>
+                    <circle cx="${M+9}" cy="${M}" r="1" fill="${ca}" opacity="0.9"/>
+                    <circle cx="${M-4.5}" cy="${M+7.8}" r="1" fill="${cb}" opacity="0.9"/>
+                    <circle cx="${M-4.5}" cy="${M-7.8}" r="1" fill="${cc}" opacity="0.9"/>
+                </svg>`;
+            }
+
+            // TIER 17 — fractal snowflake (6 arms, each with sub-branches)
+            if (tier === 17) {
+                let arms='';
+                for(let i=0;i<6;i++){
+                    const a=(Math.PI/3)*i;
+                    const x2=M+8.5*Math.cos(a), y2=M+8.5*Math.sin(a);
+                    arms+=`<line x1="${M}" y1="${M}" x2="${x2}" y2="${y2}" stroke="${ca}" stroke-width="1" opacity="0.9"/>`;
+                    for(let j=1;j<=3;j++){
+                        const frac=j/4; const bx=M+8.5*frac*Math.cos(a); const by=M+8.5*frac*Math.sin(a);
+                        const bl=2.5-j*0.5;
+                        arms+=`<line x1="${bx}" y1="${by}" x2="${bx+bl*Math.cos(a+Math.PI/3)}" y2="${by+bl*Math.sin(a+Math.PI/3)}" stroke="${cb}" stroke-width="0.6" opacity="0.8"/>`;
+                        arms+=`<line x1="${bx}" y1="${by}" x2="${bx+bl*Math.cos(a-Math.PI/3)}" y2="${by+bl*Math.sin(a-Math.PI/3)}" stroke="${cb}" stroke-width="0.6" opacity="0.8"/>`;
+                    }
+                }
+                return `<svg ${attr}>
+                    ${arms}
+                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.9"/>
+                    <circle cx="${M}" cy="${M}" r="0.8" fill="white" opacity="0.9"/>
+                </svg>`;
+            }
+
+            // TIER 18 — spiral galaxy (3 arms curling outward + outer dot ring)
+            if (tier === 18) {
+                let spiral='';
+                for(let arm=0;arm<3;arm++){
+                    const base=(2*Math.PI/3)*arm;
+                    for(let t=0;t<20;t++){
+                        const frac=t/19; const ang=base+frac*Math.PI*1.6; const dist=1+8*frac;
+                        spiral+=`<circle cx="${M+dist*Math.cos(ang)}" cy="${M+dist*Math.sin(ang)}" r="${0.9-frac*0.5}" fill="${t%2===0?ca:cb}" opacity="${0.95-frac*0.4}"/>`;
+                    }
+                }
+                let ring='';
+                for(let i=0;i<18;i++){const a=(2*Math.PI/18)*i; ring+=`<circle cx="${M+9*Math.cos(a)}" cy="${M+9*Math.sin(a)}" r="${i%3===0?0.9:0.5}" fill="${i%3===0?cc:ca}" opacity="0.85"/>`;}
+                return `<svg ${attr}>
+                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}" stop-opacity="0.8"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
+                    <circle cx="${M}" cy="${M}" r="9.5" fill="url(#${id})"/>
+                    ${spiral}${ring}
+                    <circle cx="${M}" cy="${M}" r="1.5" fill="white" opacity="0.9"/>
+                </svg>`;
+            }
+
+            // TIER 19 — nested mandalas: 4 rings of orbiting dots + spoke lines
+            if (tier === 19) {
+                let mandala='';
+                [[3,6,ca],[5,8,cb],[7,10,cc],[8.5,12,ca]].forEach(([dist,count,col])=>{
+                    for(let i=0;i<count;i++){const a=(2*Math.PI/count)*i; mandala+=`<circle cx="${M+dist*Math.cos(a)}" cy="${M+dist*Math.sin(a)}" r="${0.8}" fill="${col}" opacity="0.85"/>`;}
+                    mandala+=`<circle cx="${M}" cy="${M}" r="${dist}" fill="none" stroke="${col}" stroke-width="0.4" opacity="0.35"/>`;
+                });
+                let spokes='';
+                for(let i=0;i<12;i++){const a=(Math.PI/6)*i; spokes+=`<line x1="${M+2*Math.cos(a)}" y1="${M+2*Math.sin(a)}" x2="${M+8.5*Math.cos(a)}" y2="${M+8.5*Math.sin(a)}" stroke="${i%2===0?ca:cb}" stroke-width="0.4" opacity="0.4"/>`;}
+                return `<svg ${attr}>
+                    ${spokes}${mandala}
+                    <circle cx="${M}" cy="${M}" r="1.8" fill="${cc}" opacity="0.95"/>
+                    <circle cx="${M}" cy="${M}" r="0.7" fill="white" opacity="1"/>
+                </svg>`;
+            }
+
+            // TIER 20 — cosmic web: random star field + connecting lines + central nova
+            if (tier === 20) {
+                // deterministic "random" using tier as seed so it's consistent
+                const seed = (n) => { let x=Math.sin(n*127.1+tier*311.7)*43758.5453; return x-Math.floor(x); };
+                let web=''; const nodes=[];
+                for(let i=0;i<12;i++){const x=1+seed(i)*18, y=1+seed(i+50)*18; nodes.push([x,y]);}
+                for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++){
+                    const dx=nodes[i][0]-nodes[j][0], dy=nodes[i][1]-nodes[j][1];
+                    if(Math.sqrt(dx*dx+dy*dy)<8) web+=`<line x1="${nodes[i][0]}" y1="${nodes[i][1]}" x2="${nodes[j][0]}" y2="${nodes[j][1]}" stroke="${ca}" stroke-width="0.4" opacity="0.4"/>`;
+                }
+                let stars='';
+                nodes.forEach(([x,y],i)=>{ stars+=`<circle cx="${x}" cy="${y}" r="${i%3===0?1.1:0.6}" fill="${i%2===0?ca:cb}" opacity="0.9"/>`;});
+                let nova='';
+                for(let i=0;i<8;i++){const a=(Math.PI/4)*i; nova+=`<line x1="${M}" y1="${M}" x2="${M+3.5*Math.cos(a)}" y2="${M+3.5*Math.sin(a)}" stroke="${cc}" stroke-width="0.8" opacity="0.9"/>`;}
+                return `<svg ${attr}>
+                    ${web}${stars}${nova}
+                    <circle cx="${M}" cy="${M}" r="2.2" fill="${cc}" opacity="0.95"/>
+                    <circle cx="${M}" cy="${M}" r="0.9" fill="white" opacity="1"/>
+                </svg>`;
+            }
+
+            // TIER 21 — sacred geometry: flower of life + 24 rays + 5 concentric rings + 36 outer dots
+            if (tier === 21) {
+                let rays='';
+                for(let i=0;i<24;i++){const a=(2*Math.PI/24)*i; rays+=`<line x1="${M}" y1="${M}" x2="${M+9.5*Math.cos(a)}" y2="${M+9.5*Math.sin(a)}" stroke="${i%3===0?ca:cb}" stroke-width="${i%6===0?0.8:0.35}" opacity="${i%3===0?0.85:0.35}"/>`;}
+                let rings='';
+                [9,7.2,5.4,3.6,1.8].forEach((r,i)=>{ rings+=`<circle cx="${M}" cy="${M}" r="${r}" fill="none" stroke="${i%2===0?ca:cc}" stroke-width="${0.7-i*0.08}" opacity="${0.5+i*0.08}"/>`; });
+                let petals='';
+                for(let i=0;i<6;i++){const a=(Math.PI/3)*i; petals+=`<circle cx="${M+3.6*Math.cos(a)}" cy="${M+3.6*Math.sin(a)}" r="3.6" fill="none" stroke="${cb}" stroke-width="0.55" opacity="0.5"/>`;}
+                let dots='';
+                for(let i=0;i<36;i++){const a=(2*Math.PI/36)*i; dots+=`<circle cx="${M+9.1*Math.cos(a)}" cy="${M+9.1*Math.sin(a)}" r="${i%3===0?0.85:0.45}" fill="${i%3===0?ca:cc}" opacity="${i%3===0?1:0.6}"/>`;}
+                return `<svg ${attr}>
+                    <defs>
+                        <radialGradient id="${id}"><stop offset="0%" stop-color="${ca}" stop-opacity="0.5"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.05"/></radialGradient>
+                    </defs>
+                    <circle cx="${M}" cy="${M}" r="9.7" fill="url(#${id})"/>
+                    ${rays}${rings}${petals}${dots}
+                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.95"/>
+                    <circle cx="${M}" cy="${M}" r="0.8" fill="white" opacity="1"/>
+                </svg>`;
+            }
+
+            return `<svg ${attr}><circle cx="${M}" cy="${M}" r="5" fill="${ca}" opacity="0.5"/></svg>`;
+        }
+
+        // --- SCREEN FLASH ---
+        function flashScreen(tier) {
+            if (tier < 6) return;
+            const colors = {
+                6:'#8b5cf6',7:'#ec4899',8:'#f43f5e',9:'#f59e0b',10:'#facc15',
+                11:'#fb923c',12:'#dc2626',13:'#a855f7',14:'#7c3aed',15:'#fbbf24',
+                16:'#f43f5e',17:'#4ade80',18:'#22d3ee',19:'#e879f9',20:'#c084fc',21:'#34d399'
+            };
+            const color = colors[Math.min(tier,21)] || '#ffffff';
+            const intensity = Math.min(0.1 + (tier-6)*0.03, 0.6);
+            const flash = document.createElement('div');
+            flash.style.cssText = `position:fixed;inset:0;background:${color};opacity:0;pointer-events:none;z-index:9999`;
+            document.body.appendChild(flash);
+            // double rAF guarantees the element is painted before we transition
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                flash.style.transition = 'opacity 0.1s ease-in';
+                flash.style.opacity = intensity;
+                setTimeout(() => {
+                    flash.style.transition = 'opacity 0.6s ease-out';
+                    flash.style.opacity = '0';
+                    setTimeout(() => flash.remove(), 700);
+                }, 140);
+            }));
+        }
+
+        // --- SMART GRID PLACEMENT ---
+        function buildDisplayGrid(counts, cellCount) {
+            const available = [];
+            for (let tier = 21; tier >= 0; tier--) {
+                if (counts[tier] && counts[tier] > 0) available.push(tier);
+            }
+            if (available.length === 0) return [];
+
+            const result = new Array(cellCount).fill(null);
+            const used = new Set();
+
+            const place = (tier) => {
+                let pos;
+                let attempts = 0;
+                do { pos = Math.floor(Math.random() * cellCount); attempts++; } 
+                while (used.has(pos) && attempts < 100);
+                used.add(pos);
+                result[pos] = tier;
+            };
+
+            // 1 guaranteed best
+            place(available[0]);
+
+            // 2 guaranteed second/third best (random between the two)
+            const pool23 = available.slice(1, 3);
+            place(pool23[Math.floor(Math.random() * pool23.length)]);
+            place(pool23[Math.floor(Math.random() * pool23.length)]);
+
+            // fill rest: 90% tier 0, 5% tier 1, 5% random from remaining
+            const lowest = available[available.length - 1];
+            const secondLowest = available.length > 1 ? available[available.length - 2] : lowest;
+            for (let i = 0; i < cellCount; i++) {
+                if (result[i] !== null) continue;
+                const r = Math.random();
+                if (r < 0.90) result[i] = lowest;
+                else if (r < 0.95) result[i] = secondLowest;
+                else result[i] = available[Math.floor(Math.random() * available.length)];
+            }
+
+            return result;
+        }
+
+        // --- VISUAL GRID GENERATION ---
+        function updateVisualGrid(lastBatch) {
+            const gridContainer = document.getElementById("result-grid");
+            gridContainer.innerHTML = "";
+
+            const item = getActiveItemConfig();
+            let grabberBonus = state.consumables.grabber.active;
+            const width = item.grid + grabberBonus;
+            const cellCount = width * width;
+
+            gridContainer.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
+            gridContainer.style.gridTemplateRows = `repeat(${width}, minmax(0, 1fr))`;
+
+            // build counts map from lastBatch array for smart placement
+            const counts = {};
+            for (const t of lastBatch) counts[t] = (counts[t] || 0) + 1;
+
+            const displayTiers = lastBatch.length > 0
+                ? buildDisplayGrid(counts, cellCount)
+                : new Array(cellCount).fill(null);
+
+            const containerPx = gridContainer.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / width);
+            const baseSvgSize = Math.min(Math.round(1.05 * (cellPx * 1.5)), cellPx * 2);
+
+            for (let i = 0; i < cellCount; i++) {
+                const cell = document.createElement("div");
+                const tier = displayTiers[i];
+
+                if (tier !== null && tier !== undefined) {
+                    const meta = TIER_META[tier];
+                    cell.className = `w-full h-full flex flex-col items-center justify-center border-b border-r border-gray-800/80 select-none cursor-help grid-cell-animate overflow-visible relative ${meta.bg}`;
+
+                    if (meta.glow === "high") cell.classList.add("tier-glow-high", "border-pink-500/50");
+                    else if (meta.glow === "medium") cell.classList.add("tier-glow-medium", "border-blue-500/40");
+                    else cell.classList.add("tier-glow-low");
+
+                    // z-index by tier so higher tiers always render on top of lower ones
+                    cell.style.zIndex = tier;
+                    cell.style.position = 'relative';
+
+                    // additive scaling: starts at x2 for tier>7, adds +0.5x per tier above 7
+                    // tier 8 = x2, tier 9 = x2.5, tier 10 = x3, etc.
+                    const scaleFactor = tier > 7 ? 2 + (tier - 8) * 0.5 : 1;
+                    const svgSize = Math.round(baseSvgSize * scaleFactor);
+
+                    const svgWrap = document.createElement("div");
+                    svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:${tier};pointer-events:none;`;
+                    svgWrap.innerHTML = getTierSVG(tier, svgSize);
+
+                    const label = document.createElement("span");
+                    // no min cap — scales freely with SVG size
+                    const labelPx = Math.round(svgSize * 0.22);
+                    label.style.cssText = `position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:${labelPx}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000,0 1px 2px #000;z-index:${tier + 1};`;
+                    label.className = `bg-gradient-to-tr ${meta.color} bg-clip-text text-transparent`;
+                    label.innerText = `10^${tier}`;
+
+                    svgWrap.appendChild(label);
+                    cell.appendChild(svgWrap);
+                    cell.title = `Roll Tier: 10^${tier} (${meta.name})\nChance: 1 in 10^${tier}`;
+                } else {
+                    cell.className = "w-full h-full flex items-center justify-center border-b border-r border-gray-800/80 bg-gray-950/40";
+                }
+
+                gridContainer.appendChild(cell);
+            }
+        }
+
+
+        // --- WEB WORKERS: statistical approximation + parallel execution ---
+        // Instead of rolling one at a time, we use Poisson sampling to instantly
+        // derive how many hits each tier gets from N rolls, then verify rare tiers
+        // with a small exact RNG pass. 4 workers split the load in parallel.
+
+        const WORKER_CODE = `
+            // Poisson sampler (Knuth method for small lambda, normal approx for large)
+            function poissonSample(lambda) {
+                if (lambda <= 0) return 0;
+                if (lambda > 800) {
+                    // normal approximation: mean=lambda, std=sqrt(lambda)
+                    let u = 0, v = 0;
+                    while (u === 0) u = Math.random();
+                    while (v === 0) v = Math.random();
+                    const n = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+                    return Math.max(0, Math.round(lambda + n * Math.sqrt(lambda)));
+                }
+                // Knuth exact method
+                const L = Math.exp(-lambda);
+                let k = 0, p = 1.0;
+                do { k++; p *= Math.random(); } while (p > L);
+                return k - 1;
+            }
+
+            self.onmessage = function(e) {
+                const { rollCount, luck, luckMulti } = e.data;
+                const counts = {};
+
+                // For each tier high→low, statistically determine how many rolls hit it.
+                // A roll hits tier T if it DIDN'T hit any higher tier first, so we track
+                // remaining rolls as we descend.
+                let remaining = rollCount;
+
+                for (let tier = 21; tier >= 1; tier--) {
+                    if (remaining <= 0) break;
+                    const p = ((1.0 + luck) * luckMulti) / Math.pow(10, tier);
+                    if (p <= 0) continue;
+
+                    // expected hits at this tier from remaining rolls
+                    const lambda = remaining * Math.min(p, 1.0);
+                    const hits = poissonSample(lambda);
+
+                    if (hits > 0) {
+                        counts[tier] = hits;
+                        remaining -= hits; // those rolls are "used up"
+                    }
+                }
+
+                // everything left is tier 0
+                if (remaining > 0) counts[0] = remaining;
+
+                self.postMessage({ type: 'done', counts });
+            };
+        `;
+
+        // pre-build 4 workers from the same blob
+        const NUM_WORKERS = 4;
+        let workerPool = null;
+        let isSimulating = false;
+
+        function getWorkerPool() {
+            if (workerPool) return workerPool;
+            const blob = new Blob([WORKER_CODE], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            workerPool = Array.from({ length: NUM_WORKERS }, () => new Worker(url));
+            return workerPool;
+        }
+
+        // --- PRIMARY ACTIONS ---
+        function simulateRolls() {
+            if (isSimulating) return;
+
+            const explosionActive = state.consumables.explosion.active > 0;
+            const ultimateOneActive = state.consumables.ultimateOne.active > 0;
+            const fireBombActive = state.consumables.fireBomb.active > 0;
+
+            const baseRollCount = Math.floor(state.unspentRolls);
+
+            // build total roll count from all active bonuses
+            let rollCount = baseRollCount;
+            if (explosionActive) rollCount += 10000000;
+            if (fireBombActive) rollCount += 1000000000;
+            if (ultimateOneActive) rollCount += 1; // the ONE
+
+            if (rollCount <= 0) return;
+
+            const baseLuck = getLuckBonus();
+            const luckMulti = getLuckMulti();
+
+            // luck bonuses ADD together, not multiply
+            let luck = baseLuck;
+            if (explosionActive) luck += 12.5;
+            if (fireBombActive) luck += 3;
+            if (ultimateOneActive) luck += 200000000;
+
+            const maxVisualGridSize = (getActiveItemConfig().grid + state.consumables.grabber.active) ** 2;
+
+            state.unspentRolls = 0;
+            state.consumables.gloves.active = 0;
+            state.consumables.powder.active = 0;
+            state.consumables.grabber.active = 0;
+            state.consumables.explosion.active = 0;
+            state.consumables.grandfather.active = 0;
+            state.consumables.ultimateOne.active = 0;
+            state.consumables.fireBomb.active = 0;
+
+            isSimulating = true;
+
+            const simBtn = document.getElementById("btn-simulate");
+            simBtn.disabled = true;
+            document.getElementById("simulate-desc").innerText = `simulating ${rollCount.toLocaleString()} rolls…`;
+
+            // split rollCount across NUM_WORKERS as evenly as possible
+            const workers = getWorkerPool();
+            const sliceSize = Math.floor(rollCount / NUM_WORKERS);
+            const slices = Array.from({ length: NUM_WORKERS }, (_, i) =>
+                i === NUM_WORKERS - 1 ? rollCount - sliceSize * i : sliceSize
+            );
+
+            let finishedWorkers = 0;
+            const merged = {};
+
+            workers.forEach((worker, idx) => {
+                worker.onmessage = function(e) {
+                    if (e.data.type !== 'done') return;
+
+                    const c = e.data.counts;
+                    for (const tier in c) {
+                        merged[tier] = (merged[tier] || 0) + c[tier];
+                    }
+
+                    finishedWorkers++;
+                    if (finishedWorkers < NUM_WORKERS) return;
+
+                    // all 4 workers finished — apply merged results
+                    for (const tier in merged) {
+                        state.discoveredTiers[tier] = (state.discoveredTiers[tier] || 0) + merged[tier];
+                    }
+                    state.totalSimulated += rollCount;
+
+                    let highestInBatch = 0;
+                    const batchKeys = Object.keys(merged).map(Number);
+                    if (batchKeys.length > 0) {
+                        highestInBatch = Math.max(...batchKeys);
+                        playChimeForTier(highestInBatch);
+                        flashScreen(highestInBatch);
+                    }
+
+                    let topRolls = [];
+                    for (let tier = 21; tier >= 0; tier--) {
+                        if (merged[tier]) {
+                            const amountToAdd = Math.min(merged[tier], maxVisualGridSize - topRolls.length);
+                            for (let k = 0; k < amountToAdd; k++) topRolls.push(tier);
+                            if (topRolls.length >= maxVisualGridSize) break;
+                        }
+                    }
+
+                    updateVisualGrid(topRolls);
+                    renderInventoryList();
+                    renderSlotsList();
+                    renderConsumablesList();
+                    updateHeaderMetrics();
+
+                    if (rollCount > 0) {
+                        const highestMeta = TIER_META[highestInBatch];
+                        const displaySpan = document.getElementById("highest-batch-roll");
+                        displaySpan.innerText = `10^${highestInBatch} (${highestMeta.name})`;
+                        displaySpan.className = `font-bold text-sm bg-gradient-to-tr ${highestMeta.color} bg-clip-text text-transparent font-mono`;
+                        addLog(`Simulated <span class="text-white font-bold">${rollCount.toLocaleString()}</span> rolls. Best: <span class="font-bold font-mono">10^${highestInBatch}</span>`);
+                    }
+
+                    saveGame();
+                    isSimulating = false;
+                };
+
+                worker.onerror = function(err) {
+                    console.error("Worker error:", err);
+                    isSimulating = false;
+                    updateHeaderMetrics();
+                };
+
+                worker.postMessage({ rollCount: slices[idx], luck, luckMulti });
+            });
+        }
+
+        // Action: unlocking slots permanently
+        function unlockSlot(slotId) {
+            const item = ITEMS[slotId];
+            if (!item) return;
+
+            if (!checkHasCost(item.req)) {
+                addLog(`<span class="text-red-400">⚠️ unlock failed: insufficient resources for ${item.name}</span>`);
+                return;
+            }
+
+            // deduct materials permanently
+            deductCost(item.req);
+            
+            // add to permanent owned list
+            state.unlockedSlots.push(slotId);
+            
+            addLog(`🛠️ unlocked new framework permanently: <span class="text-purple-400 font-bold">${item.name}</span>`);
+            
+            renderInventoryList();
+            renderSlotsList();
+            saveGame();
+        }
+
+        // Action: freely equipping an already unlocked slot
+        function equipSlot(slotId) {
+            if (!state.unlockedSlots.includes(slotId)) return;
+            
+            const item = ITEMS[slotId];
+            state.activeSlotId = slotId;
+            addLog(`⚡ equipped framework: <span class="text-blue-400 font-bold">${item.name}</span>`);
+            
+            updateVisualGrid([]);
+            renderSlotsList();
+            updateHeaderMetrics();
+            saveGame();
+        }
+
+        function checkHasCost(costConfig) {
+            if (!costConfig) return true;
+            for (const key in costConfig) {
+                const countNeeded = costConfig[key];
+                // consumable cost (non-numeric key like "explosion")
+                if (isNaN(key)) {
+                    const owned = state.consumables[key] ? state.consumables[key].owned : 0;
+                    if (owned < countNeeded) return false;
+                } else {
+                    const countDiscovered = state.discoveredTiers[key] || 0;
+                    if (countDiscovered < countNeeded) return false;
+                }
+            }
+            return true;
+        }
+
+        function deductCost(costConfig) {
+            if (!costConfig) return;
+            for (const key in costConfig) {
+                if (isNaN(key)) {
+                    if (state.consumables[key]) state.consumables[key].owned -= costConfig[key];
+                } else {
+                    state.discoveredTiers[key] -= costConfig[key];
+                }
+            }
+        }
+
+
+        // --- CONSUMABLES CHEMISTRY MANAGER ---
+        
+        function buyConsumable(id) {
+            const config = CONSUMABLES_CONFIG[id];
+            if (!config) return;
+
+            if (!checkHasCost(config.cost)) {
+                addLog(`<span class="text-red-400">⚠️ crafting failed: insufficient materials for ${config.name}</span>`);
+                return;
+            }
+
+            deductCost(config.cost);
+            state.consumables[id].owned++;
+            addLog(`🧪 crafted 1x <span class="text-purple-400 font-bold">${config.name}</span>`);
+            
+            renderInventoryList();
+            renderConsumablesList();
+            updateHeaderMetrics();
+            saveGame();
+        }
+
+        function useConsumable(id) {
+            const config = CONSUMABLES_CONFIG[id];
+            if (!config) return;
+
+            if (state.consumables[id].owned <= 0) {
+                addLog(`<span class="text-red-400">⚠️ activation failed: no owned ${config.name}s</span>`);
+                return;
+            }
+
+            if (state.consumables[id].active >= config.cap) {
+                addLog(`<span class="text-red-400">⚠️ activation failed: reached stack limit of ${config.cap} for ${config.name}</span>`);
+                return;
+            }
+
+            state.consumables[id].owned--;
+            state.consumables[id].active++;
+            
+            // special immediate grandfather clock logic (adds 2 hours of roll generation instantly)
+            if (id === 'grandfather') {
+                const generatedSecs = 7200; // 2 hours
+                const rate = getRollRate();
+                const bonusRolls = generatedSecs * rate;
+                state.unspentRolls += bonusRolls;
+                addLog(`✨ activated <span class="text-green-400 font-bold">${config.name}</span>. speed increased by 1.5x and warp time granted <span class="text-blue-300 font-mono">+${bonusRolls.toLocaleString()} rolls</span>!`);
+            } else {
+                addLog(`✨ activated <span class="text-green-400 font-bold">${config.name}</span>. buff active until next roll simulation.`);
+            }
+
+            updateVisualGrid([]);
+            renderConsumablesList();
+            updateHeaderMetrics();
+            saveGame();
+        }
+
+
+        // --- DYNAMIC RENDERING FUNCTIONS ---
+
+        function renderInventoryList() {
+            const list = document.getElementById("inventory-list");
+            list.innerHTML = "";
+
+            for (let i = 0; i <= 21; i++) {
+                const count = state.discoveredTiers[i] || 0;
+                const meta = TIER_META[i];
+                
+                const itemDiv = document.createElement("div");
+                itemDiv.className = `flex justify-between items-center p-2.5 rounded-xl border border-gray-800/80 hover:border-gray-700/60 transition-all ${count > 0 ? 'bg-gray-900/20' : 'bg-gray-950/20 opacity-50'}`;
+
+                const left = document.createElement("div");
+                left.className = "flex items-center gap-2.5";
+                
+                const badge = document.createElement("div");
+                badge.className = `flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg ${meta.bg} overflow-hidden`;
+                badge.innerHTML = getTierSVG(i, 36);
+
+                const textWrap = document.createElement("div");
+                const title = document.createElement("div");
+                title.className = `font-bold text-xs ${count > 0 ? 'text-gray-200' : 'text-gray-400'}`;
+                title.innerText = meta.name;
+
+                const chance = document.createElement("span");
+                chance.className = "text-[10px] text-gray-500 block font-mono";
+                chance.innerText = `1 / 10^${i}`;
+
+                textWrap.appendChild(title);
+                textWrap.appendChild(chance);
+                left.appendChild(badge);
+                left.appendChild(textWrap);
+
+                const right = document.createElement("div");
+                right.className = "text-right";
+                
+                const countSpan = document.createElement("span");
+                countSpan.className = `font-extrabold font-mono text-sm ${count > 0 ? 'text-blue-400' : 'text-gray-600'}`;
+                countSpan.innerText = count.toLocaleString();
+
+                right.appendChild(countSpan);
+                itemDiv.appendChild(left);
+                itemDiv.appendChild(right);
+                
+                list.appendChild(itemDiv);
+            }
+            
+            document.getElementById("total-rolls-count").innerText = `Total Simulated: ${state.totalSimulated.toLocaleString()}`;
+        }
+
+        function renderSlotsList() {
+            const list = document.getElementById("slots-list");
+            list.innerHTML = "";
+
+            for (const key in ITEMS) {
+                const item = ITEMS[key];
+                const isActive = (state.activeSlotId === key);
+                const isUnlocked = state.unlockedSlots.includes(key);
+                const canAfford = checkHasCost(item.req);
+
+                const div = document.createElement("div");
+                div.className = `p-4 rounded-xl border transition-all flex flex-col gap-3 ${
+                    isActive ? 'bg-gradient-to-b from-blue-950/30 to-panelBg border-blue-500 shadow-lg shadow-blue-500/5' : 
+                    isUnlocked ? 'bg-gray-900/40 border-gray-800' :
+                    canAfford ? 'bg-gray-900/30 border-purple-500/30 hover:border-purple-500/60' : 'bg-gray-950/60 border-gray-900 opacity-60'
+                }`;
+
+                const top = document.createElement("div");
+                top.className = "flex justify-between items-start";
+                
+                const titleWrap = document.createElement("div");
+                const h4 = document.createElement("h4");
+                h4.className = "font-bold text-sm text-gray-200";
+                h4.innerText = item.name;
+                
+                const gridDesc = document.createElement("span");
+                gridDesc.className = "text-[10px] text-gray-400 font-medium block mt-0.5";
+                gridDesc.innerText = `Layout: ${item.grid}x${item.grid} (${item.grid * item.grid} Output Cells)`;
+                
+                titleWrap.appendChild(h4);
+                titleWrap.appendChild(gridDesc);
+
+                const actionArea = document.createElement("div");
+                if (isActive) {
+                    const badge = document.createElement("span");
+                    badge.className = "px-2.5 py-1 text-[10px] bg-blue-500 text-white font-extrabold rounded-md shadow";
+                    badge.innerText = "ACTIVE";
+                    actionArea.appendChild(badge);
+                } else if (isUnlocked) {
+                    const btn = document.createElement("button");
+                    btn.onclick = () => equipSlot(key);
+                    btn.className = "px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-lg border border-gray-700 transition-all shadow-sm";
+                    btn.innerText = "Equip";
+                    actionArea.appendChild(btn);
+                } else if (canAfford) {
+                    const btn = document.createElement("button");
+                    btn.onclick = () => unlockSlot(key);
+                    btn.className = "px-3 py-1 text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 font-bold rounded-lg border border-purple-700/50 transition-all shadow-sm";
+                    btn.innerText = "Craft Unlock";
+                    actionArea.appendChild(btn);
+                } else {
+                    const badge = document.createElement("span");
+                    badge.className = "px-2 py-1 text-[10px] bg-red-900/20 text-red-400 font-bold rounded border border-red-900/30";
+                    badge.innerText = "LOCKED";
+                    actionArea.appendChild(badge);
+                }
+
+                top.appendChild(titleWrap);
+                top.appendChild(actionArea);
+                div.appendChild(top);
+
+                const desc = document.createElement("p");
+                desc.className = "text-xs text-gray-400 italic";
+                desc.innerText = item.desc;
+                div.appendChild(desc);
+
+                const mods = document.createElement("div");
+                mods.className = "flex gap-2 text-[10px] font-bold font-mono";
+                
+                const luckMultiStr = item.luckMulti !== undefined ? `x${item.luckMulti}` : '';
+                const baseLuckStr = item.luck >= 0 ? `+${(item.luck || 0) * 100}%` : `${(item.luck || 0) * 100}%`;
+                const finalLuckVal = item.luckMulti !== undefined ? `${baseLuckStr} (${luckMultiStr})` : baseLuckStr;
+                const luckVal = item.luckSpecial ? "Special" : finalLuckVal;
+
+                const speedVal = item.speedDynamic ? "Fluctuating Frame Rates" : (item.speedSpecial ? "Adaptive Time" : (item.speed >= 0 ? `+${item.speed * 100}%` : `${item.speed * 100}%`));
+
+                mods.innerHTML = `
+                    <span class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">LUCK: ${luckVal}</span>
+                    <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">SPEED: ${speedVal}</span>
+                `;
+                div.appendChild(mods);
+
+                // only show requirements if it hasn't been unlocked yet
+                if (item.req && !isUnlocked) {
+                    const reqDiv = document.createElement("div");
+                    reqDiv.className = "pt-2 border-t border-gray-800/80 flex flex-wrap gap-1.5 items-center";
+                    
+                    const label = document.createElement("span");
+                    label.className = "text-[9px] font-bold text-gray-500 uppercase mr-1";
+                    label.innerText = "Unlock Cost:";
+                    reqDiv.appendChild(label);
+
+                    for (const reqTier in item.req) {
+                        const requiredCount = item.req[reqTier];
+                        const countDiscovered = state.discoveredTiers[reqTier] || 0;
+                        const met = countDiscovered >= requiredCount;
+
+                        const badge = document.createElement("span");
+                        badge.className = `text-[9px] font-bold font-mono px-1.5 py-0.5 rounded flex items-center gap-1 border ${
+                            met ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                        }`;
+                        badge.innerHTML = `<span>10^${reqTier}:</span> <span>${countDiscovered.toLocaleString()}/${requiredCount.toLocaleString()}</span>`;
+                        reqDiv.appendChild(badge);
+                    }
+                    div.appendChild(reqDiv);
+                }
+
+                list.appendChild(div);
+            }
+        }
+
+        function renderConsumablesList() {
+            const list = document.getElementById("consumables-list");
+            list.innerHTML = "";
+
+            for (const key in CONSUMABLES_CONFIG) {
+                const config = CONSUMABLES_CONFIG[key];
+                const data = state.consumables[key];
+                const canAfford = checkHasCost(config.cost);
+
+                const div = document.createElement("div");
+                div.className = "p-4 rounded-xl border border-gray-800 bg-gray-900/30 flex flex-col gap-3 hover:border-gray-700 transition-all";
+
+                // Top row details
+                const top = document.createElement("div");
+                top.className = "flex justify-between items-start gap-2";
+
+                const titleWrap = document.createElement("div");
+                const h4 = document.createElement("h4");
+                h4.className = `font-bold text-sm bg-gradient-to-r ${config.color} bg-clip-text text-transparent`;
+                h4.innerText = config.name;
+                
+                const ownedText = document.createElement("span");
+                ownedText.className = "text-[10px] text-gray-400 font-semibold block mt-0.5";
+                ownedText.innerHTML = `Inventory: <b class="text-blue-400 font-mono text-xs">${data.owned}</b> owned <span class="text-gray-600">|</span> Active: <b class="text-green-400 font-mono text-xs">${data.active}/${config.cap}</b> (stacked)`;
+                
+                titleWrap.appendChild(h4);
+                titleWrap.appendChild(ownedText);
+
+                // Action area buttons
+                const buttons = document.createElement("div");
+                buttons.className = "flex gap-1.5";
+
+                // Craft button
+                const craftBtn = document.createElement("button");
+                craftBtn.onclick = () => buyConsumable(key);
+                craftBtn.className = `px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-all ${
+                    canAfford ? 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700' : 'bg-gray-950/40 text-gray-600 border-gray-900 cursor-not-allowed'
+                }`;
+                craftBtn.innerText = "Craft 1x";
+                
+                // Activate/Use button
+                const useBtn = document.createElement("button");
+                useBtn.onclick = () => useConsumable(key);
+                const hasInventory = data.owned > 0;
+                const activeBelowCap = data.active < config.cap;
+                const canUse = hasInventory && activeBelowCap;
+
+                useBtn.className = `px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-all ${
+                    canUse ? 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500' : 'bg-gray-950/40 text-gray-600 border-gray-900 cursor-not-allowed'
+                }`;
+                useBtn.innerText = "Activate";
+
+                buttons.appendChild(craftBtn);
+                buttons.appendChild(useBtn);
+                top.appendChild(titleWrap);
+                top.appendChild(buttons);
+                div.appendChild(top);
+
+                // Description
+                const desc = document.createElement("p");
+                desc.className = "text-xs text-gray-400 leading-relaxed";
+                desc.innerText = config.desc;
+                div.appendChild(desc);
+
+                // Costs Row
+                const costDiv = document.createElement("div");
+                costDiv.className = "pt-2 border-t border-gray-800/80 flex flex-wrap gap-1.5 items-center";
+                
+                const label = document.createElement("span");
+                label.className = "text-[9px] font-bold text-gray-500 uppercase mr-1";
+                label.innerText = "Materials:";
+                costDiv.appendChild(label);
+
+                for (const costKey in config.cost) {
+                    const costAmount = config.cost[costKey];
+                    let currentCount, label;
+                    if (isNaN(costKey)) {
+                        // consumable cost
+                        currentCount = state.consumables[costKey] ? state.consumables[costKey].owned : 0;
+                        const cName = CONSUMABLES_CONFIG[costKey] ? CONSUMABLES_CONFIG[costKey].name : costKey;
+                        label = `${cName}:`;
+                    } else {
+                        currentCount = state.discoveredTiers[costKey] || 0;
+                        label = `10^${costKey}:`;
+                    }
+                    const met = currentCount >= costAmount;
+
+                    const badge = document.createElement("span");
+                    badge.className = `text-[9px] font-bold font-mono px-1.5 py-0.5 rounded flex items-center gap-1 border ${
+                        met ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                    }`;
+                    badge.innerHTML = `<span>${label}</span> <span>${currentCount.toLocaleString()}/${costAmount.toLocaleString()}</span>`;
+                    costDiv.appendChild(badge);
+                }
+                div.appendChild(costDiv);
+
+                list.appendChild(div);
+            }
+        }
+
+        function updateHeaderMetrics() {
+            const item = getActiveItemConfig();
+            
+            document.getElementById("unspent-rolls").innerText = Math.floor(state.unspentRolls).toLocaleString();
+            
+            const speedMod = getSpeedBonus();
+            const sign = speedMod >= 0 ? '+' : '';
+            document.getElementById("roll-rate-display").innerText = `${sign}${getRollRate().toFixed(2)}/s`;
+
+            document.getElementById("current-slot-tag").innerText = item.name;
+            
+            // Adjust grid size metrics considering active grabbers
+            let grabberBonus = state.consumables.grabber.active;
+            const width = item.grid + grabberBonus;
+            document.getElementById("grid-size-stat").innerText = `${width}x${width} (${width * width} cells)`;
+            
+            // Luck parsing format
+            if (item.luckMulti !== undefined) {
+                document.getElementById("luck-bonus-stat").innerText = `x${item.luckMulti}`;
+                document.getElementById("luck-bonus-stat").className = `font-bold text-red-400`;
+            } else {
+                const totalLuck = getLuckBonus();
+                document.getElementById("luck-bonus-stat").innerText = `+${Math.round(totalLuck * 100)}%`;
+                document.getElementById("luck-bonus-stat").className = `font-bold text-green-400`;
+            }
+            
+            const displaySpeedPercent = Math.round(speedMod * 100);
+            document.getElementById("speed-bonus-stat").innerText = `${displaySpeedPercent >= 0 ? '+' : ''}${displaySpeedPercent}%`;
+            document.getElementById("speed-bonus-stat").className = `font-bold ${displaySpeedPercent >= 0 ? 'text-blue-400' : 'text-red-400'}`;
+
+            document.getElementById("footer-active-slot").innerText = item.name.toLowerCase();
+
+            const simButton = document.getElementById("btn-simulate");
+            if (!isSimulating) {
+                const readyCount = Math.floor(state.unspentRolls);
+                document.getElementById("simulate-desc").innerText = `${readyCount.toLocaleString()} roll${readyCount === 1 ? '' : 's'} pending`;
+                if (readyCount > 0 || state.consumables.explosion.active > 0) {
+                    simButton.disabled = false;
+                    simButton.classList.remove("opacity-50");
+                } else {
+                    simButton.disabled = true;
+                    simButton.classList.add("opacity-50");
+                }
+            }
+
+            // Render active buffs section
+            const buffsContainer = document.getElementById("active-buffs-container");
+            const badgesWrap = document.getElementById("buff-badges");
+            badgesWrap.innerHTML = "";
+            let anyBuffs = false;
+
+            for (const key in state.consumables) {
+                const count = state.consumables[key].active;
+                if (count > 0) {
+                    anyBuffs = true;
+                    const config = CONSUMABLES_CONFIG[key];
+                    const badge = document.createElement("span");
+                    badge.className = `px-2 py-0.5 rounded text-[10px] font-bold font-mono border bg-gradient-to-tr ${config.color} text-slate-950 border-white/20`;
+                    badge.innerText = `${config.name.toUpperCase()} x${count}`;
+                    badgesWrap.appendChild(badge);
+                }
+            }
+
+            if (anyBuffs) {
+                buffsContainer.classList.remove("hidden");
+            } else {
+                buffsContainer.classList.add("hidden");
+            }
+        }
+
+
+        // --- TAB NAVIGATION MANAGER ---
+        function switchTab(tabId) {
+            document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+            
+            document.getElementById("tab-inventory-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
+            document.getElementById("tab-slots-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
+            document.getElementById("tab-consumables-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
+            document.getElementById("tab-security-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white relative";
+
+            document.getElementById(`tab-${tabId}`).classList.remove("hidden");
+            const activeBtn = document.getElementById(`tab-${tabId}-btn`);
+            activeBtn.className = "py-2 px-1 text-xs font-bold rounded-lg transition-all bg-gray-800 text-white shadow-sm";
+            if (tabId === 'security') activeBtn.classList.add("relative");
+        }
+
+
+        // --- OFFLINE / AWAY MANAGER ---
+        function handleOfflineAccumulation() {
+            const now = Date.now();
+            const elapsedSeconds = Math.max(0, (now - state.lastTickTime) / 1000);
+            
+            const cappedSeconds = Math.min(604800, elapsedSeconds); 
+
+            if (cappedSeconds > 3) {
+                const rollRate = getRollRate();
+                const gainedRolls = Math.floor(cappedSeconds * rollRate);
+
+                if (state.antiTamperFrozenSecs > 10) {
+                    addLog(`<span class="text-red-400">🛡️ offline gain blocked. clock tamper penalty is in effect.</span>`);
+                    state.lastTickTime = now;
+                    return;
+                }
+
+                if (gainedRolls > 0) {
+                    state.unspentRolls += gainedRolls;
+                    
+                    document.getElementById("away-time").innerText = formatTime(cappedSeconds);
+                    document.getElementById("away-rolls").innerText = `+${gainedRolls.toLocaleString()}`;
+                    document.getElementById("offline-modal").classList.remove("hidden");
+                }
+            }
+            state.lastTickTime = now;
+            saveGame();
+        }
+
+        function closeOfflineModal() {
+            document.getElementById("offline-modal").classList.add("hidden");
+        }
+
+        function formatTime(secs) {
+            if (secs < 60) return Math.round(secs) + "s";
+            const mins = Math.floor(secs / 60);
+            if (mins < 60) return `${mins}m ${Math.round(secs % 60)}s`;
+            const hrs = Math.floor(mins / 60);
+            return `${hrs}h ${mins % 60}m`;
+        }
+
+
+        // --- PRIMARY EVENT LOOPS ---
+
+        function gameTick() {
+            if (state.antiTamperFrozenSecs > 0) {
+                state.antiTamperFrozenSecs--;
+                if (state.antiTamperFrozenSecs <= 0) {
+                    clearTamperVisuals();
+                }
+                state.lastTickTime = Date.now();
+                saveGame();
+                return;
+            }
+
+            const currentRate = getRollRate();
+            state.unspentRolls += currentRate;
+            state.lastTickTime = Date.now();
+
+            const isDay = checkIsDaytime();
+            document.getElementById("time-display").innerText = isDay ? "Daytime" : "Nighttime";
+            document.getElementById("tod-icon").innerText = isDay ? "☀️" : "🌙";
+
+            updateHeaderMetrics();
+            saveGame();
+        }
+
+        function securityCheckLoop() {
+            fetchSecureTime();
+        }
+
+        // gamble speed fluctuating core frame updates
+        // --- AREA SYSTEM ---
+        function switchArea(area) {
+            ['main','rng','annoying'].forEach(a => {
+                const el = document.getElementById(`area-${a}`);
+                const btn = document.getElementById(`area-${a}-btn`);
+                if (a === area) {
+                    el.classList.remove('hidden');
+                    btn.classList.add('bg-blue-600','text-white');
+                    btn.classList.remove('text-gray-400','hover:text-white','hover:bg-gray-800');
+                } else {
+                    el.classList.add('hidden');
+                    btn.classList.remove('bg-blue-600','text-white');
+                    btn.classList.add('text-gray-400','hover:text-white','hover:bg-gray-800');
+                }
+            });
+        }
+
+        // --- ANNOYING TIER SVGs ---
+        // Each annoying tier has a unique SVG design
+        const ANNOYING_SVG = [
+            // 0: Loser Square — plain dull brown square
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" fill="#78716c" opacity="0.7"/></svg>`,
+            // 1: Evil Square — red glowing square with jagged border
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="evg"><stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#7f1d1d"/></radialGradient></defs><rect x="2" y="2" width="16" height="16" fill="url(#evg)" stroke="#fca5a5" stroke-width="0.8"/><rect x="5" y="5" width="10" height="10" fill="none" stroke="#ef4444" stroke-width="0.6" opacity="0.7"/><line x1="2" y1="2" x2="18" y2="18" stroke="#fca5a5" stroke-width="0.5" opacity="0.5"/><line x1="18" y1="2" x2="2" y2="18" stroke="#fca5a5" stroke-width="0.5" opacity="0.5"/></svg>`,
+            // 2: AMAZING EGG — oval egg shape with shine
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="egg" cx="40%" cy="35%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="40%" stop-color="#fde047"/><stop offset="100%" stop-color="#ca8a04"/></radialGradient></defs><ellipse cx="10" cy="11" rx="6.5" ry="8" fill="url(#egg)" stroke="#fbbf24" stroke-width="0.5"/><ellipse cx="8" cy="7.5" rx="2" ry="1.2" fill="white" opacity="0.5" transform="rotate(-20 8 7.5)"/></svg>`,
+            // 3: "totally real 10^21" — fake trophy/crown shape
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="trg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#6b21a8"/></linearGradient></defs><polygon points="10,2 12.5,7 18,7 13.5,11 15,17 10,14 5,17 6.5,11 2,7 7.5,7" fill="url(#trg)" stroke="#e9d5ff" stroke-width="0.5"/><circle cx="10" cy="10" r="2.5" fill="#f3e8ff" opacity="0.6"/><text x="10" y="11.5" text-anchor="middle" font-size="3" fill="#7c3aed" font-weight="900">??</text></svg>`,
+            // 4: ANNOYING STUPID 3D TRIANGLE — actual 3D-ish tetrahedron projection
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="tri1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#1d4ed8"/></linearGradient><linearGradient id="tri2" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#1e40af"/></linearGradient></defs><polygon points="10,1 19,17 1,17" fill="url(#tri1)" stroke="#bfdbfe" stroke-width="0.6"/><polygon points="10,1 19,17 10,12" fill="url(#tri2)" opacity="0.7"/><line x1="10" y1="1" x2="10" y2="17" stroke="#bfdbfe" stroke-width="0.4" opacity="0.5"/><polygon points="10,1 1,17 10,12" fill="#1e3a8a" opacity="0.4"/></svg>`,
+        ];
+
+        function initAnnoyingSVGs() {
+            ANNOYING_SVG.forEach((fn, i) => {
+                const el = document.getElementById(`annoying-svg-${i}`);
+                if (el) el.innerHTML = fn(32);
+            });
+        }
+
+        // --- RNG GRID RENDER ---
+        function renderRNGGrid(value) {
+            const grid = document.getElementById('rng-result-grid');
+            if (!grid) return;
+            const item = getActiveItemConfig();
+            const width = item.grid;
+            const cellCount = width * width;
+            grid.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
+            grid.style.gridTemplateRows = `repeat(${width}, minmax(0, 1fr))`;
+            grid.innerHTML = '';
+
+            // map the RNG value to a pseudo-tier for display (log10)
+            const pseudoTier = Math.min(21, Math.max(0, Math.floor(Math.log10(Math.max(1, value)))));
+            const containerPx = grid.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / width);
+            const baseSvgSize = Math.round(1.05 * (cellPx * 1.5));
+
+            for (let i = 0; i < cellCount; i++) {
+                const cell = document.createElement('div');
+                const tier = i === 0 ? pseudoTier : Math.floor(Math.random() * Math.max(1, pseudoTier));
+                const meta = TIER_META[tier] || TIER_META[0];
+                cell.className = `w-full h-full flex flex-col items-center justify-center border-b border-r border-gray-800/80 select-none overflow-visible relative ${meta.bg}`;
+                cell.style.zIndex = tier;
+                cell.style.position = 'relative';
+                const scaleFactor = tier > 7 ? 2 + (tier - 8) * 0.5 : 1;
+                const svgSize = Math.round(baseSvgSize * scaleFactor);
+                const svgWrap = document.createElement('div');
+                svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:${tier};pointer-events:none;`;
+                svgWrap.innerHTML = getTierSVG(tier, svgSize);
+                const label = document.createElement('span');
+                label.style.cssText = `position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:${Math.round(svgSize*0.22)}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000;z-index:${tier+1};`;
+                label.className = `bg-gradient-to-tr ${meta.color} bg-clip-text text-transparent`;
+                label.innerText = `10^${tier}`;
+                svgWrap.appendChild(label);
+                cell.appendChild(svgWrap);
+                grid.appendChild(cell);
+            }
+        }
+
+        // --- ANNOYING GRID RENDER ---
+        function renderAnnoyingGrid(tierIndex) {
+            const grid = document.getElementById('annoying-result-grid');
+            if (!grid) return;
+            const item = getActiveItemConfig();
+            const width = item.grid;
+            const cellCount = width * width;
+            grid.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
+            grid.style.gridTemplateRows = `repeat(${width}, minmax(0, 1fr))`;
+            grid.innerHTML = '';
+
+            const containerPx = grid.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / width);
+            const svgSize = Math.round(1.05 * (cellPx * 1.5));
+
+            for (let i = 0; i < cellCount; i++) {
+                const cell = document.createElement('div');
+                // featured cell = winning tier, rest = loser squares mostly
+                const isFeature = i === 0;
+                const t = isFeature ? tierIndex : (Math.random() < 0.05 ? tierIndex : 0);
+                cell.className = `w-full h-full flex items-center justify-center border-b border-r border-gray-800/80 overflow-visible relative`;
+                cell.style.cssText += `z-index:${t};position:relative;background:${t===0?'rgba(30,27,24,0.4)':t===1?'rgba(127,29,29,0.15)':t===2?'rgba(120,90,0,0.15)':t===3?'rgba(88,28,135,0.15)':'rgba(30,58,138,0.15)'}`;
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:${t+1};pointer-events:none;`;
+                const scaleFactor = isFeature && tierIndex >= 2 ? 1 + tierIndex * 0.5 : 1;
+                wrap.innerHTML = ANNOYING_SVG[t] ? ANNOYING_SVG[t](Math.round(svgSize * scaleFactor)) : ANNOYING_SVG[0](svgSize);
+                cell.appendChild(wrap);
+                grid.appendChild(cell);
+            }
+        }
+
+        // --- RNG AREA ---
+        function doRNGRoll() {
+            const value = 1 / Math.random();
+            const rounded = Math.round(value * 100) / 100;
+            document.getElementById('rng-result').innerHTML = `<span class="text-3xl font-black font-mono text-white">${rounded.toLocaleString()}</span><br><span class="text-xs text-gray-400 mt-1 block">= 1 / ${(1/value).toFixed(10)}</span>`;
+            document.getElementById('rng-last-value').innerText = rounded.toLocaleString();
+            renderRNGGrid(value);
+            const hist = document.getElementById('rng-history');
+            const row = document.createElement('div');
+            row.className = 'text-gray-300';
+            row.innerText = rounded.toLocaleString();
+            hist.prepend(row);
+            if (hist.children.length > 50) hist.lastChild.remove();
+        }
+
+        // --- ANNOYING AREA ---
+        const ANNOYING_TIERS = [
+            { name: '🔺 ANNOYING STUPID 3D TRIANGLE', chance: 1/100e12, color: 'text-blue-300',   bg: 'bg-blue-500/10 border-blue-500/30' },
+            { name: '🏆 "totally real 10^21"',         chance: 1/21e9,   color: 'text-purple-300', bg: 'bg-purple-500/10 border-purple-500/30' },
+            { name: '🥚 AMAZING EGG',                  chance: 1/200e6,  color: 'text-yellow-300', bg: 'bg-yellow-500/10 border-yellow-500/20' },
+            { name: '🟥 Evil Square',                  chance: 1/5e6,    color: 'text-red-400',    bg: 'bg-red-500/10 border-red-500/20' },
+            { name: '🟫 Loser Square',                 chance: 1,        color: 'text-gray-400',   bg: 'bg-gray-900/60 border-gray-800' },
+        ];
+
+        function doAnnoyingRoll() {
+            const r = Math.random();
+            let result = ANNOYING_TIERS[ANNOYING_TIERS.length - 1];
+            let tierIndex = ANNOYING_TIERS.length - 1;
+            for (let i = 0; i < ANNOYING_TIERS.length; i++) {
+                if (r < ANNOYING_TIERS[i].chance) { result = ANNOYING_TIERS[i]; tierIndex = i; break; }
+            }
+            // map tierIndex (0=rarest) to SVG index (0=loser, 4=triangle)
+            const svgIndex = ANNOYING_TIERS.length - 1 - tierIndex;
+            document.getElementById('annoying-result').innerHTML = `<div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div>`;
+            document.getElementById('annoying-last-value').innerText = result.name;
+            renderAnnoyingGrid(svgIndex);
+            if (svgIndex > 0) flashScreen(svgIndex === 4 ? 21 : svgIndex === 3 ? 18 : svgIndex === 2 ? 12 : 7);
+            const hist = document.getElementById('annoying-history');
+            const row = document.createElement('div');
+            row.className = result.color;
+            row.innerText = result.name;
+            hist.prepend(row);
+            if (hist.children.length > 50) hist.lastChild.remove();
+        }
+
+        function processGambleFluctuations() {
+            // fluctuation bounds matching user definition: min -1.00 (-100%), max 1.75 (+175%)
+            gambleFluctuation = Math.random() * (1.75 - (-1.00)) + (-1.00);
+            
+            // only trigger active refresh on visual headers if slot equipped matches gamble slots
+            if (state.activeSlotId === 'gamble') {
+                updateHeaderMetrics();
+            }
+            requestAnimationFrame(processGambleFluctuations);
+        }
+
+        // DOM Listeners
+        window.onload = function() {
+            // Load previous progression state
+            loadGame();
+
+            // Handle potential older version saves that don't have the new consumables initialized
+            if (!state.consumables) {
+                state.consumables = {
+                    gloves: { owned: 0, active: 0 },
+                    powder: { owned: 0, active: 0 },
+                    grabber: { owned: 0, active: 0 },
+                    explosion: { owned: 0, active: 0 },
+                    grandfather: { owned: 0, active: 0 }
+                };
+            }
+            if (!state.consumables.explosion) state.consumables.explosion = { owned: 0, active: 0 };
+            if (!state.consumables.grandfather) state.consumables.grandfather = { owned: 0, active: 0 };
+            if (!state.consumables.ultimateOne) state.consumables.ultimateOne = { owned: 0, active: 0 };
+            if (!state.consumables.fireBomb) state.consumables.fireBomb = { owned: 0, active: 0 };
+
+            // Render components with recovered data
+            updateVisualGrid([]);
+            renderInventoryList();
+            renderSlotsList();
+            renderConsumablesList();
+            updateHeaderMetrics();
+
+            // Start gamble fluctuation loop
+            requestAnimationFrame(processGambleFluctuations);
+
+            // Mute Switch Trigger
+            const muteBtn = document.getElementById("btn-mute");
+            muteBtn.onclick = function() {
+                state.isMuted = !state.isMuted;
+                document.getElementById("mute-icon").innerText = state.isMuted ? "🔇" : "🔊";
+                this.classList.toggle("bg-red-500/10");
+                this.classList.toggle("text-red-400");
+                this.classList.toggle("border-red-500/20");
+                saveGame();
+            };
+
+            // Main Simulate Button
+            document.getElementById("btn-simulate").onclick = simulateRolls;
+
+            // Trigger Baseline secure clock handshake
+            fetchSecureTime();
+
+            // Start standard game clock intervals
+            setInterval(gameTick, 1000);
+            setInterval(securityCheckLoop, 10000);
+
+            // Handle visibility state shifts (tab swapping / page minimization background gains)
+            document.addEventListener("visibilitychange", function() {
+                if (!document.hidden) {
+                    handleOfflineAccumulation();
+                    fetchSecureTime();
+                } else {
+                    state.lastTickTime = Date.now();
+                    saveGame();
+                }
+            });
+
+            // Run initial offline check for true cold boots (opening tab fresh)
+            handleOfflineAccumulation();
+
+            // Init annoying tier SVG badges
+            initAnnoyingSVGs();
+        }
+
+        // Force final state save before unload
+        window.onbeforeunload = function() {
+            saveGame();
+        };
+    </script>
+</body>
+</html>
