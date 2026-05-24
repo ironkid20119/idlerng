@@ -743,7 +743,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 id: 'ultimateOne',
                 name: "Ultimate ONE",
                 cost: { 9: 10, 10: 1 },
-                desc: "on use, injects a single roll simulation with x200,000,000 luck. one shot, one chance.",
+                desc: "on use, injects a single roll simulation with x12.5 BILLION luck. one shot, one chance.",
                 cap: 5,
                 color: "from-violet-400 via-fuchsia-400 to-pink-400 font-extrabold animate-pulse"
             },
@@ -1537,7 +1537,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             let luck = baseLuck;
             if (explosionActive) luck += 12.5;
             if (fireBombActive) luck += 3;
-            if (ultimateOneActive) luck += 200000000;
+            if (ultimateOneActive) luck += 1.25e10;
 
             const maxVisualGridSize = (getActiveItemConfig().grid + state.consumables.grabber.active) ** 2;
 
