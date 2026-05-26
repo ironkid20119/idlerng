@@ -90,7 +90,7 @@
                 <div>
                     <h1 class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">10^n idleRNG</h1>
                     <p class="text-xs text-gray-400 font-medium flex items-center gap-1">
-                        <span>by Cameron</span>
+                        <span id="by-cameron-btn" onclick="tryUnlockProcrastination()" class="cursor-pointer select-none hover:text-purple-400 transition-colors">by Cameron</span>
                         <span class="w-1 h-1 rounded-full bg-gray-600"></span>
                         <span id="time-display">Daytime</span>
                         <span id="tod-icon">☀️</span>
@@ -126,6 +126,7 @@
             <button onclick="switchArea('main')" id="area-main-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white">⚡ 10^n</button>
             <button onclick="switchArea('rng')" id="area-rng-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">RNG</button>
             <button onclick="switchArea('annoying')" id="area-annoying-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Annoying</button>
+            <button onclick="switchArea('serious')" id="area-serious-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Serious</button>
         </div>
     </nav>
     <div id="area-main">
@@ -227,8 +228,13 @@
                 </div>
 
                 <!-- Scrollable list of 10^n elements -->
-                <div class="space-y-2 max-h-[460px] overflow-y-auto custom-scroll pr-1" id="inventory-list">
+                <div class="space-y-2 max-h-[360px] overflow-y-auto custom-scroll pr-1" id="inventory-list">
                     <!-- Dynamic Tier Items (10^0 to 10^21) -->
+                </div>
+                <!-- Unusual Tiers Section -->
+                <div class="mt-1 pt-3 border-t border-gray-800/60">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Unusual Tiers</div>
+                    <div class="space-y-1.5" id="unusual-tiers-section"></div>
                 </div>
             </div>
 
@@ -340,7 +346,7 @@
                     <h2 class="text-lg font-bold text-gray-200">Pure RNG</h2>
                     <span class="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded-md font-mono">1 / Math.random()</span>
                 </div>
-                <button onclick="doRNGRoll()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all">
+                <button id="rng-roll-btn" onclick="doRNGRoll()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
                     ROLL
                 </button>
                 <div id="rng-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
@@ -380,7 +386,7 @@
                     <h2 class="text-lg font-bold text-gray-200">Annoying</h2>
                     <span class="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded-md font-mono">5 tiers. Good luck.</span>
                 </div>
-                <button onclick="doAnnoyingRoll()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all">
+                <button id="annoying-roll-btn" onclick="doAnnoyingRoll()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
                     ROLL
                 </button>
                 <div id="annoying-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
@@ -401,7 +407,7 @@
             </div>
         </section>
 
-        <!-- Right: Tier list + history -->
+        <!-- Right: Tier list + history + inventory -->
         <section class="lg:col-span-5 flex flex-col gap-4">
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
                 <h3 class="font-bold text-base text-gray-200">Tiers</h3>
@@ -445,7 +451,69 @@
             </div>
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
                 <h3 class="font-bold text-base text-gray-200">History</h3>
-                <div id="annoying-history" class="space-y-1 max-h-64 overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+                <div id="annoying-history" class="space-y-1 max-h-48 overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+            </div>
+            <!-- Shared Inventory (mirrored from main) -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">10^n Inventory</h3>
+                    <span class="text-xs text-gray-400 font-semibold" id="annoying-total-rolls-count">Total: 0</span>
+                </div>
+                <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="annoying-inventory-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- SERIOUS AREA -->
+    <div id="area-serious" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Roll core + grid -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-200">Serious</h2>
+                    <span class="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded-md font-mono">very serious tiers</span>
+                </div>
+                <button id="serious-roll-btn" onclick="doSeriousRoll()" class="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
+                    ROLL
+                </button>
+                <div id="serious-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
+            </div>
+            <!-- Serious Visual Grid -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Last roll visualized</span>
+                </div>
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="serious-result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                    <span>Last result:</span>
+                    <span id="serious-last-value" class="font-bold text-sm text-green-400 font-mono">None</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Tier list + history + inventory -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <h3 class="font-bold text-base text-gray-200">Tiers</h3>
+                <div class="space-y-1.5 max-h-[380px] overflow-y-auto custom-scroll pr-1" id="serious-tier-list">
+                    <!-- filled by JS -->
+                </div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <h3 class="font-bold text-base text-gray-200">History</h3>
+                <div id="serious-history" class="space-y-1 max-h-48 overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+            </div>
+            <!-- Shared Inventory -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">10^n Inventory</h3>
+                    <span class="text-xs text-gray-400 font-semibold" id="serious-total-rolls-count">Total: 0</span>
+                </div>
+                <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="serious-inventory-list"></div>
             </div>
         </section>
     </div>
@@ -521,15 +589,20 @@
         // Initialize user data & metrics
         let state = {
             unspentRolls: 0,
+            pendingRollBuckets: [],
             totalSimulated: 0,
             activeSlotId: 'toy',
-            unlockedSlots: ['toy'], // tracking permanently crafted slots
-            discoveredTiers: {}, // stores count for 0 to 21
+            unlockedSlots: ['toy'],
+            discoveredTiers: {},
             lastTickTime: Date.now(),
             accumulatedSecs: 0,
             isMuted: false,
             timeDriftErrorSecs: 0,
             antiTamperFrozenSecs: 0,
+            unusualTiers: { decay: 0, question: 0, procrastination: 0 }, // counts found
+            procrastinationUnlocked: false, // unlocked by clicking "by Cameron" at x:x4 AM
+            explosionUsedAt: null,  // timestamp (ms) when explosion was last activated
+            fireBombUsedAt: null,   // timestamp (ms) when fireBomb was last activated
             consumables: {
                 gloves: { owned: 0, active: 0 },
                 powder: { owned: 0, active: 0 },
@@ -544,6 +617,23 @@
         // Initialize state arrays
         for (let i = 0; i <= 21; i++) {
             state.discoveredTiers[i] = 0;
+        }
+
+        // Helper: add rolls earned under current slot's luck into the pending buckets.
+        // Buckets are keyed by slotId so rolls with the same slot merge together.
+        function addRollsWithSlotLuck(count, slotId) {
+            if (count <= 0) return;
+            const item = ITEMS[slotId] || ITEMS.toy;
+            const luck = item.luck !== undefined ? item.luck : 0;
+            const luckMulti = item.luckMulti !== undefined ? item.luckMulti : 1.0;
+            if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
+            const existing = state.pendingRollBuckets.find(b => b.slotId === slotId);
+            if (existing) {
+                existing.count += count;
+            } else {
+                state.pendingRollBuckets.push({ slotId, luck, luckMulti, count });
+            }
+            state.unspentRolls += count;
         }
 
         // Tier styling dictionary (name, label, color code, glowing tier rank)
@@ -703,7 +793,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 id: 'gloves',
                 name: "Lightning Gloves",
                 cost: { 4: 15, 3: 75 },
-                desc: "on use, increases roll speed by +50% (stacking positive multiplier) until you next click roll.",
+                desc: "on use, increases roll speed by +35% (stacking positive multiplier) until you next click roll.",
                 cap: 2,
                 color: "from-blue-400 to-cyan-500"
             },
@@ -711,7 +801,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 id: 'powder',
                 name: "Luck Powder",
                 cost: { 4: 20, 0: 10000, 3: 50 },
-                desc: "on use, grants +50% base luck but reduces roll speed by -30% until you next click roll.",
+                desc: "on use, grants +30% base luck but reduces roll speed by -5% until you next click roll.",
                 cap: 2,
                 color: "from-yellow-400 to-amber-500"
             },
@@ -720,14 +810,14 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 name: "Grabber Hand",
                 cost: { 5: 10, 0: 50000, 3: 25 },
                 desc: "on use, expands your active grid size by +1 (e.g. 7x7 becomes 8x8) until you next click roll.",
-                cap: 3,
+                cap: 2,
                 color: "from-purple-400 to-pink-500"
             },
             explosion: {
                 id: 'explosion',
                 name: "Slots EXPLOSION",
-                cost: { 8: 3, 9: 1, 1: 5000000 },
-                desc: "adds 10,000,000 rolls at ONCE with x12.5 luck when roll simulation is pressed.",
+                cost: { 8: 8, 9: 3, 1: 12500000 },
+                desc: "adds 2,500,000 rolls at ONCE with x20 luck when roll simulation is pressed.",
                 cap: 1,
                 color: "from-red-500 via-orange-500 to-yellow-400 font-extrabold tracking-widest animate-pulse"
             },
@@ -736,22 +826,22 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 name: "Grandfather Clock",
                 cost: { 5: 5, 3: 1000, 6: 1 },
                 desc: "multiplies speed by 1.25 and adds 45 minutes worth of roll generation instantly.",
-                cap: 5,
+                cap: 3,
                 color: "from-amber-600 to-orange-800"
             },
             ultimateOne: {
                 id: 'ultimateOne',
                 name: "Ultimate ONE",
                 cost: { 9: 10, 10: 1 },
-                desc: "on use, injects a single roll simulation with x12.5 BILLION luck. one shot, one chance.",
-                cap: 5,
+                desc: "on use, injects a single roll simulation with x2.5 BILLION luck. one shot, one chance.",
+                cap: 3,
                 color: "from-violet-400 via-fuchsia-400 to-pink-400 font-extrabold animate-pulse"
             },
             fireBomb: {
                 id: 'fireBomb',
                 name: "fire BOMB 🔥",
                 cost: { 2: 1000000, 11: 5, explosion: 5 },
-                desc: "on simulate, adds 1,000,000,000 bonus rolls with x3 luck on top of everything else.",
+                desc: "on simulate, adds 250,000,000 bonus rolls with x4 luck on top of everything else.",
                 cap: 1,
                 color: "from-orange-400 via-red-500 to-rose-600 font-extrabold tracking-widest animate-pulse"
             }
@@ -774,8 +864,23 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             try {
                 const parsed = JSON.parse(raw);
                 if (typeof parsed.unspentRolls === 'number') state.unspentRolls = parsed.unspentRolls;
-                if (typeof parsed.totalSimulated === 'number') state.totalSimulated = parsed.totalSimulated;
                 if (typeof parsed.activeSlotId === 'string') state.activeSlotId = parsed.activeSlotId;
+                // restore buckets; old saves without buckets migrate existing unspentRolls as current-slot bucket
+                if (Array.isArray(parsed.pendingRollBuckets)) {
+                    state.pendingRollBuckets = parsed.pendingRollBuckets;
+                } else if (state.unspentRolls > 0) {
+                    const item = ITEMS[state.activeSlotId] || ITEMS.toy;
+                    state.pendingRollBuckets = [{ slotId: state.activeSlotId, luck: item.luck !== undefined ? item.luck : 0, luckMulti: item.luckMulti !== undefined ? item.luckMulti : 1.0, count: state.unspentRolls }];
+                }
+                if (parsed.unusualTiers) {
+                    state.unusualTiers.decay = parsed.unusualTiers.decay || 0;
+                    state.unusualTiers.question = parsed.unusualTiers.question || 0;
+                    state.unusualTiers.procrastination = parsed.unusualTiers.procrastination || 0;
+                }
+                if (parsed.procrastinationUnlocked) state.procrastinationUnlocked = true;
+                if (parsed.explosionUsedAt) state.explosionUsedAt = parsed.explosionUsedAt;
+                if (parsed.fireBombUsedAt) state.fireBombUsedAt = parsed.fireBombUsedAt;
+                if (typeof parsed.totalSimulated === 'number') state.totalSimulated = parsed.totalSimulated;
                 
                 // backwards compatibility for unlocked slots list
                 if (Array.isArray(parsed.unlockedSlots)) {
@@ -946,10 +1051,10 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
 
         function getLuckBonus() {
             const item = getActiveItemConfig();
-            let baseLuck = item.luck || 0;
+            let baseLuck = item.luck !== undefined ? item.luck : 0;
             
-            // stack active luck powders (+50% each)
-            let powderLuckBoost = (state.consumables.powder.active) * 0.50;
+            // stack active luck powders (+30% each)
+            let powderLuckBoost = (state.consumables.powder.active) * 0.30;
             return baseLuck + powderLuckBoost;
         }
 
@@ -968,11 +1073,11 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 const isDay = checkIsDaytime();
                 baseSpeed = isDay ? 0.75 : -0.20;
             } else {
-                baseSpeed = item.speed || 0.0;
+                baseSpeed = item.speed !== undefined ? item.speed : 0.0;
             }
             
-            // apply active luck powder speed penalty (-30% each)
-            let powderSpeedPenalty = (state.consumables.powder.active) * -0.30;
+            // apply active luck powder speed penalty (-5% each)
+            let powderSpeedPenalty = (state.consumables.powder.active) * -0.05;
             return baseSpeed + powderSpeedPenalty;
         }
 
@@ -987,8 +1092,8 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             
             let calculatedRate = (1.0 + speedMod) * gridAmount;
             
-            // apply active lightning gloves speed boost (+50% positive multi stacking each)
-            let glovesBoostMultiplier = 1.0 + (0.50 * state.consumables.gloves.active);
+            // apply active lightning gloves speed boost (+35% positive multi stacking each)
+            let glovesBoostMultiplier = 1.0 + (0.35 * state.consumables.gloves.active);
             
             // apply active grandfather clock speed boost (1.25x speed stacking positive multiplier)
             let grandfatherBoostMultiplier = Math.pow(1.25, state.consumables.grandfather.active);
@@ -1339,33 +1444,41 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             for (let tier = 21; tier >= 0; tier--) {
                 if (counts[tier] && counts[tier] > 0) available.push(tier);
             }
-            if (available.length === 0) return [];
+            // non-numeric keys ('decay' etc.) are injected directly in updateVisualGrid
+            if (available.length === 0) return new Array(cellCount).fill(null);
 
             const result = new Array(cellCount).fill(null);
             const used = new Set();
 
             const place = (tier) => {
+                if (tier === undefined || tier === null) return;
                 let pos;
                 let attempts = 0;
-                do { pos = Math.floor(Math.random() * cellCount); attempts++; } 
-                while (used.has(pos) && attempts < 100);
+                do { pos = Math.floor(Math.random() * cellCount); attempts++; }
+                while (used.has(pos) && attempts < 200);
                 used.add(pos);
                 result[pos] = tier;
             };
 
-            // 1 guaranteed best
+            // always place best tier
             place(available[0]);
 
-            // 2 guaranteed second/third best (random between the two)
-            const pool23 = available.slice(1, 3);
-            place(pool23[Math.floor(Math.random() * pool23.length)]);
-            place(pool23[Math.floor(Math.random() * pool23.length)]);
+            // place 2nd/3rd best — guard against empty available slots
+            if (available.length > 1) {
+                const pool23 = available.slice(1, 3);
+                place(pool23[Math.floor(Math.random() * pool23.length)]);
+                place(pool23[Math.floor(Math.random() * pool23.length)]);
+            } else {
+                // only one tier available — fill two more of the same
+                place(available[0]);
+                place(available[0]);
+            }
 
-            // fill rest: 90% tier 0, 5% tier 1, 5% random from remaining
+            // fill rest: 90% lowest, 5% second-lowest, 5% random
             const lowest = available[available.length - 1];
             const secondLowest = available.length > 1 ? available[available.length - 2] : lowest;
             for (let i = 0; i < cellCount; i++) {
-                if (result[i] !== null) continue;
+                if (result[i] !== null && result[i] !== undefined) continue;
                 const r = Math.random();
                 if (r < 0.90) result[i] = lowest;
                 else if (r < 0.95) result[i] = secondLowest;
@@ -1403,6 +1516,20 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             for (let i = 0; i < cellCount; i++) {
                 const cell = document.createElement("div");
                 const tier = displayTiers[i];
+
+                // special: unusual decay tier cell
+                if (tier === 'decay') {
+                    cell.className = `w-full h-full flex flex-col items-center justify-center border-b border-r border-green-500/40 select-none cursor-help grid-cell-animate overflow-visible relative bg-green-900/20 tier-glow-medium`;
+                    cell.style.zIndex = 25;
+                    cell.style.position = 'relative';
+                    const svgWrap = document.createElement("div");
+                    svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:25;pointer-events:none;`;
+                    svgWrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(baseSvgSize*2.5)}" height="${Math.round(baseSvgSize*2.5)}" viewBox="0 0 24 24"><defs><radialGradient id="dkg" cx="50%" cy="50%"><stop offset="0%" stop-color="#86efac" stop-opacity="0.9"/><stop offset="100%" stop-color="#14532d" stop-opacity="0.3"/></radialGradient></defs><polygon points="12,1 14,8 21,8 15,13 17,20 12,16 7,20 9,13 3,8 10,8" fill="url(#dkg)" stroke="#4ade80" stroke-width="0.5"/><text x="12" y="28" text-anchor="middle" font-size="3" fill="#86efac" font-family="monospace">DECAY</text></svg>`;
+                    cell.appendChild(svgWrap);
+                    cell.title = 'THE DECAY — unusual tier';
+                    gridContainer.appendChild(cell);
+                    continue;
+                }
 
                 if (tier !== null && tier !== undefined) {
                     const meta = TIER_META[tier];
@@ -1444,75 +1571,161 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
         }
 
 
-        // --- WEB WORKERS: statistical approximation + parallel execution ---
-        // Instead of rolling one at a time, we use Poisson sampling to instantly
-        // derive how many hits each tier gets from N rolls, then verify rare tiers
-        // with a small exact RNG pass. 4 workers split the load in parallel.
+        // --- SIMULATION ENGINE: synchronous O(21) Poisson, no workers needed ---
+        // Each simulation is just 21 poissonSample() calls — instantaneous on main thread.
 
-        const WORKER_CODE = `
-            // Poisson sampler (Knuth method for small lambda, normal approx for large)
-            function poissonSample(lambda) {
-                if (lambda <= 0) return 0;
-                if (lambda > 800) {
-                    // normal approximation: mean=lambda, std=sqrt(lambda)
-                    let u = 0, v = 0;
-                    while (u === 0) u = Math.random();
-                    while (v === 0) v = Math.random();
-                    const n = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-                    return Math.max(0, Math.round(lambda + n * Math.sqrt(lambda)));
-                }
-                // Knuth exact method
-                const L = Math.exp(-lambda);
-                let k = 0, p = 1.0;
-                do { k++; p *= Math.random(); } while (p > L);
-                return k - 1;
-            }
-
-            self.onmessage = function(e) {
-                const { rollCount, luck, luckMulti } = e.data;
-                const counts = {};
-
-                // For each tier high→low, statistically determine how many rolls hit it.
-                // A roll hits tier T if it DIDN'T hit any higher tier first, so we track
-                // remaining rolls as we descend.
-                let remaining = rollCount;
-
-                for (let tier = 21; tier >= 1; tier--) {
-                    if (remaining <= 0) break;
-                    const p = ((1.0 + luck) * luckMulti) / Math.pow(10, tier);
-                    if (p <= 0) continue;
-
-                    // expected hits at this tier from remaining rolls
-                    const lambda = remaining * Math.min(p, 1.0);
-                    const hits = poissonSample(lambda);
-
-                    if (hits > 0) {
-                        counts[tier] = hits;
-                        remaining -= hits; // those rolls are "used up"
-                    }
-                }
-
-                // everything left is tier 0
-                if (remaining > 0) counts[0] = remaining;
-
-                self.postMessage({ type: 'done', counts });
-            };
-        `;
-
-        // pre-build 4 workers from the same blob
-        const NUM_WORKERS = 4;
-        let workerPool = null;
         let isSimulating = false;
 
-        function getWorkerPool() {
-            if (workerPool) return workerPool;
-            const blob = new Blob([WORKER_CODE], { type: 'application/javascript' });
-            const url = URL.createObjectURL(blob);
-            workerPool = Array.from({ length: NUM_WORKERS }, () => new Worker(url));
-            return workerPool;
+        function poissonSample(lambda) {
+            if (!(lambda > 0)) return 0;
+            if (lambda > 30) {
+                let u, v;
+                do { u = Math.random(); } while (u === 0);
+                do { v = Math.random(); } while (v === 0);
+                const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+                return Math.max(0, Math.round(lambda + z * Math.sqrt(lambda)));
+            }
+            const L = Math.exp(-lambda);
+            let k = 0, p = 1.0;
+            do { k++; p *= Math.random(); } while (p > L);
+            return k - 1;
+        }
+
+        function simulateJob(rollCount, luck, luckMulti) {
+            const counts = {};
+            let remaining = Math.floor(rollCount);
+            for (let tier = 21; tier >= 1; tier--) {
+                if (remaining <= 0) break;
+                const p = ((1.0 + luck) * luckMulti) / Math.pow(10, tier);
+                if (!(p > 0)) continue;
+                const lambda = remaining * Math.min(p, 1.0);
+                let hits = poissonSample(lambda);
+                hits = Math.min(hits, remaining);
+                if (hits > 0) { counts[tier] = (counts[tier] || 0) + hits; remaining -= hits; }
+            }
+            if (remaining > 0) counts[0] = (counts[0] || 0) + remaining;
+            return counts;
+        }
+
+        function runSimulation(jobs, onDone) {
+            if (isSimulating) return false;
+            const validJobs = jobs.filter(j => j.rollCount > 0);
+            if (validJobs.length === 0) return false;
+
+            const totalRollCount = validJobs.reduce((s, j) => s + j.rollCount, 0);
+            const merged = {};
+
+            isSimulating = true;
+
+            // Use setTimeout(0) to yield to the browser for one frame (so UI updates like
+            // "simulating…" text render), then do all the math synchronously.
+            setTimeout(() => {
+                try {
+                    for (const job of validJobs) {
+                        const counts = simulateJob(job.rollCount, job.luck, job.luckMulti);
+                        for (const t in counts) merged[t] = (merged[t] || 0) + counts[t];
+                    }
+                } catch(e) {
+                    console.error('Simulation error:', e);
+                }
+                isSimulating = false;
+                let highest = 0;
+                const keys = Object.keys(merged).map(Number);
+                if (keys.length) highest = Math.max(...keys);
+                onDone(merged, totalRollCount, highest);
+            }, 0);
+
+            return true;
+        }
+        // These are secret tiers with weird requirements. They show as "???" everywhere
+        // until you actually roll one. No hints about how to get them in the UI.
+
+        const UNUSUAL_TIERS = {
+            decay: {
+                id: 'decay',
+                name: 'THE DECAY',
+                displayName: () => state.unusualTiers.decay > 0 ? 'THE DECAY' : '???',
+                color: 'text-green-300',
+                bg: 'bg-green-900/30 border-green-500/30',
+                // 1/23431, unaffected by luck, replaces rarest tier in display
+                // only gets checked 1000 times per simulation
+                // requires totalSimulated to include 23431 somewhere in its digits
+                check: (totalRollCount) => {
+                    // requires your all-time simulated rolls to be >= what 6h 30m 31s of
+                    // roll generation would produce (23431 seconds × base toy rate = 23431 rolls minimum)
+                    if (state.totalSimulated < 23431) return 0;
+                    const checks = Math.min(1000, Math.floor(totalRollCount / 1000));
+                    if (checks <= 0) return 0;
+                    let hits = 0;
+                    for (let i = 0; i < checks; i++) {
+                        if (Math.random() < 1/23431) hits++;
+                    }
+                    return hits;
+                }
+            },
+            question: {
+                id: 'question',
+                name: '???',
+                displayName: () => state.unusualTiers.question > 0 ? '???' : '???',
+                color: 'text-gray-400',
+                bg: 'bg-gray-900/30 border-gray-500/20',
+                // 1/7500, but only if afk time was >5h, checked only once per sim
+                check: (totalRollCount, afkSeconds) => {
+                    if (afkSeconds < 18000) return 0; // must be >5h afk
+                    return Math.random() < 1/7500 ? 1 : 0;
+                }
+            },
+            procrastination: {
+                id: 'procrastination',
+                name: 'procastinatiob master !!!',
+                displayName: () => state.unusualTiers.procrastination > 0 ? 'procastinatiob master !!!' : '???',
+                color: 'text-yellow-300',
+                bg: 'bg-yellow-900/30 border-yellow-500/30',
+                // 1/1.5b, unaffected by luck, only rollable for ONE simulation after
+                // clicking "by cameron" at x:x4 AM (minutes ending in 4)
+                check: (totalRollCount) => {
+                    if (!state.procrastinationUnlocked) return 0;
+                    state.procrastinationUnlocked = false; // consume the unlock
+                    return Math.random() < 1/1500000000 ? 1 : 0;
+                }
+            }
+        };
+
+        function tryUnlockProcrastination() {
+            const now = new Date();
+            const hrs = now.getHours();
+            const mins = now.getMinutes();
+            // must be AM (0-11) and minutes must end in 4
+            if (hrs >= 0 && hrs < 12 && mins % 10 === 4) {
+                state.procrastinationUnlocked = true;
+                const el = document.getElementById('by-cameron-btn');
+                if (el) {
+                    el.classList.add('text-yellow-300');
+                    el.title = '✨ something unlocked...';
+                    setTimeout(() => { el.classList.remove('text-yellow-300'); el.title = ''; }, 3000);
+                }
+            }
+        }
+
+        // Run unusual tier checks after a simulation completes
+        // Returns array of {tier, hits} for any that fired
+        function checkUnusualTiers(totalRollCount, afkSeconds) {
+            if (!state.unusualTiers) state.unusualTiers = { decay: 0, question: 0, procrastination: 0 };
+            const results = [];
+            for (const key in UNUSUAL_TIERS) {
+                const ut = UNUSUAL_TIERS[key];
+                let hits = 0;
+                try { hits = ut.check(totalRollCount, afkSeconds); } catch(e) {}
+                if (hits > 0) {
+                    state.unusualTiers[key] = (state.unusualTiers[key] || 0) + hits;
+                    results.push({ tier: ut, hits });
+                }
+            }
+            return results;
         }
 
         // --- PRIMARY ACTIONS ---
+
         function simulateRolls() {
             if (isSimulating) return;
 
@@ -1520,112 +1733,108 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             const ultimateOneActive = state.consumables.ultimateOne.active > 0;
             const fireBombActive = state.consumables.fireBomb.active > 0;
 
-            const baseRollCount = Math.floor(state.unspentRolls);
+            const now = Date.now();
+            const DAY_MS = 86400000;
+            const explosionReady = explosionActive && state.explosionUsedAt && (now - state.explosionUsedAt) >= DAY_MS;
+            const fireBombReady  = fireBombActive  && state.fireBombUsedAt  && (now - state.fireBombUsedAt)  >= DAY_MS * 2.5;
 
-            // build total roll count from all active bonuses
-            let rollCount = baseRollCount;
-            if (explosionActive) rollCount += 10000000;
-            if (fireBombActive) rollCount += 1000000000;
-            if (ultimateOneActive) rollCount += 1; // the ONE
+            // warn if active but not yet ready
+            if (explosionActive && !explosionReady) {
+                const hoursLeft = Math.max(0, (DAY_MS - (now - (state.explosionUsedAt||now))) / 3600000);
+                addLog(`<span class="text-yellow-400">⏳ Slots EXPLOSION not ready — ${hoursLeft.toFixed(1)}h remaining</span>`);
+            }
+            if (fireBombActive && !fireBombReady) {
+                const hoursLeft = Math.max(0, (DAY_MS * 2.5 - (now - (state.fireBombUsedAt||now))) / 3600000);
+                addLog(`<span class="text-yellow-400">⏳ Fire BOOM not ready — ${hoursLeft.toFixed(1)}h remaining</span>`);
+            }
 
-            if (rollCount <= 0) return;
+            const activeLuck = getLuckBonus();
+            const activeLuckMulti = getLuckMulti();
 
-            const baseLuck = getLuckBonus();
-            const luckMulti = getLuckMulti();
+            if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
+            const jobs = [];
+            const powderLuck = (state.consumables.powder.active) * 0.30;
+            for (const bucket of state.pendingRollBuckets) {
+                if (bucket.count > 0)
+                    jobs.push({ rollCount: Math.floor(bucket.count), luck: bucket.luck + powderLuck, luckMulti: bucket.luckMulti });
+            }
+            if (explosionReady)     jobs.push({ rollCount: 2500000,   luck: activeLuck + 20,    luckMulti: activeLuckMulti });
+            if (fireBombReady)      jobs.push({ rollCount: 250000000,  luck: activeLuck + 4,     luckMulti: activeLuckMulti });
+            if (ultimateOneActive)  jobs.push({ rollCount: 1,          luck: activeLuck + 2.5e9, luckMulti: activeLuckMulti });
 
-            // luck bonuses ADD together, not multiply
-            let luck = baseLuck;
-            if (explosionActive) luck += 12.5;
-            if (fireBombActive) luck += 3;
-            if (ultimateOneActive) luck += 1.25e10;
+            if (jobs.reduce((s, j) => s + j.rollCount, 0) <= 0) return;
 
             const maxVisualGridSize = (getActiveItemConfig().grid + state.consumables.grabber.active) ** 2;
 
             state.unspentRolls = 0;
+            state.pendingRollBuckets = [];
             state.consumables.gloves.active = 0;
             state.consumables.powder.active = 0;
             state.consumables.grabber.active = 0;
-            state.consumables.explosion.active = 0;
+            if (explosionReady)    { state.consumables.explosion.active = 0; state.explosionUsedAt = null; }
+            if (fireBombReady)     { state.consumables.fireBomb.active  = 0; state.fireBombUsedAt  = null; }
             state.consumables.grandfather.active = 0;
             state.consumables.ultimateOne.active = 0;
-            state.consumables.fireBomb.active = 0;
-
-            isSimulating = true;
 
             const simBtn = document.getElementById("btn-simulate");
             simBtn.disabled = true;
-            document.getElementById("simulate-desc").innerText = `simulating ${rollCount.toLocaleString()} rolls…`;
+            const totalDisplay = jobs.reduce((s, j) => s + j.rollCount, 0);
+            document.getElementById("simulate-desc").innerText = `simulating ${totalDisplay.toLocaleString()} rolls…`;
 
-            // split rollCount across NUM_WORKERS as evenly as possible
-            const workers = getWorkerPool();
-            const sliceSize = Math.floor(rollCount / NUM_WORKERS);
-            const slices = Array.from({ length: NUM_WORKERS }, (_, i) =>
-                i === NUM_WORKERS - 1 ? rollCount - sliceSize * i : sliceSize
-            );
+            // capture AFK seconds at time of simulate press
+            const afkSeconds = Math.max(0, (Date.now() - state.lastTickTime) / 1000);
 
-            let finishedWorkers = 0;
-            const merged = {};
+            runSimulation(jobs, (merged, totalRollCount, highestInBatch) => {
+                for (const tier in merged)
+                    state.discoveredTiers[tier] = (state.discoveredTiers[tier] || 0) + merged[tier];
+                state.totalSimulated += totalRollCount;
 
-            workers.forEach((worker, idx) => {
-                worker.onmessage = function(e) {
-                    if (e.data.type !== 'done') return;
+                // --- unusual tier checks ---
+                const unusualHits = checkUnusualTiers(totalRollCount, afkSeconds);
 
-                    const c = e.data.counts;
-                    for (const tier in c) {
-                        merged[tier] = (merged[tier] || 0) + c[tier];
+                // find rarest tier index in merged for DECAY replacement
+                let rarestTierInBatch = 0;
+                for (let t = 21; t >= 0; t--) { if (merged[t] > 0) { rarestTierInBatch = t; break; } }
+
+                playChimeForTier(highestInBatch);
+                flashScreen(highestInBatch);
+
+                let topRolls = [];
+                for (let tier = 21; tier >= 0; tier--) {
+                    if (merged[tier]) {
+                        const add = Math.min(merged[tier], maxVisualGridSize - topRolls.length);
+                        for (let k = 0; k < add; k++) topRolls.push(tier);
+                        if (topRolls.length >= maxVisualGridSize) break;
                     }
+                }
+                // DECAY always replaces rarest tier in grid display
+                const decayHit = unusualHits.find(u => u.tier.id === 'decay');
+                if (decayHit) {
+                    const idx = topRolls.lastIndexOf(rarestTierInBatch);
+                    if (idx !== -1) topRolls[idx] = 'decay';
+                    else topRolls[topRolls.length - 1] = 'decay';
+                }
 
-                    finishedWorkers++;
-                    if (finishedWorkers < NUM_WORKERS) return;
+                updateVisualGrid(topRolls);
+                renderInventoryList();
+                renderSlotsList();
+                renderConsumablesList();
+                updateHeaderMetrics();
+                simBtn.disabled = false;
 
-                    // all 4 workers finished — apply merged results
-                    for (const tier in merged) {
-                        state.discoveredTiers[tier] = (state.discoveredTiers[tier] || 0) + merged[tier];
-                    }
-                    state.totalSimulated += rollCount;
+                const highestMeta = TIER_META[highestInBatch];
+                const displaySpan = document.getElementById("highest-batch-roll");
+                displaySpan.innerText = `10^${highestInBatch} (${highestMeta.name})`;
+                displaySpan.className = `font-bold text-sm bg-gradient-to-tr ${highestMeta.color} bg-clip-text text-transparent font-mono`;
+                addLog(`Simulated <span class="text-white font-bold">${totalRollCount.toLocaleString()}</span> rolls. Best: <span class="font-bold font-mono">10^${highestInBatch}</span>`);
 
-                    let highestInBatch = 0;
-                    const batchKeys = Object.keys(merged).map(Number);
-                    if (batchKeys.length > 0) {
-                        highestInBatch = Math.max(...batchKeys);
-                        playChimeForTier(highestInBatch);
-                        flashScreen(highestInBatch);
-                    }
+                // log unusual tier hits
+                for (const u of unusualHits) {
+                    addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${u.tier.displayName()} ×${u.hits}</span>`);
+                    flashScreen(21);
+                }
 
-                    let topRolls = [];
-                    for (let tier = 21; tier >= 0; tier--) {
-                        if (merged[tier]) {
-                            const amountToAdd = Math.min(merged[tier], maxVisualGridSize - topRolls.length);
-                            for (let k = 0; k < amountToAdd; k++) topRolls.push(tier);
-                            if (topRolls.length >= maxVisualGridSize) break;
-                        }
-                    }
-
-                    updateVisualGrid(topRolls);
-                    renderInventoryList();
-                    renderSlotsList();
-                    renderConsumablesList();
-                    updateHeaderMetrics();
-
-                    if (rollCount > 0) {
-                        const highestMeta = TIER_META[highestInBatch];
-                        const displaySpan = document.getElementById("highest-batch-roll");
-                        displaySpan.innerText = `10^${highestInBatch} (${highestMeta.name})`;
-                        displaySpan.className = `font-bold text-sm bg-gradient-to-tr ${highestMeta.color} bg-clip-text text-transparent font-mono`;
-                        addLog(`Simulated <span class="text-white font-bold">${rollCount.toLocaleString()}</span> rolls. Best: <span class="font-bold font-mono">10^${highestInBatch}</span>`);
-                    }
-
-                    saveGame();
-                    isSimulating = false;
-                };
-
-                worker.onerror = function(err) {
-                    console.error("Worker error:", err);
-                    isSimulating = false;
-                    updateHeaderMetrics();
-                };
-
-                worker.postMessage({ rollCount: slices[idx], luck, luckMulti });
+                saveGame();
             });
         }
 
@@ -1731,13 +1940,17 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
 
             state.consumables[id].owned--;
             state.consumables[id].active++;
+
+            // record activation time for time-gated consumables
+            if (id === 'explosion') state.explosionUsedAt = Date.now();
+            if (id === 'fireBomb')  state.fireBombUsedAt  = Date.now();
             
             // special immediate grandfather clock logic (adds 2 hours of roll generation instantly)
             if (id === 'grandfather') {
                 const generatedSecs = 7200; // 2 hours
                 const rate = getRollRate();
                 const bonusRolls = generatedSecs * rate;
-                state.unspentRolls += bonusRolls;
+                addRollsWithSlotLuck(bonusRolls, state.activeSlotId);
                 addLog(`✨ activated <span class="text-green-400 font-bold">${config.name}</span>. speed increased by 1.5x and warp time granted <span class="text-blue-300 font-mono">+${bonusRolls.toLocaleString()} rolls</span>!`);
             } else {
                 addLog(`✨ activated <span class="text-green-400 font-bold">${config.name}</span>. buff active until next roll simulation.`);
@@ -1799,6 +2012,43 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             }
             
             document.getElementById("total-rolls-count").innerText = `Total Simulated: ${state.totalSimulated.toLocaleString()}`;
+
+            // --- unusual tiers section ---
+            const unusualSection = document.getElementById("unusual-tiers-section");
+            if (unusualSection) {
+                const ut = state.unusualTiers || {};
+                unusualSection.innerHTML = '';
+                for (const key in UNUSUAL_TIERS) {
+                    const def = UNUSUAL_TIERS[key];
+                    const count = ut[key] || 0;
+                    const row = document.createElement('div');
+                    const found = count > 0;
+                    row.className = `flex justify-between items-center p-2.5 rounded-xl border ${found ? def.bg : 'border-gray-800/50 bg-gray-950/20 opacity-40'} transition-all`;
+                    row.innerHTML = `<div class="flex flex-col gap-0.5"><span class="font-bold text-xs ${found ? def.color : 'text-gray-500'}">${found ? def.displayName() : '???'}</span><span class="text-[10px] text-gray-600 font-mono">unusual tier</span></div><span class="font-extrabold font-mono text-sm ${found ? def.color : 'text-gray-600'}">${count.toLocaleString()}</span>`;
+                    unusualSection.appendChild(row);
+                }
+            }
+
+            // Mirror inventory into annoying + serious panels (compact rows)
+            ['annoying', 'serious'].forEach(area => {
+                const mirrorList = document.getElementById(`${area}-inventory-list`);
+                const mirrorTotal = document.getElementById(`${area}-total-rolls-count`);
+                if (!mirrorList) return;
+                mirrorList.innerHTML = '';
+                for (let i = 21; i >= 0; i--) {
+                    const count = state.discoveredTiers[i] || 0;
+                    if (count === 0) continue;
+                    const meta = TIER_META[i];
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between items-center px-2 py-1 rounded-lg bg-gray-900/40 border border-gray-800/60';
+                    row.innerHTML = `<span class="text-[10px] font-bold bg-gradient-to-r ${meta.color} bg-clip-text text-transparent">10^${i} ${meta.name}</span><span class="font-mono text-[10px] text-blue-400 font-bold">${count.toLocaleString()}</span>`;
+                    mirrorList.appendChild(row);
+                }
+                if (mirrorList.children.length === 0) {
+                    mirrorList.innerHTML = '<div class="text-[10px] text-gray-600 italic text-center py-2">No tiers discovered yet</div>';
+                }
+                if (mirrorTotal) mirrorTotal.innerText = `Total: ${state.totalSimulated.toLocaleString()}`;
+            });
         }
 
         function renderSlotsList() {
@@ -1936,6 +2186,23 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 const ownedText = document.createElement("span");
                 ownedText.className = "text-[10px] text-gray-400 font-semibold block mt-0.5";
                 ownedText.innerHTML = `Inventory: <b class="text-blue-400 font-mono text-xs">${data.owned}</b> owned <span class="text-gray-600">|</span> Active: <b class="text-green-400 font-mono text-xs">${data.active}/${config.cap}</b> (stacked)`;
+
+                // time-gated status for explosion and fireBomb
+                if ((key === 'explosion' || key === 'fireBomb') && data.active > 0) {
+                    const usedAt = key === 'explosion' ? state.explosionUsedAt : state.fireBombUsedAt;
+                    const requiredMs = key === 'explosion' ? 86400000 : 86400000 * 2.5;
+                    const elapsed = usedAt ? Date.now() - usedAt : 0;
+                    const remaining = Math.max(0, requiredMs - elapsed);
+                    const hrs = Math.floor(remaining / 3600000);
+                    const mins = Math.floor((remaining % 3600000) / 60000);
+                    const readyText = remaining <= 0
+                        ? `<span class="text-green-400 font-bold">✅ READY to fire!</span>`
+                        : `<span class="text-yellow-400">⏳ ready in ${hrs}h ${mins}m</span>`;
+                    const timerLine = document.createElement('div');
+                    timerLine.className = 'text-[10px] mt-0.5';
+                    timerLine.innerHTML = readyText;
+                    ownedText.appendChild(timerLine);
+                }
                 
                 titleWrap.appendChild(h4);
                 titleWrap.appendChild(ownedText);
@@ -2117,7 +2384,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 }
 
                 if (gainedRolls > 0) {
-                    state.unspentRolls += gainedRolls;
+                    addRollsWithSlotLuck(gainedRolls, state.activeSlotId);
                     
                     document.getElementById("away-time").innerText = formatTime(cappedSeconds);
                     document.getElementById("away-rolls").innerText = `+${gainedRolls.toLocaleString()}`;
@@ -2155,7 +2422,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             }
 
             const currentRate = getRollRate();
-            state.unspentRolls += currentRate;
+            addRollsWithSlotLuck(currentRate, state.activeSlotId);
             state.lastTickTime = Date.now();
 
             const isDay = checkIsDaytime();
@@ -2229,7 +2496,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             }
         }
         function switchArea(area) {
-            ['main','rng','annoying'].forEach(a => {
+            ['main','rng','annoying','serious'].forEach(a => {
                 const el = document.getElementById(`area-${a}`);
                 const btn = document.getElementById(`area-${a}-btn`);
                 if (a === area) {
@@ -2264,6 +2531,168 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 const el = document.getElementById(`annoying-svg-${i}`);
                 if (el) el.innerHTML = fn(32);
             });
+        }
+
+        // --- SERIOUS AREA ---
+        // Tiers sorted rarest → most common.
+        // "replaces" means: if you roll the base tier, display this one instead (upgrade).
+        // The roll system checks rarest first; if a tier has a "replacedBy" chain, the rarest
+        // in the chain wins. We flatten this into a single check list at runtime.
+        const SERIOUS_TIERS_RAW = [
+            // id, name, chance (1/x), color class, bg class, svgIndex
+            { id:'bilcircle',   name:'1 BILION CIRCLES AHHHH', chance:1/200e6,      color:'text-cyan-200',   bg:'bg-cyan-500/10 border-cyan-400/30',    svgIdx:17, replaces:'circle' },
+            { id:'h',           name:'h',                       chance:1/100e6,      color:'text-gray-200',   bg:'bg-gray-500/10 border-gray-400/30',    svgIdx:16 },
+            { id:'lazy',        name:'i got lazy so now we doing giant steps', chance:1/10e6, color:'text-lime-300', bg:'bg-lime-500/10 border-lime-400/30', svgIdx:15 },
+            { id:'air',         name:'air',                     chance:1/13884000,   color:'text-sky-200',    bg:'bg-sky-500/10 border-sky-400/20',      svgIdx:14, replaces:'clock' },
+            { id:'big',         name:'big',                     chance:1/50e3,       color:'text-orange-300', bg:'bg-orange-500/10 border-orange-400/30',svgIdx:13 },
+            { id:'pizzaOverlord',name:'PIZZA OVERLORD',         chance:1/1250,       color:'text-red-300',    bg:'bg-red-500/10 border-red-400/30',      svgIdx:12, replaces:'pizza' },
+            { id:'pillow',      name:'pillow',                  chance:1/10e3,       color:'text-pink-200',   bg:'bg-pink-500/10 border-pink-400/20',    svgIdx:11 },
+            { id:'sgc',         name:'SUPER GAMBLE CRYSTAL',    chance:1/7777,       color:'text-violet-200', bg:'bg-violet-500/10 border-violet-400/30',svgIdx:10, replaces:'door' },
+            { id:'door',        name:'DOOR',                    chance:1/27568.25,   color:'text-amber-300',  bg:'bg-amber-500/10 border-amber-400/30',  svgIdx:9,  replaces:'doorknob' },
+            { id:'doorknob',    name:'DOORKNOB',                chance:1/1000,       color:'text-yellow-300', bg:'bg-yellow-500/10 border-yellow-400/30',svgIdx:8 },
+            { id:'frank',       name:'FRANK',                   chance:1/20,         color:'text-emerald-300',bg:'bg-emerald-500/10 border-emerald-400/30',svgIdx:7, replaces:'dave' },
+            { id:'dave',        name:'dave',                    chance:1/250,        color:'text-teal-300',   bg:'bg-teal-500/10 border-teal-400/20',    svgIdx:6 },
+            { id:'soda',        name:'soda',                    chance:1/100,        color:'text-blue-300',   bg:'bg-blue-500/10 border-blue-400/20',    svgIdx:5 },
+            { id:'pizzaSupreme',name:'pizza supreme',           chance:1/25,         color:'text-rose-300',   bg:'bg-rose-500/10 border-rose-400/30',    svgIdx:4, replaces:'pizza' },
+            { id:'pizza',       name:'pizza',                   chance:1/20,         color:'text-orange-200', bg:'bg-orange-500/10 border-orange-400/20',svgIdx:3 },
+            { id:'clock',       name:'clock',                   chance:1/50,         color:'text-indigo-300', bg:'bg-indigo-500/10 border-indigo-400/20',svgIdx:2 },
+            { id:'circle',      name:'circle',                  chance:1/5,          color:'text-purple-300', bg:'bg-purple-500/10 border-purple-400/20',svgIdx:1 },
+            { id:'square',      name:'square',                  chance:1,            color:'text-gray-400',   bg:'bg-gray-900/60 border-gray-800',       svgIdx:0 },
+        ];
+
+        // Build a flat roll table: for each tier, resolve replacement chains so we present
+        // the most upgraded version. E.g. if you roll pizza (1/20), check pizzaSupreme (1/25)
+        // first — if that hits, show pizzaSupreme; if not, fall through to pizza.
+        // We pre-sort by chance ascending (rarest first) for the check loop.
+        const SERIOUS_ROLL_TABLE = [...SERIOUS_TIERS_RAW].sort((a,b) => a.chance - b.chance);
+
+        // SVG generators for all 18 serious tiers (svgIdx 0–17)
+        const SERIOUS_SVG = [
+            // 0: square — plain flat square
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="4" y="4" width="12" height="12" fill="#6b7280" opacity="0.85" rx="1"/></svg>`,
+            // 1: circle — clean circle
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#a78bfa" opacity="0.85"/><circle cx="10" cy="10" r="4" fill="none" stroke="#c4b5fd" stroke-width="0.8" opacity="0.6"/></svg>`,
+            // 2: clock — circle with hands
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="0.9"/><circle cx="10" cy="10" r="1" fill="#818cf8"/><line x1="10" y1="10" x2="10" y2="4" stroke="#a5b4fc" stroke-width="1" stroke-linecap="round"/><line x1="10" y1="10" x2="14" y2="12" stroke="#6366f1" stroke-width="0.8" stroke-linecap="round"/></svg>`,
+            // 3: pizza — triangle slice with toppings
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="pzg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><polygon points="10,2 18,17 2,17" fill="url(#pzg)" stroke="#f59e0b" stroke-width="0.5"/><circle cx="10" cy="12" r="1.2" fill="#ef4444" opacity="0.9"/><circle cx="7" cy="14.5" r="0.9" fill="#ef4444" opacity="0.9"/><circle cx="13" cy="14" r="0.9" fill="#7c3aed" opacity="0.9"/><line x1="2" y1="17" x2="18" y2="17" stroke="#92400e" stroke-width="1.2"/></svg>`,
+            // 4: pizza supreme — bigger slice with extra toppings + crown
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="psg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><polygon points="10,2 18,17 2,17" fill="url(#psg)" stroke="#fbbf24" stroke-width="0.6"/><circle cx="10" cy="11" r="1.3" fill="#ef4444"/><circle cx="7" cy="14" r="1" fill="#10b981"/><circle cx="13" cy="13.5" r="1" fill="#ef4444"/><circle cx="10" cy="15" r="0.8" fill="#7c3aed"/><polygon points="10,0 11.5,3 10,2.5 8.5,3" fill="#fbbf24" stroke="#f59e0b" stroke-width="0.3"/></svg>`,
+            // 5: soda — cup with straw and bubbles
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="sdg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0369a1"/></linearGradient></defs><path d="M6,5 L7,18 L13,18 L14,5 Z" fill="url(#sdg)" stroke="#7dd3fc" stroke-width="0.5"/><rect x="6" y="4" width="8" height="2" rx="1" fill="#0ea5e9" stroke="#7dd3fc" stroke-width="0.4"/><line x1="12" y1="4" x2="15" y2="1" stroke="#bae6fd" stroke-width="0.8" stroke-linecap="round"/><circle cx="9" cy="10" r="0.7" fill="#bae6fd" opacity="0.7"/><circle cx="11" cy="13" r="0.5" fill="#bae6fd" opacity="0.7"/><circle cx="10" cy="8" r="0.5" fill="#bae6fd" opacity="0.5"/></svg>`,
+            // 6: dave — simple smiley face
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#14b8a6" opacity="0.8" stroke="#5eead4" stroke-width="0.6"/><circle cx="7.5" cy="8.5" r="1.2" fill="#0f172a"/><circle cx="12.5" cy="8.5" r="1.2" fill="#0f172a"/><path d="M7,13 Q10,16 13,13" fill="none" stroke="#0f172a" stroke-width="1" stroke-linecap="round"/><circle cx="8.3" cy="8" r="0.4" fill="white" opacity="0.7"/><circle cx="13.3" cy="8" r="0.4" fill="white" opacity="0.7"/></svg>`,
+            // 7: FRANK — dave but angrier, spiky hair
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="11" r="7.5" fill="#059669" opacity="0.85" stroke="#34d399" stroke-width="0.7"/><circle cx="7.5" cy="9.5" r="1.3" fill="#0f172a"/><circle cx="12.5" cy="9.5" r="1.3" fill="#0f172a"/><path d="M7.5,14.5 Q10,13 12.5,14.5" fill="none" stroke="#0f172a" stroke-width="1.1" stroke-linecap="round"/><line x1="7" y1="3.5" x2="8.5" y2="5.5" stroke="#34d399" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="3" x2="10" y2="5" stroke="#34d399" stroke-width="1.2" stroke-linecap="round"/><line x1="13" y1="3.5" x2="11.5" y2="5.5" stroke="#34d399" stroke-width="1.2" stroke-linecap="round"/><circle cx="8.3" cy="9" r="0.4" fill="white" opacity="0.7"/></svg>`,
+            // 8: DOORKNOB — circle on rectangle plate
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="7" y="3" width="6" height="15" rx="1" fill="#78716c" stroke="#a8a29e" stroke-width="0.5"/><circle cx="10" cy="11" r="2.8" fill="#d4a853" stroke="#fbbf24" stroke-width="0.6"/><circle cx="10" cy="11" r="1.2" fill="#92400e" opacity="0.8"/><rect x="9.3" y="9.5" width="1.4" height="3" rx="0.5" fill="#fbbf24" opacity="0.7"/></svg>`,
+            // 9: DOOR — full door with knob and panels
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="3" y="1" width="14" height="18" rx="0.5" fill="#92400e" stroke="#d97706" stroke-width="0.6"/><rect x="5" y="3" width="4.5" height="5.5" rx="0.3" fill="none" stroke="#fbbf24" stroke-width="0.5" opacity="0.6"/><rect x="10.5" y="3" width="4.5" height="5.5" rx="0.3" fill="none" stroke="#fbbf24" stroke-width="0.5" opacity="0.6"/><rect x="5" y="10" width="10" height="7" rx="0.3" fill="none" stroke="#fbbf24" stroke-width="0.5" opacity="0.6"/><circle cx="14" cy="10.5" r="1.3" fill="#fbbf24"/><circle cx="14" cy="10.5" r="0.6" fill="#92400e"/></svg>`,
+            // 10: SUPER GAMBLE CRYSTAL — faceted gem
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="crg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="50%" stop-color="#818cf8"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><polygon points="10,1 16,6 18,13 10,19 2,13 4,6" fill="url(#crg)" stroke="#e9d5ff" stroke-width="0.5"/><polygon points="10,1 16,6 10,8 4,6" fill="#e9d5ff" opacity="0.25"/><polygon points="10,8 16,6 18,13 10,19" fill="#7c3aed" opacity="0.3"/><polygon points="10,8 4,6 2,13 10,19" fill="#6d28d9" opacity="0.25"/><line x1="10" y1="1" x2="10" y2="19" stroke="#c4b5fd" stroke-width="0.4" opacity="0.5"/><circle cx="10" cy="10" r="1.5" fill="white" opacity="0.5"/></svg>`,
+            // 11: pillow — puffy rectangle with stitching
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="plg" cx="50%" cy="40%"><stop offset="0%" stop-color="#fbcfe8"/><stop offset="100%" stop-color="#db2777"/></radialGradient></defs><rect x="2" y="5" width="16" height="11" rx="4" fill="url(#plg)" stroke="#f9a8d4" stroke-width="0.5"/><rect x="4" y="7" width="12" height="7" rx="2.5" fill="none" stroke="#fce7f3" stroke-width="0.5" opacity="0.6" stroke-dasharray="1.5,1"/><circle cx="10" cy="10.5" r="1" fill="#fce7f3" opacity="0.6"/></svg>`,
+            // 12: PIZZA OVERLORD — massive pizza slice with crown and drip
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="pog" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fef08a"/><stop offset="100%" stop-color="#b45309"/></linearGradient></defs><polygon points="10,1 19,18 1,18" fill="url(#pog)" stroke="#fbbf24" stroke-width="0.7"/><circle cx="10" cy="11" r="1.5" fill="#dc2626"/><circle cx="7" cy="14" r="1.1" fill="#dc2626"/><circle cx="13" cy="13" r="1.1" fill="#7c3aed"/><circle cx="10.5" cy="15.5" r="0.8" fill="#16a34a"/><polygon points="8,1 9.5,4 10,2 10.5,4 12,1 11,3.5 10,2.5 9,3.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.3"/><path d="M5,18 Q4.5,19.5 4,18.5" fill="none" stroke="#f59e0b" stroke-width="0.8"/><path d="M15,18 Q15.5,19.5 16,18.5" fill="none" stroke="#f59e0b" stroke-width="0.8"/></svg>`,
+            // 13: big — oversized bold text block
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="bgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><rect x="1" y="1" width="18" height="18" rx="2" fill="url(#bgg)" opacity="0.9"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="white" font-family="monospace">BIG</text></svg>`,
+            // 14: air — almost invisible, just faint swirls
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><path d="M3,10 Q6,6 10,10 Q14,14 17,10" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.5" stroke-linecap="round"/><path d="M3,13 Q7,9 11,13 Q15,17 18,13" fill="none" stroke="#e0f2fe" stroke-width="0.7" opacity="0.35" stroke-linecap="round"/><circle cx="5" cy="7" r="0.5" fill="#bae6fd" opacity="0.4"/><circle cx="15" cy="8" r="0.5" fill="#bae6fd" opacity="0.4"/><circle cx="10" cy="5" r="0.4" fill="#e0f2fe" opacity="0.3"/></svg>`,
+            // 15: i got lazy — literal shrug / squiggle
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="1" y="1" width="18" height="18" rx="2" fill="#1a1a2e" opacity="0.9"/><text x="10" y="8" text-anchor="middle" font-size="3.5" fill="#a3e635" font-family="monospace" font-weight="700">i got lazy</text><text x="10" y="13" text-anchor="middle" font-size="3" fill="#84cc16" font-family="monospace">giant steps</text><text x="10" y="17.5" text-anchor="middle" font-size="3.5" fill="#bef264">¯_(tsu)_/¯</text></svg>`,
+            // 16: h — just the letter h
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="1" y="1" width="18" height="18" rx="2" fill="#111827" opacity="0.95"/><text x="10" y="14.5" text-anchor="middle" font-size="13" font-weight="900" fill="#e5e7eb" font-family="monospace">h</text></svg>`,
+            // 17: 1 BILION CIRCLES AHHHH — chaotic many circles
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#0e7490" opacity="0.7"/><circle cx="10" cy="10" r="7" fill="none" stroke="#22d3ee" stroke-width="0.5" opacity="0.8"/><circle cx="10" cy="10" r="5" fill="#0891b2" opacity="0.6"/><circle cx="10" cy="10" r="3" fill="none" stroke="#67e8f9" stroke-width="0.6"/><circle cx="10" cy="10" r="1.5" fill="#22d3ee"/><circle cx="4" cy="4" r="1.2" fill="#38bdf8" opacity="0.7"/><circle cx="16" cy="4" r="1" fill="#38bdf8" opacity="0.6"/><circle cx="4" cy="16" r="1" fill="#22d3ee" opacity="0.6"/><circle cx="16" cy="16" r="1.2" fill="#06b6d4" opacity="0.7"/><circle cx="10" cy="2" r="0.7" fill="#7dd3fc" opacity="0.5"/><circle cx="10" cy="18" r="0.7" fill="#7dd3fc" opacity="0.5"/><circle cx="2" cy="10" r="0.7" fill="#7dd3fc" opacity="0.5"/><circle cx="18" cy="10" r="0.7" fill="#7dd3fc" opacity="0.5"/></svg>`,
+        ];
+
+        function renderSeriousTierList() {
+            const container = document.getElementById('serious-tier-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const realOdds = computeRealOdds(SERIOUS_TIERS_RAW);
+            // display common→rare for readability in the UI
+            const display = [...SERIOUS_TIERS_RAW].sort((a,b) => b.chance - a.chance);
+            display.forEach(t => {
+                const statedStr = t.chance >= 1 ? '1/1 (always)' : `1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:2})}`;
+                const realOdd = realOdds[t.id || t.name];
+                const realStr = realOdd >= 1 ? '' : realOdd !== t.chance
+                    ? ` <span class="text-orange-400 font-bold">(real: 1 / ${(1/realOdd).toLocaleString(undefined,{maximumFractionDigits:0})})</span>`
+                    : '';
+                const row = document.createElement('div');
+                row.className = `flex items-center gap-2 rounded-lg px-3 py-2 border ${t.bg}`;
+                const svgWrap = document.createElement('div');
+                svgWrap.className = 'w-8 h-8 flex-shrink-0';
+                svgWrap.innerHTML = SERIOUS_SVG[t.svgIdx] ? SERIOUS_SVG[t.svgIdx](32) : '';
+                const info = document.createElement('div');
+                info.className = 'flex-1 min-w-0';
+                info.innerHTML = `<div class="font-bold ${t.color} text-xs">${t.name}${t.replaces ? ` <span class="text-gray-500 font-normal text-[9px]">(replaces ${t.replaces})</span>` : ''}</div><div class="font-mono text-[10px] text-gray-500">${statedStr}${realStr}</div>`;
+                row.appendChild(svgWrap);
+                row.appendChild(info);
+                container.appendChild(row);
+            });
+        }
+
+        function doSeriousRoll() {
+            const btnEl = document.getElementById('serious-roll-btn');
+            const resultEl = document.getElementById('serious-result');
+            if (isSimulating) return;
+            if ((state.unspentRolls || 0) < 1) {
+                resultEl.innerHTML = `<span class="text-sm text-red-400 font-semibold">No rolls available — wait for more to accumulate.</span>`;
+                return;
+            }
+            const rollCount = Math.floor(state.unspentRolls);
+            resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
+            if (btnEl) btnEl.disabled = true;
+            simulateAreaRolls((merged, total, highest) => {
+                const result = pickTierWithReplacements(SERIOUS_TIERS_RAW);
+                resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated — best 10^n: 10^${highest}</span></div>`;
+                document.getElementById('serious-last-value').innerText = result.name;
+                renderSeriousGrid(result.svgIdx);
+                const rarity = 1 / result.chance;
+                if (rarity >= 1e8) flashScreen(21);
+                else if (rarity >= 1e7) flashScreen(18);
+                else if (rarity >= 1e6) flashScreen(15);
+                else if (rarity >= 1e4) flashScreen(12);
+                else if (rarity >= 1000) flashScreen(9);
+                else if (rarity >= 100) flashScreen(6);
+                const hist = document.getElementById('serious-history');
+                const row = document.createElement('div');
+                row.className = result.color;
+                row.innerText = `${result.name} (${total.toLocaleString()} rolls)`;
+                hist.prepend(row);
+                if (hist.children.length > 50) hist.lastChild.remove();
+                if (btnEl) btnEl.disabled = false;
+            });
+        }
+
+        function renderSeriousGrid(svgIdx) {
+            const grid = document.getElementById('serious-result-grid');
+            if (!grid) return;
+            const item = getActiveItemConfig();
+            const width = item.grid;
+            const cellCount = width * width;
+            grid.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
+            grid.style.gridTemplateRows = `repeat(${width}, minmax(0, 1fr))`;
+            grid.innerHTML = '';
+            const containerPx = grid.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / width);
+            const svgSize = Math.round(1.05 * (cellPx * 1.5));
+            // bg colors keyed by svgIdx bucket
+            const bgPalette = ['rgba(30,27,24,0.4)','rgba(88,28,135,0.15)','rgba(30,27,100,0.15)','rgba(120,80,0,0.15)','rgba(120,60,0,0.2)','rgba(0,80,140,0.15)','rgba(20,100,80,0.15)','rgba(10,120,60,0.2)','rgba(100,80,10,0.15)','rgba(110,60,0,0.18)','rgba(70,20,140,0.2)','rgba(140,30,90,0.15)','rgba(140,80,0,0.2)','rgba(160,50,0,0.2)','rgba(10,80,100,0.1)','rgba(20,60,10,0.15)','rgba(20,20,30,0.15)','rgba(0,100,120,0.2)'];
+            for (let i = 0; i < cellCount; i++) {
+                const cell = document.createElement('div');
+                const isFeature = i === 0;
+                const t = isFeature ? svgIdx : (Math.random() < 0.05 ? svgIdx : 0);
+                cell.className = `w-full h-full flex items-center justify-center border-b border-r border-gray-800/80 overflow-visible relative`;
+                cell.style.cssText += `z-index:${t};position:relative;background:${bgPalette[t] || bgPalette[0]}`;
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:${t+1};pointer-events:none;`;
+                const scaleFactor = isFeature && svgIdx >= 8 ? 1 + svgIdx * 0.3 : 1;
+                wrap.innerHTML = SERIOUS_SVG[t] ? SERIOUS_SVG[t](Math.round(svgSize * scaleFactor)) : SERIOUS_SVG[0](svgSize);
+                cell.appendChild(wrap);
+                grid.appendChild(cell);
+            }
         }
 
         // --- RNG GRID RENDER ---
@@ -2337,18 +2766,79 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
         }
 
         // --- RNG AREA ---
+
+        function simulateAreaRolls(onDone) {
+            if (isSimulating) return false;
+            if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
+            const powderLuck = (state.consumables.powder.active) * 0.30;
+            const jobs = [];
+            for (const bucket of state.pendingRollBuckets) {
+                if (bucket.count > 0)
+                    jobs.push({ rollCount: Math.floor(bucket.count), luck: bucket.luck + powderLuck, luckMulti: bucket.luckMulti });
+            }
+            const totalRollCount = jobs.reduce((s, j) => s + j.rollCount, 0);
+            if (totalRollCount <= 0) return false;
+
+            state.unspentRolls = 0;
+            state.pendingRollBuckets = [];
+            state.consumables.gloves.active = 0;
+            state.consumables.powder.active = 0;
+            state.consumables.grabber.active = 0;
+            state.consumables.grandfather.active = 0;
+            state.consumables.explosion.active = 0;
+            state.consumables.ultimateOne.active = 0;
+            state.consumables.fireBomb.active = 0;
+            updateHeaderMetrics();
+
+            const afkSeconds = Math.max(0, (Date.now() - state.lastTickTime) / 1000);
+
+            runSimulation(jobs, (merged, total, highest) => {
+                for (const tier in merged)
+                    state.discoveredTiers[tier] = (state.discoveredTiers[tier] || 0) + merged[tier];
+                state.totalSimulated += total;
+                const unusualHits = checkUnusualTiers(total, afkSeconds);
+                playChimeForTier(highest);
+                flashScreen(highest);
+                for (const u of unusualHits) {
+                    addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${u.tier.displayName()} ×${u.hits}</span>`);
+                    flashScreen(21);
+                }
+                renderInventoryList();
+                renderSlotsList();
+                renderConsumablesList();
+                updateHeaderMetrics();
+                saveGame();
+                onDone(merged, total, highest);
+            });
+            return true;
+        }
+
         function doRNGRoll() {
-            const value = 1 / Math.random();
-            const rounded = Math.round(value * 100) / 100;
-            document.getElementById('rng-result').innerHTML = `<span class="text-3xl font-black font-mono text-white">${rounded.toLocaleString()}</span><br><span class="text-xs text-gray-400 mt-1 block">= 1 / ${(1/value).toFixed(10)}</span>`;
-            document.getElementById('rng-last-value').innerText = rounded.toLocaleString();
-            renderRNGGrid(value);
-            const hist = document.getElementById('rng-history');
-            const row = document.createElement('div');
-            row.className = 'text-gray-300';
-            row.innerText = rounded.toLocaleString();
-            hist.prepend(row);
-            if (hist.children.length > 50) hist.lastChild.remove();
+            const btnEl = document.getElementById('rng-roll-btn');
+            const resultEl = document.getElementById('rng-result');
+            if (isSimulating) return;
+            if ((state.unspentRolls || 0) < 1) {
+                resultEl.innerHTML = `<span class="text-sm text-red-400 font-semibold">No rolls available — wait for more to accumulate.</span>`;
+                return;
+            }
+            const rollCount = Math.floor(state.unspentRolls);
+            resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
+            if (btnEl) btnEl.disabled = true;
+            simulateAreaRolls((merged, total, highest) => {
+                // RNG display: show a 1/x value derived from the highest tier hit
+                const value = Math.pow(10, highest) * (1 + Math.random());
+                const rounded = Math.round(value * 100) / 100;
+                resultEl.innerHTML = `<span class="text-3xl font-black font-mono text-white">${rounded.toLocaleString()}</span><br><span class="text-xs text-gray-400 mt-1 block">Best tier: 10^${highest} — simulated ${total.toLocaleString()} rolls</span>`;
+                document.getElementById('rng-last-value').innerText = rounded.toLocaleString();
+                renderRNGGrid(value);
+                const hist = document.getElementById('rng-history');
+                const row = document.createElement('div');
+                row.className = 'text-gray-300';
+                row.innerText = `${rounded.toLocaleString()} (${total.toLocaleString()} rolls)`;
+                hist.prepend(row);
+                if (hist.children.length > 50) hist.lastChild.remove();
+                if (btnEl) btnEl.disabled = false;
+            });
         }
 
         // --- ANNOYING AREA ---
@@ -2360,25 +2850,81 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             { name: '🟫 Loser Square',                 chance: 1,        color: 'text-gray-400',   bg: 'bg-gray-900/60 border-gray-800' },
         ];
 
-        function doAnnoyingRoll() {
+        // Correctly pick a tier using chained replacements.
+        // Multiple tiers can replace the same base — all are checked independently,
+        // the rarest one that fires wins. Then that winner is itself checked for replacers.
+        function pickTierWithReplacements(tierTable) {
+            const sorted = [...tierTable].sort((a,b) => a.chance - b.chance);
+
+            // Step 1: pick the base tier (independent roll, rarest-first)
+            let base = tierTable.find(t => t.chance >= 1) || sorted[sorted.length - 1];
             const r = Math.random();
-            let result = ANNOYING_TIERS[ANNOYING_TIERS.length - 1];
-            let tierIndex = ANNOYING_TIERS.length - 1;
-            for (let i = 0; i < ANNOYING_TIERS.length; i++) {
-                if (r < ANNOYING_TIERS[i].chance) { result = ANNOYING_TIERS[i]; tierIndex = i; break; }
+            for (const t of sorted) {
+                if (r < t.chance) { base = t; break; }
             }
-            // map tierIndex (0=rarest) to SVG index (0=loser, 4=triangle)
-            const svgIndex = ANNOYING_TIERS.length - 1 - tierIndex;
-            document.getElementById('annoying-result').innerHTML = `<div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div>`;
-            document.getElementById('annoying-last-value').innerText = result.name;
-            renderAnnoyingGrid(svgIndex);
-            if (svgIndex > 0) flashScreen(svgIndex === 4 ? 21 : svgIndex === 3 ? 18 : svgIndex === 2 ? 12 : 7);
-            const hist = document.getElementById('annoying-history');
-            const row = document.createElement('div');
-            row.className = result.color;
-            row.innerText = result.name;
-            hist.prepend(row);
-            if (hist.children.length > 50) hist.lastChild.remove();
+
+            // Step 2: walk replacement chain — at each step, find ALL tiers that replace
+            // current, roll each independently, pick rarest winner, repeat.
+            let current = base;
+            let safety = 0;
+            while (safety++ < 20) {
+                const replacers = tierTable.filter(t => t.replaces === current.id);
+                if (!replacers.length) break;
+                // roll each independently, collect winners, pick rarest
+                const winners = replacers.filter(t => Math.random() < t.chance);
+                if (!winners.length) break;
+                winners.sort((a,b) => a.chance - b.chance); // rarest first
+                current = winners[0];
+            }
+            return current;
+        }
+
+        // Pre-compute real (compounded) odds for each tier.
+        // Real odds = product of all chances in the replacement chain leading to this tier.
+        function computeRealOdds(tierTable) {
+            const byId = {};
+            for (const t of tierTable) { if (t.id) byId[t.id] = t; }
+            const realOdds = {};
+            for (const t of tierTable) {
+                let odds = t.chance;
+                let cur = t;
+                let safety = 0;
+                while (cur.replaces && byId[cur.replaces] && safety++ < 20) {
+                    cur = byId[cur.replaces];
+                    odds *= cur.chance;
+                }
+                realOdds[t.id || t.name] = odds;
+            }
+            return realOdds;
+        }
+
+        function doAnnoyingRoll() {
+            const btnEl = document.getElementById('annoying-roll-btn');
+            const resultEl = document.getElementById('annoying-result');
+            if (isSimulating) return;
+            if ((state.unspentRolls || 0) < 1) {
+                resultEl.innerHTML = `<span class="text-sm text-red-400 font-semibold">No rolls available — wait for more to accumulate.</span>`;
+                return;
+            }
+            const rollCount = Math.floor(state.unspentRolls);
+            resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
+            if (btnEl) btnEl.disabled = true;
+            simulateAreaRolls((merged, total, highest) => {
+                const result = pickTierWithReplacements(ANNOYING_TIERS);
+                const tierIndex = ANNOYING_TIERS.findIndex(t => t.name === result.name);
+                const svgIndex = ANNOYING_TIERS.length - 1 - tierIndex;
+                resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated — best 10^n: 10^${highest}</span></div>`;
+                document.getElementById('annoying-last-value').innerText = result.name;
+                renderAnnoyingGrid(svgIndex);
+                if (svgIndex > 0) flashScreen(svgIndex === 4 ? 21 : svgIndex === 3 ? 18 : svgIndex === 2 ? 12 : 7);
+                const hist = document.getElementById('annoying-history');
+                const row = document.createElement('div');
+                row.className = result.color;
+                row.innerText = `${result.name} (${total.toLocaleString()} rolls)`;
+                hist.prepend(row);
+                if (hist.children.length > 50) hist.lastChild.remove();
+                if (btnEl) btnEl.disabled = false;
+            });
         }
 
         function processGambleFluctuations() {
@@ -2459,6 +3005,9 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
 
             // Init annoying tier SVG badges
             initAnnoyingSVGs();
+
+            // Build serious tier list
+            renderSeriousTierList();
         }
 
         // Force final state save before unload
