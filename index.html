@@ -127,6 +127,7 @@
             <button onclick="switchArea('rng')" id="area-rng-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">RNG</button>
             <button onclick="switchArea('annoying')" id="area-annoying-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Annoying</button>
             <button onclick="switchArea('serious')" id="area-serious-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Serious</button>
+            <button onclick="switchArea('money')" id="area-money-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">💰 Money</button>
         </div>
     </nav>
     <div id="area-main">
@@ -367,11 +368,14 @@
             </div>
         </section>
 
-        <!-- Right: History -->
+        <!-- Right: Inventory -->
         <section class="lg:col-span-5 flex flex-col gap-4">
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
-                <h3 class="font-bold text-base text-gray-200">Roll History</h3>
-                <div id="rng-history" class="space-y-1 max-h-[600px] overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">RNG Inventory</h3>
+                    <span class="text-xs text-gray-500 font-mono" id="rng-roll-count">0 rolls</span>
+                </div>
+                <div class="space-y-1 max-h-[600px] overflow-y-auto custom-scroll pr-1" id="rng-area-inventory"></div>
             </div>
         </section>
     </div>
@@ -407,7 +411,7 @@
             </div>
         </section>
 
-        <!-- Right: Tier list + history + inventory -->
+        <!-- Right: Tier list + inventory -->
         <section class="lg:col-span-5 flex flex-col gap-4">
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
                 <h3 class="font-bold text-base text-gray-200">Tiers</h3>
@@ -449,11 +453,15 @@
                     </div>
                 </div>
             </div>
+            <!-- Area Inventory -->
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
-                <h3 class="font-bold text-base text-gray-200">History</h3>
-                <div id="annoying-history" class="space-y-1 max-h-48 overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">Annoying Inventory</h3>
+                    <span class="text-xs text-gray-500 font-mono" id="annoying-roll-count">0 rolls</span>
+                </div>
+                <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="annoying-area-inventory"></div>
             </div>
-            <!-- Shared Inventory (mirrored from main) -->
+            <!-- 10^n Mirror -->
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-base text-gray-200">10^n Inventory</h3>
@@ -504,10 +512,13 @@
                 </div>
             </div>
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
-                <h3 class="font-bold text-base text-gray-200">History</h3>
-                <div id="serious-history" class="space-y-1 max-h-48 overflow-y-auto custom-scroll text-xs font-mono text-gray-400"></div>
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">Serious Inventory</h3>
+                    <span class="text-xs text-gray-500 font-mono" id="serious-roll-count">0 rolls</span>
+                </div>
+                <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="serious-area-inventory"></div>
             </div>
-            <!-- Shared Inventory -->
+            <!-- 10^n Mirror -->
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-base text-gray-200">10^n Inventory</h3>
@@ -541,6 +552,62 @@
                 🔄 Revalidate System Sync
             </button>
         </div>
+    </div>
+
+    <!-- MONEY AREA -->
+    <div id="area-money" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Roll core + grid -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-200">💰 Money</h2>
+                    <span class="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded-md font-mono">everything. x50 rarer.</span>
+                </div>
+                <button id="money-roll-btn" onclick="doMoneyRoll()" class="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
+                    ROLL
+                </button>
+                <div id="money-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
+            </div>
+            <!-- Money Visual Grid -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Last roll visualized</span>
+                </div>
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="money-result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                    <span>Last result:</span>
+                    <span id="money-last-value" class="font-bold text-sm text-yellow-400 font-mono">None</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Tier list + inventory -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <h3 class="font-bold text-base text-gray-200">Tiers</h3>
+                <div class="space-y-1.5 max-h-[300px] overflow-y-auto custom-scroll pr-1" id="money-tier-list"></div>
+            </div>
+            <!-- Area Inventory -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">Money Inventory</h3>
+                    <span class="text-xs text-gray-500 font-mono" id="money-roll-count">0 rolls</span>
+                </div>
+                <div class="space-y-1 max-h-64 overflow-y-auto custom-scroll pr-1" id="money-area-inventory"></div>
+            </div>
+            <!-- 10^n Mirror -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">10^n Inventory</h3>
+                    <span class="text-xs text-gray-400 font-semibold" id="money-total-rolls-count">Total: 0</span>
+                </div>
+                <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="money-inventory-list"></div>
+            </div>
+        </section>
     </div>
 
     <!-- Dynamic Offline Progression Modal -->
@@ -603,6 +670,12 @@
             procrastinationUnlocked: false, // unlocked by clicking "by Cameron" at x:x4 AM
             explosionUsedAt: null,  // timestamp (ms) when explosion was last activated
             fireBombUsedAt: null,   // timestamp (ms) when fireBomb was last activated
+            areaInventory: {
+                annoying: {},
+                serious:  {},
+                money:    {},
+                rng:      {}
+            },
             consumables: {
                 gloves: { owned: 0, active: 0 },
                 powder: { owned: 0, active: 0 },
@@ -880,6 +953,12 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 if (parsed.procrastinationUnlocked) state.procrastinationUnlocked = true;
                 if (parsed.explosionUsedAt) state.explosionUsedAt = parsed.explosionUsedAt;
                 if (parsed.fireBombUsedAt) state.fireBombUsedAt = parsed.fireBombUsedAt;
+                if (parsed.areaInventory) {
+                    state.areaInventory.annoying = parsed.areaInventory.annoying || {};
+                    state.areaInventory.serious  = parsed.areaInventory.serious  || {};
+                    state.areaInventory.money    = parsed.areaInventory.money    || {};
+                    state.areaInventory.rng      = parsed.areaInventory.rng      || {};
+                }
                 if (typeof parsed.totalSimulated === 'number') state.totalSimulated = parsed.totalSimulated;
                 
                 // backwards compatibility for unlocked slots list
@@ -940,7 +1019,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
 
             const audioFile = `10^${filePrefix}.mp3`;
             const audio = new Audio(audioFile);
-            audio.volume = 0.8;
+            audio.volume = 0.25;
             audio.play().catch(() => {});
         }
 
@@ -2030,7 +2109,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             }
 
             // Mirror inventory into annoying + serious panels (compact rows)
-            ['annoying', 'serious'].forEach(area => {
+            ['annoying', 'serious', 'money'].forEach(area => {
                 const mirrorList = document.getElementById(`${area}-inventory-list`);
                 const mirrorTotal = document.getElementById(`${area}-total-rolls-count`);
                 if (!mirrorList) return;
@@ -2495,20 +2574,28 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 status.className = 'text-xs mt-1 text-center text-red-400';
             }
         }
-        function switchArea(area) {
-            ['main','rng','annoying','serious'].forEach(a => {
-                const el = document.getElementById(`area-${a}`);
-                const btn = document.getElementById(`area-${a}-btn`);
-                if (a === area) {
-                    el.classList.remove('hidden');
-                    btn.classList.add('bg-blue-600','text-white');
-                    btn.classList.remove('text-gray-400','hover:text-white','hover:bg-gray-800');
-                } else {
-                    el.classList.add('hidden');
-                    btn.classList.remove('bg-blue-600','text-white');
-                    btn.classList.add('text-gray-400','hover:text-white','hover:bg-gray-800');
+        // --- AREA INVENTORY RENDERER ---
+        function renderAreaInventory(areaKey, containerId, rollCountId) {
+            const inv = state.areaInventory[areaKey] || {};
+            const el = document.getElementById(containerId);
+            const rc = document.getElementById(rollCountId);
+            if (!el) return;
+            el.innerHTML = '';
+            const entries = Object.entries(inv).sort((a,b) => b[1] - a[1]);
+            if (entries.length === 0) {
+                el.innerHTML = '<div class="text-[10px] text-gray-600 italic text-center py-2">Nothing found yet</div>';
+            } else {
+                for (const [name, count] of entries) {
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between items-center px-2 py-1.5 rounded-lg bg-gray-900/40 border border-gray-800/60';
+                    row.innerHTML = `<span class="text-[11px] font-bold text-gray-300">${name}</span><span class="font-mono text-[11px] text-blue-400 font-bold">${count.toLocaleString()}</span>`;
+                    el.appendChild(row);
                 }
-            });
+            }
+            if (rc) {
+                const total = entries.reduce((s,[,c]) => s + c, 0);
+                rc.innerText = `${total.toLocaleString()} total`;
+            }
         }
 
         // --- ANNOYING TIER SVGs ---
@@ -2645,23 +2732,21 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
             if (btnEl) btnEl.disabled = true;
             simulateAreaRolls((merged, total, highest) => {
-                const result = pickTierWithReplacements(SERIOUS_TIERS_RAW);
+                const result = pickBestAreaTier(SERIOUS_TIERS_RAW, total, getLuckBonus());
+                if (!state.areaInventory.serious) state.areaInventory.serious = {};
+                state.areaInventory.serious[result.name] = (state.areaInventory.serious[result.name] || 0) + 1;
                 resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated — best 10^n: 10^${highest}</span></div>`;
                 document.getElementById('serious-last-value').innerText = result.name;
                 renderSeriousGrid(result.svgIdx);
-                const rarity = 1 / result.chance;
-                if (rarity >= 1e8) flashScreen(21);
-                else if (rarity >= 1e7) flashScreen(18);
-                else if (rarity >= 1e6) flashScreen(15);
-                else if (rarity >= 1e4) flashScreen(12);
-                else if (rarity >= 1000) flashScreen(9);
-                else if (rarity >= 100) flashScreen(6);
-                const hist = document.getElementById('serious-history');
-                const row = document.createElement('div');
-                row.className = result.color;
-                row.innerText = `${result.name} (${total.toLocaleString()} rolls)`;
-                hist.prepend(row);
-                if (hist.children.length > 50) hist.lastChild.remove();
+                const realOdds = computeRealOdds(SERIOUS_TIERS_RAW);
+                const realRarity = 1 / (realOdds[result.id || result.name] || result.chance);
+                if (realRarity >= 1e8) flashScreen(21);
+                else if (realRarity >= 1e7) flashScreen(18);
+                else if (realRarity >= 1e6) flashScreen(15);
+                else if (realRarity >= 1e4) flashScreen(12);
+                else if (realRarity >= 1000) flashScreen(9);
+                else if (realRarity >= 100) flashScreen(6);
+                renderAreaInventory('serious', 'serious-area-inventory', 'serious-roll-count');
                 if (btnEl) btnEl.disabled = false;
             });
         }
@@ -2831,12 +2916,10 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 resultEl.innerHTML = `<span class="text-3xl font-black font-mono text-white">${rounded.toLocaleString()}</span><br><span class="text-xs text-gray-400 mt-1 block">Best tier: 10^${highest} — simulated ${total.toLocaleString()} rolls</span>`;
                 document.getElementById('rng-last-value').innerText = rounded.toLocaleString();
                 renderRNGGrid(value);
-                const hist = document.getElementById('rng-history');
-                const row = document.createElement('div');
-                row.className = 'text-gray-300';
-                row.innerText = `${rounded.toLocaleString()} (${total.toLocaleString()} rolls)`;
-                hist.prepend(row);
-                if (hist.children.length > 50) hist.lastChild.remove();
+                if (!state.areaInventory.rng) state.areaInventory.rng = {};
+                const rngKey = `10^${highest}`;
+                state.areaInventory.rng[rngKey] = (state.areaInventory.rng[rngKey] || 0) + 1;
+                renderAreaInventory('rng', 'rng-area-inventory', 'rng-roll-count');
                 if (btnEl) btnEl.disabled = false;
             });
         }
@@ -2850,33 +2933,55 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             { name: '🟫 Loser Square',                 chance: 1,        color: 'text-gray-400',   bg: 'bg-gray-900/60 border-gray-800' },
         ];
 
-        // Correctly pick a tier using chained replacements.
-        // Multiple tiers can replace the same base — all are checked independently,
-        // the rarest one that fires wins. Then that winner is itself checked for replacers.
-        function pickTierWithReplacements(tierTable) {
-            const sorted = [...tierTable].sort((a,b) => a.chance - b.chance);
+        // Simulate `total` rolls against an area tier table and return the rarest tier hit.
+        // Uses Poisson sampling (same as main sim) then walks replacement chains on any hits.
+        function pickBestAreaTier(tierTable, total, luck) {
+            if (total <= 0) return tierTable.find(t => t.chance >= 1) || tierTable[tierTable.length - 1];
 
-            // Step 1: pick the base tier (independent roll, rarest-first)
-            let base = tierTable.find(t => t.chance >= 1) || sorted[sorted.length - 1];
-            const r = Math.random();
-            for (const t of sorted) {
-                if (r < t.chance) { base = t; break; }
+            // Sort base tiers (non-replacers) rarest→common
+            const baseTiers = tierTable.filter(t => !t.replaces);
+            const sorted = [...baseTiers].sort((a, b) => a.chance - b.chance);
+
+            // For each base tier, Poisson-sample how many hits from `total` rolls
+            // Walk rarest→common, track remaining rolls (same as main simulateJob)
+            let remaining = total;
+            let bestTier = null;
+
+            for (const tier of sorted) {
+                if (remaining <= 0) break;
+                const p = Math.min(tier.chance * (1 + luck), 1.0);
+                if (!(p > 0)) continue;
+                const lambda = remaining * p;
+                const hits = Math.min(poissonSample(lambda), remaining);
+                if (hits > 0) {
+                    remaining -= hits;
+                    // attempt replacement chain on this tier
+                    let current = tier;
+                    let safety = 0;
+                    while (safety++ < 20) {
+                        const replacers = tierTable.filter(t => t.replaces === current.id);
+                        if (!replacers.length) break;
+                        // each replacer: did any of the `hits` rolls also hit it?
+                        const winners = [];
+                        for (const rep of replacers) {
+                            const repLambda = hits * Math.min(rep.chance, 1.0);
+                            if (poissonSample(repLambda) > 0) winners.push(rep);
+                        }
+                        if (!winners.length) break;
+                        winners.sort((a, b) => a.chance - b.chance);
+                        current = winners[0];
+                    }
+                    // track rarest result
+                    if (!bestTier || current.chance < bestTier.chance) bestTier = current;
+                }
             }
 
-            // Step 2: walk replacement chain — at each step, find ALL tiers that replace
-            // current, roll each independently, pick rarest winner, repeat.
-            let current = base;
-            let safety = 0;
-            while (safety++ < 20) {
-                const replacers = tierTable.filter(t => t.replaces === current.id);
-                if (!replacers.length) break;
-                // roll each independently, collect winners, pick rarest
-                const winners = replacers.filter(t => Math.random() < t.chance);
-                if (!winners.length) break;
-                winners.sort((a,b) => a.chance - b.chance); // rarest first
-                current = winners[0];
+            // fallback to most common if nothing hit
+            if (!bestTier) {
+                const common = tierTable.find(t => t.chance >= 1) || tierTable[tierTable.length - 1];
+                bestTier = common;
             }
-            return current;
+            return bestTier;
         }
 
         // Pre-compute real (compounded) odds for each tier.
@@ -2910,19 +3015,122 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
             if (btnEl) btnEl.disabled = true;
             simulateAreaRolls((merged, total, highest) => {
-                const result = pickTierWithReplacements(ANNOYING_TIERS);
+                const result = pickBestAreaTier(ANNOYING_TIERS, total, getLuckBonus());
+                if (!state.areaInventory.annoying) state.areaInventory.annoying = {};
+                state.areaInventory.annoying[result.name] = (state.areaInventory.annoying[result.name] || 0) + 1;
                 const tierIndex = ANNOYING_TIERS.findIndex(t => t.name === result.name);
                 const svgIndex = ANNOYING_TIERS.length - 1 - tierIndex;
                 resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated — best 10^n: 10^${highest}</span></div>`;
                 document.getElementById('annoying-last-value').innerText = result.name;
                 renderAnnoyingGrid(svgIndex);
                 if (svgIndex > 0) flashScreen(svgIndex === 4 ? 21 : svgIndex === 3 ? 18 : svgIndex === 2 ? 12 : 7);
-                const hist = document.getElementById('annoying-history');
+                renderAreaInventory('annoying', 'annoying-area-inventory', 'annoying-roll-count');
+                if (btnEl) btnEl.disabled = false;
+            });
+        }
+
+        function switchArea(area) {
+            ['main','rng','annoying','serious','money'].forEach(a => {
+                const el = document.getElementById(`area-${a}`);
+                const btn = document.getElementById(`area-${a}-btn`);
+                if (!el || !btn) return;
+                if (a === area) {
+                    el.classList.remove('hidden');
+                    btn.classList.add('bg-blue-600','text-white');
+                    btn.classList.remove('text-gray-400','hover:text-white','hover:bg-gray-800');
+                } else {
+                    el.classList.add('hidden');
+                    btn.classList.remove('bg-blue-600','text-white');
+                    btn.classList.add('text-gray-400','hover:text-white','hover:bg-gray-800');
+                }
+            });
+        }
+
+        // --- MONEY AREA ---
+        const MONEY_BASE_TIERS = [
+            { id:'penny',   name:'penny',    chance:1,      color:'text-orange-300', bg:'bg-orange-900/20 border-orange-500/20', emoji:'🪙' },
+            { id:'dollar',  name:'dollar',   chance:1/100,  color:'text-green-300',  bg:'bg-green-900/20 border-green-500/20',   emoji:'💵' },
+            { id:'goldbar', name:'gold bar', chance:1/1e6,  color:'text-yellow-300', bg:'bg-yellow-900/20 border-yellow-500/20', emoji:'🟨' },
+        ];
+
+        function buildMoneyTierPool() {
+            const pool = [];
+            for (const t of MONEY_BASE_TIERS) pool.push({...t});
+            for (const t of ANNOYING_TIERS) {
+                if (t.chance < 1) pool.push({ id:'ann_'+t.name, name:t.name, chance:t.chance/50, color:t.color, bg:t.bg, source:'annoying' });
+            }
+            for (const t of SERIOUS_TIERS_RAW) {
+                if (t.chance < 1) pool.push({ id:'ser_'+t.id, name:t.name, chance:t.chance/50, color:t.color, bg:t.bg, svgIdx:t.svgIdx, replaces: t.replaces ? 'ser_'+t.replaces : undefined, source:'serious' });
+            }
+            const unusualDefs = [
+                { id:'u_decay', name:'THE DECAY',                chance:1/(23431*100000), color:'text-green-300',  bg:'bg-green-900/30 border-green-500/30' },
+                { id:'u_quest', name:'???',                      chance:1/(7500*100000),  color:'text-gray-400',   bg:'bg-gray-900/30 border-gray-500/20' },
+                { id:'u_procr', name:'procastinatiob master !!!',chance:1/(1.5e9*100000), color:'text-yellow-300', bg:'bg-yellow-900/30 border-yellow-500/30' },
+            ];
+            for (const t of unusualDefs) pool.push(t);
+            return pool;
+        }
+
+        function renderMoneyTierList() {
+            const container = document.getElementById('money-tier-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const pool = buildMoneyTierPool();
+            const sorted = [...pool].sort((a,b) => b.chance - a.chance);
+            for (const t of sorted) {
+                const chanceStr = t.chance >= 1 ? '1/1' : `1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                const sourceTag = t.source ? ` <span class="text-gray-600 text-[9px]">[${t.source}]</span>` : '';
                 const row = document.createElement('div');
-                row.className = result.color;
-                row.innerText = `${result.name} (${total.toLocaleString()} rolls)`;
-                hist.prepend(row);
-                if (hist.children.length > 50) hist.lastChild.remove();
+                row.className = `flex items-center gap-2 rounded-lg px-2 py-1.5 border ${t.bg}`;
+                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${t.color} text-[11px]">${t.emoji||''} ${t.name}${sourceTag}</div><div class="font-mono text-[9px] text-gray-500">${chanceStr}</div></div>`;
+                container.appendChild(row);
+            }
+        }
+
+        function doMoneyRoll() {
+            const btnEl = document.getElementById('money-roll-btn');
+            const resultEl = document.getElementById('money-result');
+            if (isSimulating) return;
+            if ((state.unspentRolls || 0) < 1) {
+                resultEl.innerHTML = `<span class="text-sm text-red-400 font-semibold">No rolls available — wait for more to accumulate.</span>`;
+                return;
+            }
+            const rollCount = Math.floor(state.unspentRolls);
+            resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
+            if (btnEl) btnEl.disabled = true;
+            // luck^0.5 for money area
+            const moneyLuck = Math.pow(Math.max(0, getLuckBonus()), 0.5);
+            simulateAreaRolls((merged, total, highest) => {
+                const pool = buildMoneyTierPool();
+                const result = pickBestAreaTier(pool, total, moneyLuck);
+                if (!state.areaInventory.money) state.areaInventory.money = {};
+                state.areaInventory.money[result.name] = (state.areaInventory.money[result.name] || 0) + 1;
+                resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.emoji||''} ${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls — best 10^n: 10^${highest}</span></div>`;
+                document.getElementById('money-last-value').innerText = (result.emoji||'') + ' ' + result.name;
+                const item = getActiveItemConfig();
+                const grid = document.getElementById('money-result-grid');
+                if (grid) {
+                    const w = item.grid;
+                    grid.style.gridTemplateColumns = `repeat(${w}, minmax(0, 1fr))`;
+                    grid.innerHTML = '';
+                    const pick = result.emoji || '🪙';
+                    const cellPx = Math.floor((grid.parentElement.offsetWidth||320) / w);
+                    for (let i = 0; i < w*w; i++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'w-full h-full flex items-center justify-center border-b border-r border-gray-800/60 bg-gray-950/20';
+                        const isFeature = i === 0;
+                        cell.style.fontSize = `${isFeature ? cellPx*0.7 : cellPx*0.45}px`;
+                        cell.innerText = isFeature ? pick : (Math.random() < 0.15 ? pick : '🪙');
+                        grid.appendChild(cell);
+                    }
+                }
+                const rarity = 1/result.chance;
+                if (rarity >= 1e8) flashScreen(21);
+                else if (rarity >= 1e6) flashScreen(18);
+                else if (rarity >= 1e4) flashScreen(15);
+                else if (rarity >= 1000) flashScreen(12);
+                else if (rarity >= 100) flashScreen(9);
+                renderAreaInventory('money', 'money-area-inventory', 'money-roll-count');
                 if (btnEl) btnEl.disabled = false;
             });
         }
@@ -3006,14 +3214,20 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             // Init annoying tier SVG badges
             initAnnoyingSVGs();
 
-            // Build serious tier list
+            // Build serious and money tier lists
             renderSeriousTierList();
+            renderMoneyTierList();
+
+            // Restore area inventories
+            renderAreaInventory('annoying', 'annoying-area-inventory', 'annoying-roll-count');
+            renderAreaInventory('serious',  'serious-area-inventory',  'serious-roll-count');
+            renderAreaInventory('money',    'money-area-inventory',    'money-roll-count');
+            renderAreaInventory('rng',      'rng-area-inventory',      'rng-roll-count');
         }
 
         // Force final state save before unload
         window.onbeforeunload = function() {
             saveGame();
-        };
-    </script>
+        };</script>
 </body>
 </html>
