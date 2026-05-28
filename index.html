@@ -122,12 +122,13 @@
 
     <!-- Area Navigation -->
     <nav class="border-b border-gray-800 bg-gray-950/60 backdrop-blur-sm sticky top-[57px] z-40">
-        <div class="max-w-6xl mx-auto flex gap-1 px-4 py-1.5">
-            <button onclick="switchArea('main')" id="area-main-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white">⚡ 10^n</button>
-            <button onclick="switchArea('rng')" id="area-rng-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">RNG</button>
-            <button onclick="switchArea('annoying')" id="area-annoying-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Annoying</button>
-            <button onclick="switchArea('serious')" id="area-serious-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Serious</button>
-            <button onclick="switchArea('money')" id="area-money-btn" class="area-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">💰 Money</button>
+        <div class="max-w-6xl mx-auto flex gap-1 px-4 py-1.5 overflow-x-auto scrollbar-none" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;white-space:nowrap;">
+            <button onclick="switchArea('main')" id="area-main-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white">⚡ 10^n</button>
+            <button onclick="switchArea('rng')" id="area-rng-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">RNG</button>
+            <button onclick="switchArea('annoying')" id="area-annoying-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Annoying</button>
+            <button onclick="switchArea('serious')" id="area-serious-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Serious</button>
+            <button onclick="switchArea('money')" id="area-money-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Money</button>
+            <button onclick="switchArea('elements')" id="area-elements-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Elements</button>
         </div>
     </nav>
     <div id="area-main">
@@ -529,6 +530,56 @@
         </section>
     </div>
 
+    <!-- ELEMENTS AREA -->
+    <div id="area-elements" class="hidden flex-grow max-w-2xl w-full mx-auto p-4 flex flex-col gap-4 overflow-y-auto">
+        <!-- Roll core -->
+        <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-200">Elements</h2>
+                <span class="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded-md font-mono">四神 await</span>
+            </div>
+            <button id="elements-roll-btn" onclick="doElementsRoll()" class="w-full bg-gradient-to-r from-orange-600 via-red-600 to-purple-700 hover:from-orange-500 hover:via-red-500 hover:to-purple-600 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
+                ROLL
+            </button>
+            <div id="elements-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
+        </div>
+        <!-- Visual Grid -->
+        <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                <span class="text-xs text-gray-500 italic">Last roll visualized</span>
+            </div>
+            <div class="flex items-center justify-center p-2">
+                <div id="elements-result-grid" class="grid w-full max-w-[420px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+            </div>
+            <div class="pt-2 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                <span>Last result:</span>
+                <span id="elements-last-value" class="font-bold text-sm text-orange-400 font-mono">None</span>
+            </div>
+        </div>
+        <!-- Tier list -->
+        <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+            <h3 class="font-bold text-base text-gray-200">Tiers</h3>
+            <div class="space-y-1.5" id="elements-tier-list"></div>
+        </div>
+        <!-- Area Inventory -->
+        <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-base text-gray-200">Elements Inventory</h3>
+                <span class="text-xs text-gray-500 font-mono" id="elements-roll-count">0 rolls</span>
+            </div>
+            <div class="space-y-1" id="elements-area-inventory"></div>
+        </div>
+        <!-- 10^n Mirror -->
+        <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-base text-gray-200">10^n Inventory</h3>
+                <span class="text-xs text-gray-400 font-semibold" id="elements-total-rolls-count">Total: 0</span>
+            </div>
+            <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="elements-inventory-list"></div>
+        </div>
+    </div>
+
     <!-- Global Time Tamper Intercept Modal (Popup Overlay) -->
     <div id="tamper-blocker" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="max-w-md w-full bg-panelBg border border-red-500/40 rounded-3xl p-6 shadow-2xl text-center flex flex-col items-center gap-4">
@@ -561,7 +612,7 @@
         <section class="lg:col-span-7 flex flex-col gap-4">
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-gray-200">💰 Money</h2>
+                    <h2 class="text-lg font-bold text-gray-200">Money</h2>
                     <span class="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded-md font-mono">everything. x50 rarer.</span>
                 </div>
                 <button id="money-roll-btn" onclick="doMoneyRoll()" class="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
@@ -670,11 +721,13 @@
             procrastinationUnlocked: false, // unlocked by clicking "by Cameron" at x:x4 AM
             explosionUsedAt: null,  // timestamp (ms) when explosion was last activated
             fireBombUsedAt: null,   // timestamp (ms) when fireBomb was last activated
+            bonusSimLastFired: {},  // key: "slotId_simIdx" -> timestamp ms when last fired
             areaInventory: {
                 annoying: {},
                 serious:  {},
                 money:    {},
-                rng:      {}
+                rng:      {},
+                elements: {}
             },
             consumables: {
                 gloves: { owned: 0, active: 0 },
@@ -803,51 +856,74 @@
             },
             mechanic: {
                 name: "Mechanic Slots",
-                grid: 11, // 11x11
-                luck: 1.75, // +175%
-                speed: 1.20, // +120%
+                grid: 11,
+                luck: 1.75,
+                speed: 1.20,
                 req: { 7: 5, 8: 1, 1: 250000 },
-                desc: "expert gears calibrated to yield maximum luck efficiency while humming beautifully."
+                desc: "expert gears calibrated to yield maximum luck efficiency while humming beautifully.",
+                bonusSims: [
+                    { intervalSecs: 3600, rolls: 500000, luck: 1.0  },  // every 1h: 500k x2 luck
+                    { intervalSecs: 3600, rolls: 30000,  luck: 9.0  },  // every 1h: 30k x10 luck
+                ]
             },
             fantasy: {
                 name: "Fantasy Slots",
-                grid: 10, // 10x10
-                luck: 1.00, // +100%
-                speed: 1.25, // +125%
+                grid: 10,
+                luck: 1.00,
+                speed: 1.25,
                 req: { 8: 1 },
-                desc: "surreal design that defies typical engineering. dual modifiers of high power."
+                desc: "surreal design that defies typical engineering. dual modifiers of high power.",
+                bonusSims: [
+                    { intervalSecs: 600, rolls: 7000,  luck: 2.0  },   // every 10min: 7k x3 luck
+                    { intervalSecs: 600, rolls: 50000, luck: 0.8  },   // every 10min: 50k x1.8 luck
+                ]
             },
             colossal: {
                 name: "Colossal Slots",
-                grid: 13, // 13x13
-                luck: 1.25, // +125%
-                speed: 0.75, // +75%
+                grid: 13,
+                luck: 1.25,
+                speed: 0.75,
                 req: { 6: 250, 7: 25, 9: 2 },
-                desc: "massive reinforced architecture. built to handle staggering luck and speed simultaneously."
+                desc: "massive reinforced architecture. built to handle staggering luck and speed simultaneously.",
+                bonusSims: [
+                    { intervalSecs: 1800, rolls: 1,     luck: 499.0 }, // every 30min: 1 roll x500 luck
+                    { intervalSecs: 1800, rolls: 70000, luck: 5.0   }, // every 30min: 70k x6 luck
+                ]
             },
             illusory: {
                 name: "Illusory Slots",
-                grid: 15, // 15x15
-                luck: 1.80, // +180%
-                speed: 0.25, // +25%
+                grid: 15,
+                luck: 1.80,
+                speed: 0.25,
                 req: { 9: 1, 3: 10000, 0: 10000000 },
-                desc: "phantom elements shifting in and out of dimension. wide spatial output reach."
+                desc: "phantom elements shifting in and out of dimension. wide spatial output reach.",
+                bonusSims: [
+                    { intervalSecs: 300, rolls: 2000,   luck: 7.0  }, // every 5min: 2k x8 luck
+                    { intervalSecs: 300, rolls: 100000, luck: 0.5  }, // every 5min: 100k x1.5 luck
+                ]
             },
             devil: {
                 name: "Devil Slots",
-                grid: 16, // 16x16 (256 cells)
-                luck: 6.66, // +666%
-                speed: -0.66, // -66%
+                grid: 16,
+                luck: 6.66,
+                speed: -0.66,
                 req: { 0: 6666666, 6: 66 },
-                desc: "a massive dark frame. incredibly slow roll rate, but luck is extremely high."
+                desc: "a massive dark frame. incredibly slow roll rate, but luck is extremely high.",
+                bonusSims: [
+                    { intervalSecs: 360, rolls: 666, luck: 65.6 }, // every 6min: 666 rolls x66.6 luck
+                ]
             },
             burnt: {
                 name: "Burnt Slots",
-                grid: 30, // 30x30
-                luckMulti: 0.0001, // x1e-4 luck
-                speed: 12.50, // +1250%
+                grid: 30,
+                luckMulti: 0.0001,
+                speed: 12.50,
                 req: { 8: 15, 0: 1e7, 9: 5 },
-                desc: "scorched from absolute overallocation. absurd speed but catastrophically ruined luck multipliers."
+                desc: "scorched from absolute overallocation. absurd speed but catastrophically ruined luck multipliers.",
+                bonusSims: [
+                    { intervalSecs: 900,  rolls: 5000000, luck: -0.9975 }, // every 15min: 5m x0.0025 luck
+                    { intervalSecs: 900,  rolls: 750000,  luck: -0.99   }, // every 15min: 750k x0.01 luck
+                ]
             },
 camerontest: {
 name: "test !!",
@@ -953,11 +1029,13 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 if (parsed.procrastinationUnlocked) state.procrastinationUnlocked = true;
                 if (parsed.explosionUsedAt) state.explosionUsedAt = parsed.explosionUsedAt;
                 if (parsed.fireBombUsedAt) state.fireBombUsedAt = parsed.fireBombUsedAt;
+                if (parsed.bonusSimLastFired) state.bonusSimLastFired = parsed.bonusSimLastFired;
                 if (parsed.areaInventory) {
-                    state.areaInventory.annoying = parsed.areaInventory.annoying || {};
-                    state.areaInventory.serious  = parsed.areaInventory.serious  || {};
-                    state.areaInventory.money    = parsed.areaInventory.money    || {};
-                    state.areaInventory.rng      = parsed.areaInventory.rng      || {};
+                    state.areaInventory.annoying  = parsed.areaInventory.annoying  || {};
+                    state.areaInventory.serious   = parsed.areaInventory.serious   || {};
+                    state.areaInventory.money     = parsed.areaInventory.money     || {};
+                    state.areaInventory.rng       = parsed.areaInventory.rng       || {};
+                    state.areaInventory.elements  = parsed.areaInventory.elements  || {};
                 }
                 if (typeof parsed.totalSimulated === 'number') state.totalSimulated = parsed.totalSimulated;
                 
@@ -1760,13 +1838,20 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 displayName: () => state.unusualTiers.procrastination > 0 ? 'procastinatiob master !!!' : '???',
                 color: 'text-yellow-300',
                 bg: 'bg-yellow-900/30 border-yellow-500/30',
-                // 1/1.5b, unaffected by luck, only rollable for ONE simulation after
-                // clicking "by cameron" at x:x4 AM (minutes ending in 4)
                 check: (totalRollCount) => {
                     if (!state.procrastinationUnlocked) return 0;
-                    state.procrastinationUnlocked = false; // consume the unlock
+                    state.procrastinationUnlocked = false;
                     return Math.random() < 1/1500000000 ? 1 : 0;
                 }
+            },
+            quanneng: {
+                id: 'quanneng',
+                name: '全能的',
+                displayName: () => (state.unusualTiers.quanneng || 0) > 0 ? '全能的' : '???',
+                color: 'text-yellow-200',
+                bg: 'bg-yellow-900/30 border-yellow-400/40',
+                // checked inside doElementsRoll — no check() here
+                check: () => 0
             }
         };
 
@@ -2102,14 +2187,15 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                     const count = ut[key] || 0;
                     const row = document.createElement('div');
                     const found = count > 0;
+                    const areaLabel = key === 'quanneng' ? 'elements' : key === 'decay' || key === 'question' || key === 'procrastination' ? '10^n sim' : '';
                     row.className = `flex justify-between items-center p-2.5 rounded-xl border ${found ? def.bg : 'border-gray-800/50 bg-gray-950/20 opacity-40'} transition-all`;
-                    row.innerHTML = `<div class="flex flex-col gap-0.5"><span class="font-bold text-xs ${found ? def.color : 'text-gray-500'}">${found ? def.displayName() : '???'}</span><span class="text-[10px] text-gray-600 font-mono">unusual tier</span></div><span class="font-extrabold font-mono text-sm ${found ? def.color : 'text-gray-600'}">${count.toLocaleString()}</span>`;
+                    row.innerHTML = `<div class="flex flex-col gap-0.5"><span class="font-bold text-xs ${found ? def.color : 'text-gray-500'}">${found ? def.displayName() : '???'}</span><span class="text-[10px] text-gray-600 font-mono">unusual${areaLabel ? ` — ${areaLabel}` : ''}</span></div><span class="font-extrabold font-mono text-sm ${found ? def.color : 'text-gray-600'}">${count.toLocaleString()}</span>`;
                     unusualSection.appendChild(row);
                 }
             }
 
             // Mirror inventory into annoying + serious panels (compact rows)
-            ['annoying', 'serious', 'money'].forEach(area => {
+            ['annoying', 'serious', 'money', 'elements'].forEach(area => {
                 const mirrorList = document.getElementById(`${area}-inventory-list`);
                 const mirrorTotal = document.getElementById(`${area}-total-rolls-count`);
                 if (!mirrorList) return;
@@ -2489,6 +2575,34 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
 
         // --- PRIMARY EVENT LOOPS ---
 
+        function processBonusSims() {
+            const item = ITEMS[state.activeSlotId];
+            if (!item || !item.bonusSims) return;
+            const now = Date.now();
+            if (!state.bonusSimLastFired) state.bonusSimLastFired = {};
+            for (let i = 0; i < item.bonusSims.length; i++) {
+                const sim = item.bonusSims[i];
+                const key = `${state.activeSlotId}_${i}`;
+                const lastFired = state.bonusSimLastFired[key] || 0;
+                const elapsed = (now - lastFired) / 1000;
+                if (elapsed >= sim.intervalSecs) {
+                    state.bonusSimLastFired[key] = now;
+                    // add rolls as a special bucket with the sim's own luck
+                    const luckMulti = item.luckMulti !== undefined ? item.luckMulti : 1.0;
+                    if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
+                    const bucketKey = `${state.activeSlotId}_bonus_${i}`;
+                    const existing = state.pendingRollBuckets.find(b => b.slotId === bucketKey);
+                    if (existing) {
+                        existing.count += sim.rolls;
+                    } else {
+                        state.pendingRollBuckets.push({ slotId: bucketKey, luck: sim.luck, luckMulti, count: sim.rolls });
+                    }
+                    state.unspentRolls += sim.rolls;
+                    addLog(`<span class="text-blue-300 font-semibold">${item.name} bonus: +${sim.rolls.toLocaleString()} rolls (x${(1+sim.luck).toFixed(2)} luck)</span>`);
+                }
+            }
+        }
+
         function gameTick() {
             if (state.antiTamperFrozenSecs > 0) {
                 state.antiTamperFrozenSecs--;
@@ -2502,6 +2616,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
 
             const currentRate = getRollRate();
             addRollsWithSlotLuck(currentRate, state.activeSlotId);
+            processBonusSims();
             state.lastTickTime = Date.now();
 
             const isDay = checkIsDaytime();
@@ -2732,9 +2847,10 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
             if (btnEl) btnEl.disabled = true;
             simulateAreaRolls((merged, total, highest) => {
-                const result = pickBestAreaTier(SERIOUS_TIERS_RAW, total, getLuckBonus());
+                const { best: result, counts } = pickBestAreaTier(SERIOUS_TIERS_RAW, total, getLuckBonus());
                 if (!state.areaInventory.serious) state.areaInventory.serious = {};
-                state.areaInventory.serious[result.name] = (state.areaInventory.serious[result.name] || 0) + 1;
+                for (const [name, c] of Object.entries(counts))
+                    state.areaInventory.serious[name] = (state.areaInventory.serious[name] || 0) + c;
                 resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated — best 10^n: 10^${highest}</span></div>`;
                 document.getElementById('serious-last-value').innerText = result.name;
                 renderSeriousGrid(result.svgIdx);
@@ -2917,8 +3033,10 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 document.getElementById('rng-last-value').innerText = rounded.toLocaleString();
                 renderRNGGrid(value);
                 if (!state.areaInventory.rng) state.areaInventory.rng = {};
-                const rngKey = `10^${highest}`;
-                state.areaInventory.rng[rngKey] = (state.areaInventory.rng[rngKey] || 0) + 1;
+                for (const [tier, c] of Object.entries(merged)) {
+                    const key = `10^${tier}`;
+                    state.areaInventory.rng[key] = (state.areaInventory.rng[key] || 0) + c;
+                }
                 renderAreaInventory('rng', 'rng-area-inventory', 'rng-roll-count');
                 if (btnEl) btnEl.disabled = false;
             });
@@ -2933,19 +3051,18 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             { name: '🟫 Loser Square',                 chance: 1,        color: 'text-gray-400',   bg: 'bg-gray-900/60 border-gray-800' },
         ];
 
-        // Simulate `total` rolls against an area tier table and return the rarest tier hit.
-        // Uses Poisson sampling (same as main sim) then walks replacement chains on any hits.
+        // Simulate `total` rolls against an area tier table.
+        // Returns { best: tier, counts: {tierName: hitCount} } for ALL tiers that fired.
         function pickBestAreaTier(tierTable, total, luck) {
-            if (total <= 0) return tierTable.find(t => t.chance >= 1) || tierTable[tierTable.length - 1];
+            const fallback = tierTable.find(t => t.chance >= 1) || tierTable[tierTable.length - 1];
+            if (total <= 0) return { best: fallback, counts: { [fallback.name]: 1 } };
 
-            // Sort base tiers (non-replacers) rarest→common
             const baseTiers = tierTable.filter(t => !t.replaces);
             const sorted = [...baseTiers].sort((a, b) => a.chance - b.chance);
 
-            // For each base tier, Poisson-sample how many hits from `total` rolls
-            // Walk rarest→common, track remaining rolls (same as main simulateJob)
             let remaining = total;
             let bestTier = null;
+            const counts = {};
 
             for (const tier of sorted) {
                 if (remaining <= 0) break;
@@ -2955,33 +3072,38 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 const hits = Math.min(poissonSample(lambda), remaining);
                 if (hits > 0) {
                     remaining -= hits;
-                    // attempt replacement chain on this tier
+                    // walk replacement chain
                     let current = tier;
+                    let currentHits = hits;
                     let safety = 0;
                     while (safety++ < 20) {
                         const replacers = tierTable.filter(t => t.replaces === current.id);
                         if (!replacers.length) break;
-                        // each replacer: did any of the `hits` rolls also hit it?
                         const winners = [];
                         for (const rep of replacers) {
-                            const repLambda = hits * Math.min(rep.chance, 1.0);
-                            if (poissonSample(repLambda) > 0) winners.push(rep);
+                            const repHits = poissonSample(currentHits * Math.min(rep.chance, 1.0));
+                            if (repHits > 0) winners.push({ tier: rep, hits: repHits });
                         }
                         if (!winners.length) break;
-                        winners.sort((a, b) => a.chance - b.chance);
-                        current = winners[0];
+                        winners.sort((a, b) => a.tier.chance - b.tier.chance);
+                        // add non-replaced hits to base tier count
+                        const replacedHits = winners.reduce((s, w) => s + w.hits, 0);
+                        const baseHits = Math.max(0, currentHits - replacedHits);
+                        if (baseHits > 0) counts[current.name] = (counts[current.name] || 0) + baseHits;
+                        current = winners[0].tier;
+                        currentHits = winners[0].hits;
                     }
-                    // track rarest result
+                    counts[current.name] = (counts[current.name] || 0) + currentHits;
                     if (!bestTier || current.chance < bestTier.chance) bestTier = current;
                 }
             }
 
-            // fallback to most common if nothing hit
+            // always add at least the most common tier if nothing hit
             if (!bestTier) {
-                const common = tierTable.find(t => t.chance >= 1) || tierTable[tierTable.length - 1];
-                bestTier = common;
+                bestTier = fallback;
+                counts[fallback.name] = (counts[fallback.name] || 0) + 1;
             }
-            return bestTier;
+            return { best: bestTier, counts };
         }
 
         // Pre-compute real (compounded) odds for each tier.
@@ -3015,9 +3137,10 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
             if (btnEl) btnEl.disabled = true;
             simulateAreaRolls((merged, total, highest) => {
-                const result = pickBestAreaTier(ANNOYING_TIERS, total, getLuckBonus());
+                const { best: result, counts } = pickBestAreaTier(ANNOYING_TIERS, total, getLuckBonus());
                 if (!state.areaInventory.annoying) state.areaInventory.annoying = {};
-                state.areaInventory.annoying[result.name] = (state.areaInventory.annoying[result.name] || 0) + 1;
+                for (const [name, c] of Object.entries(counts))
+                    state.areaInventory.annoying[name] = (state.areaInventory.annoying[name] || 0) + c;
                 const tierIndex = ANNOYING_TIERS.findIndex(t => t.name === result.name);
                 const svgIndex = ANNOYING_TIERS.length - 1 - tierIndex;
                 resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated — best 10^n: 10^${highest}</span></div>`;
@@ -3030,7 +3153,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
         }
 
         function switchArea(area) {
-            ['main','rng','annoying','serious','money'].forEach(a => {
+            ['main','rng','annoying','serious','money','elements'].forEach(a => {
                 const el = document.getElementById(`area-${a}`);
                 const btn = document.getElementById(`area-${a}-btn`);
                 if (!el || !btn) return;
@@ -3056,16 +3179,24 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
         function buildMoneyTierPool() {
             const pool = [];
             for (const t of MONEY_BASE_TIERS) pool.push({...t});
+            // annoying tiers ×50 rarer
             for (const t of ANNOYING_TIERS) {
                 if (t.chance < 1) pool.push({ id:'ann_'+t.name, name:t.name, chance:t.chance/50, color:t.color, bg:t.bg, source:'annoying' });
             }
+            // serious tiers ×50 rarer
             for (const t of SERIOUS_TIERS_RAW) {
                 if (t.chance < 1) pool.push({ id:'ser_'+t.id, name:t.name, chance:t.chance/50, color:t.color, bg:t.bg, svgIdx:t.svgIdx, replaces: t.replaces ? 'ser_'+t.replaces : undefined, source:'serious' });
             }
+            // elements tiers ×50 rarer (base tiers 1/1 skipped, replacements chained)
+            for (const t of ELEMENTS_TIERS) {
+                if (t.chance < 1) pool.push({ id:'el_'+t.id, name:t.name, chance:t.chance/50, color:t.color, bg:t.bg, replaces: t.replaces ? 'el_'+t.replaces : undefined, source:'elements' });
+            }
+            // unusual tiers ×100k rarer, no requirements, hidden until found
             const unusualDefs = [
                 { id:'u_decay', name:'THE DECAY',                chance:1/(23431*100000), color:'text-green-300',  bg:'bg-green-900/30 border-green-500/30' },
                 { id:'u_quest', name:'???',                      chance:1/(7500*100000),  color:'text-gray-400',   bg:'bg-gray-900/30 border-gray-500/20' },
                 { id:'u_procr', name:'procastinatiob master !!!',chance:1/(1.5e9*100000), color:'text-yellow-300', bg:'bg-yellow-900/30 border-yellow-500/30' },
+                { id:'u_quan',  name:'全能的',                   chance:1/(777*100000),   color:'text-yellow-200', bg:'bg-yellow-900/30 border-yellow-400/40' },
             ];
             for (const t of unusualDefs) pool.push(t);
             return pool;
@@ -3077,12 +3208,29 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             container.innerHTML = '';
             const pool = buildMoneyTierPool();
             const sorted = [...pool].sort((a,b) => b.chance - a.chance);
+            const unusualIds = new Set(['u_decay','u_quest','u_procr','u_quan']);
+            const moneyInv = state.areaInventory.money || {};
             for (const t of sorted) {
+                const isUnusual = unusualIds.has(t.id);
+                const found = isUnusual ? moneyInv[t.name] > 0 : false;
+                // hide unusual tiers until found
+                if (isUnusual && !found) continue;
                 const chanceStr = t.chance >= 1 ? '1/1' : `1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:0})}`;
                 const sourceTag = t.source ? ` <span class="text-gray-600 text-[9px]">[${t.source}]</span>` : '';
+                const unusualTag = isUnusual ? ` <span class="text-purple-400 text-[9px]">[unusual]</span>` : '';
                 const row = document.createElement('div');
                 row.className = `flex items-center gap-2 rounded-lg px-2 py-1.5 border ${t.bg}`;
-                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${t.color} text-[11px]">${t.emoji||''} ${t.name}${sourceTag}</div><div class="font-mono text-[9px] text-gray-500">${chanceStr}</div></div>`;
+                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${t.color} text-[11px]">${t.name}${sourceTag}${unusualTag}</div><div class="font-mono text-[9px] text-gray-500">${chanceStr}</div></div>`;
+                container.appendChild(row);
+            }
+            // show placeholder rows for undiscovered unusual tiers
+            for (const uid of unusualIds) {
+                const t = pool.find(p => p.id === uid);
+                if (!t) continue;
+                if (moneyInv[t.name] > 0) continue;
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 rounded-lg px-2 py-1.5 border bg-gray-950/20 border-gray-800/40 opacity-40';
+                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold text-gray-600 text-[11px]">??? <span class="text-[9px]">[unusual]</span></div><div class="font-mono text-[9px] text-gray-700">???</div></div>`;
                 container.appendChild(row);
             }
         }
@@ -3102,11 +3250,12 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             const moneyLuck = Math.pow(Math.max(0, getLuckBonus()), 0.5);
             simulateAreaRolls((merged, total, highest) => {
                 const pool = buildMoneyTierPool();
-                const result = pickBestAreaTier(pool, total, moneyLuck);
+                const { best: result, counts } = pickBestAreaTier(pool, total, moneyLuck);
                 if (!state.areaInventory.money) state.areaInventory.money = {};
-                state.areaInventory.money[result.name] = (state.areaInventory.money[result.name] || 0) + 1;
-                resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.emoji||''} ${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls — best 10^n: 10^${highest}</span></div>`;
-                document.getElementById('money-last-value').innerText = (result.emoji||'') + ' ' + result.name;
+                for (const [name, c] of Object.entries(counts))
+                    state.areaInventory.money[name] = (state.areaInventory.money[name] || 0) + c;
+                resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls — best 10^n: 10^${highest}</span></div>`;
+                document.getElementById('money-last-value').innerText = result.name;
                 const item = getActiveItemConfig();
                 const grid = document.getElementById('money-result-grid');
                 if (grid) {
@@ -3131,6 +3280,187 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 else if (rarity >= 1000) flashScreen(12);
                 else if (rarity >= 100) flashScreen(9);
                 renderAreaInventory('money', 'money-area-inventory', 'money-roll-count');
+                renderMoneyTierList();
+                if (btnEl) btnEl.disabled = false;
+            });
+        }
+
+        // --- ELEMENTS AREA ---
+        const ELEMENTS_TIERS = [
+            // base elements (1/1 each)
+            { id:'air',    name:'air',    chance:1, color:'text-sky-300',    bg:'bg-sky-900/20 border-sky-500/20',    svgIdx:0 },
+            { id:'fire',   name:'fire',   chance:1, color:'text-red-400',    bg:'bg-red-900/20 border-red-500/20',    svgIdx:1 },
+            { id:'water',  name:'water',  chance:1, color:'text-blue-400',   bg:'bg-blue-900/20 border-blue-500/20',  svgIdx:2 },
+            { id:'ground', name:'ground', chance:1, color:'text-amber-400',  bg:'bg-amber-900/20 border-amber-500/20',svgIdx:3 },
+            // tier 2 (1/200, replace base)
+            { id:'wind',      name:'wind',      chance:1/200,  color:'text-cyan-300',   bg:'bg-cyan-900/20 border-cyan-500/20',   svgIdx:4,  replaces:'air' },
+            { id:'explosion', name:'explosion', chance:1/200,  color:'text-orange-400', bg:'bg-orange-900/20 border-orange-500/20',svgIdx:5, replaces:'fire' },
+            { id:'pond',      name:'pond',      chance:1/200,  color:'text-teal-400',   bg:'bg-teal-900/20 border-teal-500/20',   svgIdx:6,  replaces:'water' },
+            { id:'mountain',  name:'mountain',  chance:1/200,  color:'text-stone-400',  bg:'bg-stone-900/20 border-stone-500/20', svgIdx:7,  replaces:'ground' },
+            // tier 3 (1/50, replace tier 2)
+            { id:'plasma',  name:'plasma',  chance:1/50, color:'text-violet-400', bg:'bg-violet-900/20 border-violet-500/20',svgIdx:8,  replaces:'explosion' },
+            { id:'gust',    name:'gust',    chance:1/50, color:'text-indigo-300', bg:'bg-indigo-900/20 border-indigo-500/20',svgIdx:9,  replaces:'wind' },
+            { id:'ocean',   name:'ocean',   chance:1/50, color:'text-blue-300',   bg:'bg-blue-900/30 border-blue-400/30',    svgIdx:10, replaces:'pond' },
+            { id:'earth',   name:'earth',   chance:1/50, color:'text-green-400',  bg:'bg-green-900/20 border-green-500/20',  svgIdx:11, replaces:'mountain' },
+            // tier 4 gods (1/250,625,125, replace tier 3)
+            { id:'huoshen',   name:'火神',    chance:1/250625125, color:'text-red-300',    bg:'bg-red-900/30 border-red-400/40',    svgIdx:12, replaces:'plasma' },
+            { id:'kongqishen',name:'空气之神', chance:1/250625125, color:'text-sky-200',    bg:'bg-sky-900/30 border-sky-400/40',    svgIdx:13, replaces:'gust' },
+            { id:'shuishen',  name:'水之神',  chance:1/250625125, color:'text-blue-200',   bg:'bg-blue-900/30 border-blue-400/40',  svgIdx:14, replaces:'ocean' },
+            { id:'diqiushen', name:'地球之神', chance:1/250625125, color:'text-emerald-300',bg:'bg-emerald-900/30 border-emerald-400/40',svgIdx:15, replaces:'earth' },
+        ];
+
+        // 全能的 unusual tier — needs all 4 gods in one sim then 1/777
+        // tracked separately in unusualTiers.quanneng
+        const QUANNENG_TIER = {
+            id: 'quanneng', name: '全能的',
+            color: 'text-yellow-200', bg: 'bg-yellow-900/30 border-yellow-400/40'
+        };
+
+        // SVGs for all 16 element tiers (indices 0-15)
+        const ELEMENTS_SVG = [
+            // 0: air — wispy swirls
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M3,12 Q6,7 12,12 Q18,17 21,12" fill="none" stroke="#7dd3fc" stroke-width="1.5" stroke-linecap="round"/><path d="M3,16 Q8,11 14,16 Q19,21 22,16" fill="none" stroke="#bae6fd" stroke-width="1" stroke-linecap="round" opacity="0.6"/><circle cx="20" cy="8" r="2" fill="#38bdf8" opacity="0.4"/></svg>`,
+            // 1: fire — flame
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="fg${s}" cx="50%" cy="80%"><stop offset="0%" stop-color="#fbbf24"/><stop offset="60%" stop-color="#ef4444"/><stop offset="100%" stop-color="#7c2d12" stop-opacity="0"/></radialGradient></defs><path d="M12,2 Q16,8 14,12 Q18,8 16,14 Q19,11 17,17 Q15,22 12,22 Q9,22 7,17 Q5,11 8,14 Q6,8 10,12 Q8,8 12,2Z" fill="url(#fg${s})"/><path d="M12,10 Q13,14 12,18 Q11,14 12,10Z" fill="#fef08a" opacity="0.7"/></svg>`,
+            // 2: water — droplet
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><linearGradient id="wg${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#1d4ed8"/></linearGradient></defs><path d="M12,2 Q18,10 18,15 A6,6 0 0,1 6,15 Q6,10 12,2Z" fill="url(#wg${s})"/><ellipse cx="10" cy="13" rx="2" ry="3" fill="white" opacity="0.25" transform="rotate(-20,10,13)"/></svg>`,
+            // 3: ground — layered earth
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><rect x="2" y="16" width="20" height="4" rx="1" fill="#92400e"/><rect x="2" y="12" width="20" height="4" rx="1" fill="#b45309"/><rect x="2" y="8" width="20" height="4" rx="1" fill="#d97706"/><path d="M4,8 Q8,4 12,6 Q16,4 20,8" fill="#86efac" opacity="0.8"/></svg>`,
+            // 4: wind — swirling lines
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M2,8 Q8,4 14,8 Q18,10 16,14 Q14,18 10,16" fill="none" stroke="#67e8f9" stroke-width="2" stroke-linecap="round"/><path d="M2,14 Q7,10 12,14 Q15,16 14,19 Q13,21 11,20" fill="none" stroke="#a5f3fc" stroke-width="1.5" stroke-linecap="round"/><circle cx="16" cy="7" r="2.5" fill="none" stroke="#67e8f9" stroke-width="1"/></svg>`,
+            // 5: explosion — burst
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="eg${s}" cx="50%" cy="50%"><stop offset="0%" stop-color="#fef08a"/><stop offset="40%" stop-color="#f97316"/><stop offset="100%" stop-color="#7c2d12" stop-opacity="0"/></radialGradient></defs><polygon points="12,1 14,8 21,6 16,11 22,14 15,14 17,21 12,17 7,21 9,14 2,14 8,11 3,6 10,8" fill="url(#eg${s})"/></svg>`,
+            // 6: pond — calm water with lily pad
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="10" ry="5" fill="#0e7490" opacity="0.7"/><ellipse cx="12" cy="14" rx="10" ry="4" fill="#0891b2" opacity="0.5"/><ellipse cx="9" cy="14" rx="3.5" ry="2" fill="#16a34a" opacity="0.8"/><path d="M9,12 L9,14" stroke="#15803d" stroke-width="0.8"/><circle cx="14" cy="13" r="1" fill="#f9a8d4" opacity="0.9"/></svg>`,
+            // 7: mountain — peaks
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><polygon points="12,3 22,21 2,21" fill="#78716c"/><polygon points="12,3 16,11 8,11" fill="white" opacity="0.7"/><polygon points="6,10 13,21 2,21" fill="#57534e" opacity="0.5"/></svg>`,
+            // 8: plasma — electric orb
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="pg${s}" cx="50%" cy="50%"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="50%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#2e1065" stop-opacity="0.3"/></radialGradient></defs><circle cx="12" cy="12" r="9" fill="url(#pg${s})"/><path d="M12,4 L10,11 L14,11 L9,20 L13,13 L9,13 Z" fill="#fde68a" opacity="0.9"/><circle cx="12" cy="12" r="3" fill="white" opacity="0.3"/></svg>`,
+            // 9: gust — tornado
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M12,3 Q18,5 16,9 Q14,13 12,13 Q10,13 8,15 Q6,19 12,21" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round"/><path d="M8,6 Q14,7 13,10 Q12,13 10,14" fill="none" stroke="#c7d2fe" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/><path d="M10,17 Q13,18 14,20" fill="none" stroke="#818cf8" stroke-width="1" stroke-linecap="round" opacity="0.5"/></svg>`,
+            // 10: ocean — waves
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><linearGradient id="og${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#1e3a5f"/></linearGradient></defs><rect x="0" y="0" width="24" height="24" fill="url(#og${s})" opacity="0.8" rx="2"/><path d="M0,10 Q4,7 8,10 Q12,13 16,10 Q20,7 24,10" fill="none" stroke="white" stroke-width="1.2" opacity="0.6"/><path d="M0,15 Q4,12 8,15 Q12,18 16,15 Q20,12 24,15" fill="none" stroke="white" stroke-width="1" opacity="0.4"/><circle cx="19" cy="5" r="3" fill="#fbbf24" opacity="0.6"/></svg>`,
+            // 11: earth — planet with crust
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#166534"/><ellipse cx="9" cy="10" rx="4" ry="3" fill="#15803d" transform="rotate(-20,9,10)"/><ellipse cx="16" cy="14" rx="3" ry="2" fill="#15803d" transform="rotate(15,16,14)"/><path d="M2,12 Q12,8 22,12" fill="none" stroke="#86efac" stroke-width="0.5" opacity="0.4"/><circle cx="12" cy="12" r="10" fill="none" stroke="#4ade80" stroke-width="0.5" opacity="0.3"/></svg>`,
+            // 12: 火神 — fire god, ornate flame crown
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="hg${s}" cx="50%" cy="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="40%" stop-color="#f97316"/><stop offset="80%" stop-color="#dc2626"/><stop offset="100%" stop-color="#450a0a" stop-opacity="0"/></radialGradient></defs><path d="M12,1 Q17,6 15,10 Q20,5 18,12 Q22,8 20,15 Q18,21 12,22 Q6,21 4,15 Q2,8 6,12 Q4,5 9,10 Q7,6 12,1Z" fill="url(#hg${s})"/><path d="M12,8 Q14,13 12,19 Q10,13 12,8Z" fill="#fef9c3" opacity="0.8"/><polygon points="12,1 13,4 12,3 11,4" fill="#fbbf24"/><polygon points="8,2 9,5 8,4 7,5" fill="#f97316" opacity="0.8"/><polygon points="16,2 17,5 16,4 15,5" fill="#f97316" opacity="0.8"/><text x="12" y="13" text-anchor="middle" font-size="4" fill="#fef9c3" font-family="serif" font-weight="bold" opacity="0.9">神</text></svg>`,
+            // 13: 空气之神 — air god, divine wind spiral
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="ag${s}" cx="50%" cy="50%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0.2"/></radialGradient></defs><circle cx="12" cy="12" r="10" fill="url(#ag${s})" opacity="0.6"/><path d="M12,4 Q18,6 17,10 Q16,14 12,13 Q8,12 8,15 Q8,19 12,20" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/><path d="M7,6 Q13,7 12,11 Q11,14 9,14" fill="none" stroke="#7dd3fc" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/><text x="12" y="13" text-anchor="middle" font-size="4" fill="#bae6fd" font-family="serif" font-weight="bold" opacity="0.9">神</text><circle cx="12" cy="12" r="10" fill="none" stroke="#7dd3fc" stroke-width="0.5" opacity="0.5"/></svg>`,
+            // 14: 水之神 — water god, divine droplet with glow
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="wdg${s}" cx="50%" cy="60%"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="60%" stop-color="#1d4ed8"/><stop offset="100%" stop-color="#1e3a8a" stop-opacity="0.5"/></radialGradient></defs><path d="M12,1 Q20,10 20,16 A8,8 0 0,1 4,16 Q4,10 12,1Z" fill="url(#wdg${s})"/><ellipse cx="9" cy="14" rx="2.5" ry="4" fill="white" opacity="0.2" transform="rotate(-20,9,14)"/><text x="12" y="17" text-anchor="middle" font-size="4" fill="#bfdbfe" font-family="serif" font-weight="bold" opacity="0.9">神</text><circle cx="12" cy="12" r="11" fill="none" stroke="#93c5fd" stroke-width="0.5" opacity="0.4"/></svg>`,
+            // 15: 地球之神 — earth god, divine planet
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 24 24"><defs><radialGradient id="edg${s}" cx="40%" cy="40%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#064e3b"/></radialGradient></defs><circle cx="12" cy="12" r="10" fill="url(#edg${s})"/><ellipse cx="8" cy="9" rx="4" ry="2.5" fill="#15803d" transform="rotate(-20,8,9)"/><ellipse cx="16" cy="15" rx="3.5" ry="2" fill="#166534" transform="rotate(10,16,15)"/><ellipse cx="13" cy="8" rx="2" ry="1.5" fill="#15803d" opacity="0.8"/><text x="12" y="14" text-anchor="middle" font-size="4" fill="#d1fae5" font-family="serif" font-weight="bold" opacity="0.9">神</text><circle cx="12" cy="12" r="10" fill="none" stroke="#4ade80" stroke-width="0.6" opacity="0.5"/></svg>`,
+        ];
+
+        function renderElementsTierList() {
+            const container = document.getElementById('elements-tier-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const realOdds = computeRealOdds(ELEMENTS_TIERS);
+            // display common→rare
+            const sorted = [...ELEMENTS_TIERS].sort((a,b) => b.chance - a.chance);
+            for (const t of sorted) {
+                const statedStr = t.chance >= 1 ? '1/1' : `1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                const real = realOdds[t.id];
+                const realStr = real && real !== t.chance
+                    ? ` <span class="text-orange-400 font-bold">(real: 1 / ${(1/real).toLocaleString(undefined,{maximumFractionDigits:0})})</span>`
+                    : '';
+                const row = document.createElement('div');
+                row.className = `flex items-center gap-2 rounded-lg px-3 py-2 border ${t.bg}`;
+                const svgWrap = document.createElement('div');
+                svgWrap.className = 'w-8 h-8 flex-shrink-0';
+                svgWrap.innerHTML = ELEMENTS_SVG[t.svgIdx](32);
+                const info = document.createElement('div');
+                info.className = 'flex-1 min-w-0';
+                info.innerHTML = `<div class="font-bold ${t.color} text-xs">${t.name}${t.replaces ? ` <span class="text-gray-600 text-[9px]">(replaces ${t.replaces})</span>` : ''}</div><div class="font-mono text-[10px] text-gray-500">${statedStr}${realStr}</div>`;
+                row.appendChild(svgWrap);
+                row.appendChild(info);
+                container.appendChild(row);
+            }
+        }
+
+        function renderElementsGrid(svgIdx) {
+            const grid = document.getElementById('elements-result-grid');
+            if (!grid) return;
+            const item = getActiveItemConfig();
+            const w = item.grid;
+            grid.style.gridTemplateColumns = `repeat(${w}, minmax(0, 1fr))`;
+            grid.style.gridTemplateRows = `repeat(${w}, minmax(0, 1fr))`;
+            grid.innerHTML = '';
+            const containerPx = grid.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / w);
+            const baseSize = Math.round(cellPx * 1.2);
+            for (let i = 0; i < w*w; i++) {
+                const cell = document.createElement('div');
+                const isFeature = i === 0;
+                const t = isFeature ? svgIdx : (Math.random() < 0.08 ? svgIdx : Math.floor(Math.random() * 4));
+                cell.className = 'w-full h-full flex items-center justify-center border-b border-r border-gray-800/60 overflow-visible relative';
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;`;
+                const sz = isFeature ? Math.round(baseSize * 1.8) : baseSize;
+                wrap.innerHTML = ELEMENTS_SVG[t] ? ELEMENTS_SVG[t](sz) : ELEMENTS_SVG[0](sz);
+                cell.appendChild(wrap);
+                grid.appendChild(cell);
+            }
+        }
+
+        function doElementsRoll() {
+            const btnEl = document.getElementById('elements-roll-btn');
+            const resultEl = document.getElementById('elements-result');
+            if (isSimulating) return;
+            if ((state.unspentRolls || 0) < 1) {
+                resultEl.innerHTML = `<span class="text-sm text-red-400 font-semibold">No rolls available — wait for more to accumulate.</span>`;
+                return;
+            }
+            const rollCount = Math.floor(state.unspentRolls);
+            resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
+            if (btnEl) btnEl.disabled = true;
+            const luck = getLuckBonus();
+            simulateAreaRolls((merged, total, highest) => {
+                const { best: result, counts: elCounts } = pickBestAreaTier(ELEMENTS_TIERS, total, luck);
+                if (!state.areaInventory.elements) state.areaInventory.elements = {};
+                for (const [name, c] of Object.entries(elCounts))
+                    state.areaInventory.elements[name] = (state.areaInventory.elements[name] || 0) + c;
+
+                // Check for 全能的 — all 4 gods must have fired in this sim
+                const gods = ['huoshen','kongqiushen','shuishen','diqiushen'];
+                // simulate each god chain independently
+                const allGodsHit = ['huoshen','kongqishen','shuishen','diqiushen'].every(godId => {
+                    const god = ELEMENTS_TIERS.find(t => t.id === godId);
+                    if (!god) return false;
+                    const realOdds = computeRealOdds(ELEMENTS_TIERS);
+                    const odds = realOdds[godId] || god.chance;
+                    return poissonSample(total * Math.min(odds * (1 + luck), 1)) > 0;
+                });
+                let quannengHit = false;
+                if (allGodsHit && Math.random() < 1/777) {
+                    quannengHit = true;
+                    if (!state.unusualTiers) state.unusualTiers = {};
+                    state.unusualTiers.quanneng = (state.unusualTiers.quanneng || 0) + 1;
+                }
+
+                if (!state.areaInventory.elements) state.areaInventory.elements = {};
+                if (quannengHit) {
+                    state.areaInventory.elements['全能的'] = (state.areaInventory.elements['全能的'] || 0) + 1;
+                }
+
+                const displayTier = quannengHit ? QUANNENG_TIER : result;
+                resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${displayTier.bg} ${displayTier.color} font-extrabold text-lg">${displayTier.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls — best 10^n: 10^${highest}</span></div>`;
+                document.getElementById('elements-last-value').innerText = displayTier.name;
+                renderElementsGrid(quannengHit ? 12 : result.svgIdx);
+
+                if (quannengHit) { flashScreen(21); addLog(`<span class="text-yellow-300 font-bold">全能的 — THE OMNIPOTENT</span>`); }
+                else {
+                    const realOdds = computeRealOdds(ELEMENTS_TIERS);
+                    const rarity = 1 / (realOdds[result.id] || result.chance);
+                    if (rarity >= 1e8) flashScreen(21);
+                    else if (rarity >= 1e6) flashScreen(18);
+                    else if (rarity >= 1e4) flashScreen(15);
+                    else if (rarity >= 1000) flashScreen(12);
+                    else if (rarity >= 100) flashScreen(9);
+                }
+
+                renderAreaInventory('elements', 'elements-area-inventory', 'elements-roll-count');
                 if (btnEl) btnEl.disabled = false;
             });
         }
@@ -3217,12 +3547,14 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             // Build serious and money tier lists
             renderSeriousTierList();
             renderMoneyTierList();
+            renderElementsTierList();
 
             // Restore area inventories
-            renderAreaInventory('annoying', 'annoying-area-inventory', 'annoying-roll-count');
-            renderAreaInventory('serious',  'serious-area-inventory',  'serious-roll-count');
-            renderAreaInventory('money',    'money-area-inventory',    'money-roll-count');
-            renderAreaInventory('rng',      'rng-area-inventory',      'rng-roll-count');
+            renderAreaInventory('annoying',  'annoying-area-inventory',  'annoying-roll-count');
+            renderAreaInventory('serious',   'serious-area-inventory',   'serious-roll-count');
+            renderAreaInventory('money',     'money-area-inventory',     'money-roll-count');
+            renderAreaInventory('rng',       'rng-area-inventory',       'rng-roll-count');
+            renderAreaInventory('elements',  'elements-area-inventory',  'elements-roll-count');
         }
 
         // Force final state save before unload
