@@ -233,6 +233,11 @@
                 <div class="space-y-2 max-h-[360px] overflow-y-auto custom-scroll pr-1" id="inventory-list">
                     <!-- Dynamic Tier Items (10^0 to 10^21) -->
                 </div>
+                <!-- Types Section -->
+                <div class="mt-1 pt-3 border-t border-gray-800/60">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Types Found</div>
+                    <div class="space-y-1.5" id="types-section"></div>
+                </div>
                 <!-- Unusual Tiers Section -->
                 <div class="mt-1 pt-3 border-t border-gray-800/60">
                     <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Unusual Tiers</div>
@@ -717,7 +722,8 @@
             isMuted: false,
             timeDriftErrorSecs: 0,
             antiTamperFrozenSecs: 0,
-            unusualTiers: { decay: 0, question: 0, procrastination: 0 }, // counts found
+            unusualTiers: { question: 0, procrastination: 0 }, // counts found
+            foundTypes: {}, // typeId -> count seen in grid
             procrastinationUnlocked: false, // unlocked by clicking "by Cameron" at x:x4 AM
             explosionUsedAt: null,  // timestamp (ms) when explosion was last activated
             fireBombUsedAt: null,   // timestamp (ms) when fireBomb was last activated
@@ -805,6 +811,14 @@
                 speed: 0.10, // +10%
                 req: { 0: 500, 2: 10 },
                 desc: "harness simple chemical storage to enhance luck and performance speed."
+            },
+            dark: {
+                name: "Dark Slots",
+                grid: 4, // 4x4
+                luck: 0.30, // +30%
+                speed: 0.30, // +30%
+                req: { 0: 5000, 3: 5, 2: 100 },
+                desc: "shadowy architecture channels dim fortune energy into consistent dual gains."
             },
             solarbeam: {
                 name: "Solarbeam Slots",
@@ -921,8 +935,20 @@
                 req: { 8: 15, 0: 1e7, 9: 5 },
                 desc: "scorched from absolute overallocation. absurd speed but catastrophically ruined luck multipliers.",
                 bonusSims: [
-                    { intervalSecs: 900,  rolls: 5000000, luck: -0.9975 }, // every 15min: 5m x0.0025 luck
-                    { intervalSecs: 900,  rolls: 750000,  luck: -0.99   }, // every 15min: 750k x0.01 luck
+                    { intervalSecs: 900,  rolls: 5000000, luck: -0.9975 },
+                    { intervalSecs: 900,  rolls: 750000,  luck: -0.99   },
+                ]
+            },
+            ultimate: {
+                name: "Ultimate Slots",
+                grid: 15, // 15x15
+                luck: 7.50, // +750%
+                speed: 2.50, // +250%
+                req: { ultimateOne: 25, 12: 1, 1: 1e9, 4: 1e6, 9: 2500, grabber: 10, powder: 75 },
+                desc: "the pinnacle of slot engineering. overwhelming luck and speed with periodic massive sim bursts.",
+                bonusSims: [
+                    { intervalSecs: 900, rolls: 5,      luck: 249999.0 }, // every 15min: 5 rolls x250k luck
+                    { intervalSecs: 900, rolls: 750000, luck: 9.0      }, // every 15min: 750k rolls x10 luck
                 ]
             },
 camerontest: {
@@ -973,8 +999,8 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             grandfather: {
                 id: 'grandfather',
                 name: "Grandfather Clock",
-                cost: { 5: 5, 3: 1000, 6: 1 },
-                desc: "multiplies speed by 1.25 and adds 45 minutes worth of roll generation instantly.",
+                cost: { 5: 5, 3: 1000, 6: 1, 4: 50000, 7: 5 },
+                desc: "adds +0.2x speed (stacking) and adds 45 minutes worth of roll generation instantly.",
                 cap: 3,
                 color: "from-amber-600 to-orange-800"
             },
@@ -1022,7 +1048,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                     state.pendingRollBuckets = [{ slotId: state.activeSlotId, luck: item.luck !== undefined ? item.luck : 0, luckMulti: item.luckMulti !== undefined ? item.luckMulti : 1.0, count: state.unspentRolls }];
                 }
                 if (parsed.unusualTiers) {
-                    state.unusualTiers.decay = parsed.unusualTiers.decay || 0;
+                    
                     state.unusualTiers.question = parsed.unusualTiers.question || 0;
                     state.unusualTiers.procrastination = parsed.unusualTiers.procrastination || 0;
                 }
@@ -1030,6 +1056,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 if (parsed.explosionUsedAt) state.explosionUsedAt = parsed.explosionUsedAt;
                 if (parsed.fireBombUsedAt) state.fireBombUsedAt = parsed.fireBombUsedAt;
                 if (parsed.bonusSimLastFired) state.bonusSimLastFired = parsed.bonusSimLastFired;
+                if (parsed.foundTypes) state.foundTypes = parsed.foundTypes;
                 if (parsed.areaInventory) {
                     state.areaInventory.annoying  = parsed.areaInventory.annoying  || {};
                     state.areaInventory.serious   = parsed.areaInventory.serious   || {};
@@ -1252,8 +1279,8 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             // apply active lightning gloves speed boost (+35% positive multi stacking each)
             let glovesBoostMultiplier = 1.0 + (0.35 * state.consumables.gloves.active);
             
-            // apply active grandfather clock speed boost (1.25x speed stacking positive multiplier)
-            let grandfatherBoostMultiplier = Math.pow(1.25, state.consumables.grandfather.active);
+            // apply active grandfather clock speed boost (+0.2x additive stacking each)
+            let grandfatherBoostMultiplier = 1.0 + (0.2 * state.consumables.grandfather.active);
             
             return Math.max(0.1, calculatedRate * glovesBoostMultiplier * grandfatherBoostMultiplier);
         }
@@ -1601,7 +1628,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             for (let tier = 21; tier >= 0; tier--) {
                 if (counts[tier] && counts[tier] > 0) available.push(tier);
             }
-            // non-numeric keys ('decay' etc.) are injected directly in updateVisualGrid
+            // non-numeric keys are handled separately in updateVisualGrid
             if (available.length === 0) return new Array(cellCount).fill(null);
 
             const result = new Array(cellCount).fill(null);
@@ -1646,6 +1673,24 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
         }
 
         // --- VISUAL GRID GENERATION ---
+        // --- TYPES SYSTEM ---
+        // Types are rolled per-cell independently when a tier is placed in the grid.
+        // They modify the visual appearance via CSS filters.
+        const TIER_TYPES = [
+            { id: 'weird',     name: 'Weird',     chance: 1/25,  rarityMult: 5,   filter: 'hue-rotate(200deg) saturate(1.5) brightness(1.1)',  labelColor: '#93c5fd' },
+            { id: 'grayscale', name: 'Grayscale', chance: 1/75,  rarityMult: 10,  filter: 'grayscale(1) brightness(1.2)',                        labelColor: '#d1d5db' },
+            { id: 'negative',  name: 'Negative',  chance: 1/625, rarityMult: 25,  filter: 'invert(1) hue-rotate(180deg)',                        labelColor: '#f0abfc' },
+        ];
+
+        function rollCellType() {
+            const r = Math.random();
+            // rarest first
+            for (const t of [...TIER_TYPES].sort((a,b) => a.chance - b.chance)) {
+                if (r < t.chance) return t;
+            }
+            return null;
+        }
+
         function updateVisualGrid(lastBatch) {
             const gridContainer = document.getElementById("result-grid");
             gridContainer.innerHTML = "";
@@ -1674,20 +1719,6 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 const cell = document.createElement("div");
                 const tier = displayTiers[i];
 
-                // special: unusual decay tier cell
-                if (tier === 'decay') {
-                    cell.className = `w-full h-full flex flex-col items-center justify-center border-b border-r border-green-500/40 select-none cursor-help grid-cell-animate overflow-visible relative bg-green-900/20 tier-glow-medium`;
-                    cell.style.zIndex = 25;
-                    cell.style.position = 'relative';
-                    const svgWrap = document.createElement("div");
-                    svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:25;pointer-events:none;`;
-                    svgWrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(baseSvgSize*2.5)}" height="${Math.round(baseSvgSize*2.5)}" viewBox="0 0 24 24"><defs><radialGradient id="dkg" cx="50%" cy="50%"><stop offset="0%" stop-color="#86efac" stop-opacity="0.9"/><stop offset="100%" stop-color="#14532d" stop-opacity="0.3"/></radialGradient></defs><polygon points="12,1 14,8 21,8 15,13 17,20 12,16 7,20 9,13 3,8 10,8" fill="url(#dkg)" stroke="#4ade80" stroke-width="0.5"/><text x="12" y="28" text-anchor="middle" font-size="3" fill="#86efac" font-family="monospace">DECAY</text></svg>`;
-                    cell.appendChild(svgWrap);
-                    cell.title = 'THE DECAY — unusual tier';
-                    gridContainer.appendChild(cell);
-                    continue;
-                }
-
                 if (tier !== null && tier !== undefined) {
                     const meta = TIER_META[tier];
                     cell.className = `w-full h-full flex flex-col items-center justify-center border-b border-r border-gray-800/80 select-none cursor-help grid-cell-animate overflow-visible relative ${meta.bg}`;
@@ -1706,14 +1737,19 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                     const svgSize = Math.round(baseSvgSize * scaleFactor);
 
                     const svgWrap = document.createElement("div");
-                    svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:${tier};pointer-events:none;`;
+                    const cellType = rollCellType();
+                    if (cellType) {
+                        if (!state.foundTypes) state.foundTypes = {};
+                        state.foundTypes[cellType.id] = (state.foundTypes[cellType.id] || 0) + 1;
+                    }
+                    const filterStyle = cellType ? `filter:${cellType.filter};` : '';
+                    svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:${tier};pointer-events:none;image-rendering:crisp-edges;${filterStyle}`;
                     svgWrap.innerHTML = getTierSVG(tier, svgSize);
 
                     const label = document.createElement("span");
-                    // no min cap — scales freely with SVG size
                     const labelPx = Math.round(svgSize * 0.22);
-                    label.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:${labelPx}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000,0 1px 2px #000;z-index:${tier + 1};`;
-                    label.className = `bg-gradient-to-tr ${meta.color} bg-clip-text text-transparent`;
+                    const lc = cellType ? cellType.labelColor : (meta.labelColor || '#fff');
+                    label.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:${labelPx}px;font-weight:900;font-family:monospace;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 0 8px #000;z-index:${tier + 1};color:${lc};`;
                     label.innerText = `10^${tier}`;
 
                     svgWrap.appendChild(label);
@@ -1798,28 +1834,6 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
         // until you actually roll one. No hints about how to get them in the UI.
 
         const UNUSUAL_TIERS = {
-            decay: {
-                id: 'decay',
-                name: 'THE DECAY',
-                displayName: () => state.unusualTiers.decay > 0 ? 'THE DECAY' : '???',
-                color: 'text-green-300',
-                bg: 'bg-green-900/30 border-green-500/30',
-                // 1/23431, unaffected by luck, replaces rarest tier in display
-                // only gets checked 1000 times per simulation
-                // requires totalSimulated to include 23431 somewhere in its digits
-                check: (totalRollCount) => {
-                    // requires your all-time simulated rolls to be >= what 6h 30m 31s of
-                    // roll generation would produce (23431 seconds × base toy rate = 23431 rolls minimum)
-                    if (state.totalSimulated < 23431) return 0;
-                    const checks = Math.min(1000, Math.floor(totalRollCount / 1000));
-                    if (checks <= 0) return 0;
-                    let hits = 0;
-                    for (let i = 0; i < checks; i++) {
-                        if (Math.random() < 1/23431) hits++;
-                    }
-                    return hits;
-                }
-            },
             question: {
                 id: 'question',
                 name: '???',
@@ -1874,7 +1888,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
         // Run unusual tier checks after a simulation completes
         // Returns array of {tier, hits} for any that fired
         function checkUnusualTiers(totalRollCount, afkSeconds) {
-            if (!state.unusualTiers) state.unusualTiers = { decay: 0, question: 0, procrastination: 0 };
+            if (!state.unusualTiers) state.unusualTiers = { question: 0, procrastination: 0 };
             const results = [];
             for (const key in UNUSUAL_TIERS) {
                 const ut = UNUSUAL_TIERS[key];
@@ -1956,10 +1970,6 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 // --- unusual tier checks ---
                 const unusualHits = checkUnusualTiers(totalRollCount, afkSeconds);
 
-                // find rarest tier index in merged for DECAY replacement
-                let rarestTierInBatch = 0;
-                for (let t = 21; t >= 0; t--) { if (merged[t] > 0) { rarestTierInBatch = t; break; } }
-
                 playChimeForTier(highestInBatch);
                 flashScreen(highestInBatch);
 
@@ -1971,14 +1981,6 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                         if (topRolls.length >= maxVisualGridSize) break;
                     }
                 }
-                // DECAY always replaces rarest tier in grid display
-                const decayHit = unusualHits.find(u => u.tier.id === 'decay');
-                if (decayHit) {
-                    const idx = topRolls.lastIndexOf(rarestTierInBatch);
-                    if (idx !== -1) topRolls[idx] = 'decay';
-                    else topRolls[topRolls.length - 1] = 'decay';
-                }
-
                 updateVisualGrid(topRolls);
                 renderInventoryList();
                 renderSlotsList();
@@ -2115,7 +2117,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                 const rate = getRollRate();
                 const bonusRolls = generatedSecs * rate;
                 addRollsWithSlotLuck(bonusRolls, state.activeSlotId);
-                addLog(`✨ activated <span class="text-green-400 font-bold">${config.name}</span>. speed increased by 1.5x and warp time granted <span class="text-blue-300 font-mono">+${bonusRolls.toLocaleString()} rolls</span>!`);
+                addLog(`activated <span class="text-green-400 font-bold">${config.name}</span>. speed +0.2x and warp time granted <span class="text-blue-300 font-mono">+${bonusRolls.toLocaleString()} rolls</span>!`);
             } else {
                 addLog(`✨ activated <span class="text-green-400 font-bold">${config.name}</span>. buff active until next roll simulation.`);
             }
@@ -2177,6 +2179,31 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             
             document.getElementById("total-rolls-count").innerText = `Total Simulated: ${state.totalSimulated.toLocaleString()}`;
 
+            // --- types section ---
+            const typesSection = document.getElementById("types-section");
+            if (typesSection) {
+                typesSection.innerHTML = '';
+                const ft = state.foundTypes || {};
+                for (const t of TIER_TYPES) {
+                    const count = ft[t.id] || 0;
+                    const found = count > 0;
+                    const row = document.createElement('div');
+                    row.className = `flex justify-between items-center p-2 rounded-xl border ${found ? 'border-gray-700/60 bg-gray-900/30' : 'border-gray-800/40 bg-gray-950/20 opacity-40'} transition-all`;
+                    const preview = document.createElement('div');
+                    preview.style.cssText = `width:16px;height:16px;border-radius:3px;background:#6366f1;filter:${t.filter};flex-shrink:0;`;
+                    const info = document.createElement('div');
+                    info.className = 'flex-1 ml-2';
+                    info.innerHTML = `<span class="font-bold text-xs text-gray-300">${found ? t.name : '???'}</span><span class="text-[10px] text-gray-600 block font-mono">×${t.rarityMult} rarity · 1/${(1/t.chance).toLocaleString()}</span>`;
+                    const cnt = document.createElement('span');
+                    cnt.className = 'font-mono text-xs text-blue-400 font-bold';
+                    cnt.innerText = count.toLocaleString();
+                    row.appendChild(preview);
+                    row.appendChild(info);
+                    row.appendChild(cnt);
+                    typesSection.appendChild(row);
+                }
+            }
+
             // --- unusual tiers section ---
             const unusualSection = document.getElementById("unusual-tiers-section");
             if (unusualSection) {
@@ -2187,7 +2214,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
                     const count = ut[key] || 0;
                     const row = document.createElement('div');
                     const found = count > 0;
-                    const areaLabel = key === 'quanneng' ? 'elements' : key === 'decay' || key === 'question' || key === 'procrastination' ? '10^n sim' : '';
+                    const areaLabel = key === 'quanneng' ? 'elements' : key === 'question' || key === 'procrastination' ? '10^n sim' : '';
                     row.className = `flex justify-between items-center p-2.5 rounded-xl border ${found ? def.bg : 'border-gray-800/50 bg-gray-950/20 opacity-40'} transition-all`;
                     row.innerHTML = `<div class="flex flex-col gap-0.5"><span class="font-bold text-xs ${found ? def.color : 'text-gray-500'}">${found ? def.displayName() : '???'}</span><span class="text-[10px] text-gray-600 font-mono">unusual${areaLabel ? ` — ${areaLabel}` : ''}</span></div><span class="font-extrabold font-mono text-sm ${found ? def.color : 'text-gray-600'}">${count.toLocaleString()}</span>`;
                     unusualSection.appendChild(row);
@@ -3187,18 +3214,10 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             for (const t of SERIOUS_TIERS_RAW) {
                 if (t.chance < 1) pool.push({ id:'ser_'+t.id, name:t.name, chance:t.chance/50, color:t.color, bg:t.bg, svgIdx:t.svgIdx, replaces: t.replaces ? 'ser_'+t.replaces : undefined, source:'serious' });
             }
-            // elements tiers ×50 rarer (base tiers 1/1 skipped, replacements chained)
+            // elements tiers ×50 rarer
             for (const t of ELEMENTS_TIERS) {
                 if (t.chance < 1) pool.push({ id:'el_'+t.id, name:t.name, chance:t.chance/50, color:t.color, bg:t.bg, replaces: t.replaces ? 'el_'+t.replaces : undefined, source:'elements' });
             }
-            // unusual tiers ×100k rarer, no requirements, hidden until found
-            const unusualDefs = [
-                { id:'u_decay', name:'THE DECAY',                chance:1/(23431*100000), color:'text-green-300',  bg:'bg-green-900/30 border-green-500/30' },
-                { id:'u_quest', name:'???',                      chance:1/(7500*100000),  color:'text-gray-400',   bg:'bg-gray-900/30 border-gray-500/20' },
-                { id:'u_procr', name:'procastinatiob master !!!',chance:1/(1.5e9*100000), color:'text-yellow-300', bg:'bg-yellow-900/30 border-yellow-500/30' },
-                { id:'u_quan',  name:'全能的',                   chance:1/(777*100000),   color:'text-yellow-200', bg:'bg-yellow-900/30 border-yellow-400/40' },
-            ];
-            for (const t of unusualDefs) pool.push(t);
             return pool;
         }
 
@@ -3208,29 +3227,12 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             container.innerHTML = '';
             const pool = buildMoneyTierPool();
             const sorted = [...pool].sort((a,b) => b.chance - a.chance);
-            const unusualIds = new Set(['u_decay','u_quest','u_procr','u_quan']);
-            const moneyInv = state.areaInventory.money || {};
             for (const t of sorted) {
-                const isUnusual = unusualIds.has(t.id);
-                const found = isUnusual ? moneyInv[t.name] > 0 : false;
-                // hide unusual tiers until found
-                if (isUnusual && !found) continue;
                 const chanceStr = t.chance >= 1 ? '1/1' : `1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:0})}`;
                 const sourceTag = t.source ? ` <span class="text-gray-600 text-[9px]">[${t.source}]</span>` : '';
-                const unusualTag = isUnusual ? ` <span class="text-purple-400 text-[9px]">[unusual]</span>` : '';
                 const row = document.createElement('div');
                 row.className = `flex items-center gap-2 rounded-lg px-2 py-1.5 border ${t.bg}`;
-                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${t.color} text-[11px]">${t.name}${sourceTag}${unusualTag}</div><div class="font-mono text-[9px] text-gray-500">${chanceStr}</div></div>`;
-                container.appendChild(row);
-            }
-            // show placeholder rows for undiscovered unusual tiers
-            for (const uid of unusualIds) {
-                const t = pool.find(p => p.id === uid);
-                if (!t) continue;
-                if (moneyInv[t.name] > 0) continue;
-                const row = document.createElement('div');
-                row.className = 'flex items-center gap-2 rounded-lg px-2 py-1.5 border bg-gray-950/20 border-gray-800/40 opacity-40';
-                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold text-gray-600 text-[11px]">??? <span class="text-[9px]">[unusual]</span></div><div class="font-mono text-[9px] text-gray-700">???</div></div>`;
+                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${t.color} text-[11px]">${t.name}${sourceTag}</div><div class="font-mono text-[9px] text-gray-500">${chanceStr}</div></div>`;
                 container.appendChild(row);
             }
         }
