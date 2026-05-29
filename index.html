@@ -930,21 +930,21 @@
             burnt: {
                 name: "Burnt Slots",
                 grid: 30,
-                luckMulti: 0.0001,
+                luckMulti: 0.5,
                 speed: 12.50,
-                req: { 8: 15, 0: 1e7, 9: 5 },
-                desc: "scorched from absolute overallocation. absurd speed but catastrophically ruined luck multipliers.",
+                req: { 8: 15, 0: 1e7, 9: 1 },
+                desc: "scorched from absolute overallocation. absurd speed but amazingly bad..?",
                 bonusSims: [
-                    { intervalSecs: 900,  rolls: 5000000, luck: -0.9975 },
-                    { intervalSecs: 900,  rolls: 750000,  luck: -0.99   },
+                    { intervalSecs: 900,  rolls: 50000000, luck: -0.9 },
+                    { intervalSecs: 900,  rolls: 7500000,  luck: -0.3   },
                 ]
             },
-            ultimate: {
+            ultimateSL: {
                 name: "Ultimate Slots",
                 grid: 15, // 15x15
                 luck: 7.50, // +750%
                 speed: 2.50, // +250%
-                req: { ultimateOne: 25, 12: 1, 1: 1e9, 4: 1e6, 9: 2500, grabber: 10, powder: 75 },
+                req: { ultimateOne: 25, 12: 1, 1: 1e9, 4: 1e6, 9: 250, grabber: 10, powder: 75 },
                 desc: "the pinnacle of slot engineering. overwhelming luck and speed with periodic massive sim bursts.",
                 bonusSims: [
                     { intervalSecs: 900, rolls: 5,      luck: 249999.0 }, // every 15min: 5 rolls x250k luck
@@ -959,6 +959,17 @@ luckMulti:25,
 speed: 100,
 req: {21: 1e303},
 desc: "you aint supposed to have this.. (stats change based off whatever i do !!)"
+},
+bls: {
+    name: "big lucky slots",
+    grid: 17,
+    luck: 6.77,
+    speed: 6.77,
+    bonusSims: [
+        { intervalSecs: 25200, rolls: 7, luck: 777777 }, { intervalSecs: 25200, rolls: 777777, luck: 7 }
+    ],
+    desc: "just a tiny bit of the power am i right... NO shut up, the.. number isnt intentional. ITS SO YOUR LUCK AND SPEED IS 777%",
+    req: { 7: 77777777 }
 }
         };
 
@@ -999,7 +1010,7 @@ desc: "you aint supposed to have this.. (stats change based off whatever i do !!
             grandfather: {
                 id: 'grandfather',
                 name: "Grandfather Clock",
-                cost: { 5: 500, 3: 1000, 6: 25, 4: 25000, 7: 10 },
+                cost: { 5: 500, 3: 100, 6: 25, 4: 2500, 7: 10 },
                 desc: "adds +0.2x speed (stacking) and adds 45 minutes worth of roll generation instantly.",
                 cap: 3,
                 color: "from-amber-600 to-orange-800"
