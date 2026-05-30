@@ -233,11 +233,7 @@
                 <div class="space-y-2 max-h-[360px] overflow-y-auto custom-scroll pr-1" id="inventory-list">
                     <!-- Dynamic Tier Items (10^0 to 10^21) -->
                 </div>
-                <!-- Types Section -->
-                <div class="mt-1 pt-3 border-t border-gray-800/60">
-                    <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Types Found</div>
-                    <div class="space-y-1.5" id="types-section"></div>
-                </div>
+
                 <!-- Unusual Tiers Section -->
                 <div class="mt-1 pt-3 border-t border-gray-800/60">
                     <div class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Unusual Tiers</div>
@@ -723,7 +719,7 @@
             timeDriftErrorSecs: 0,
             antiTamperFrozenSecs: 0,
             unusualTiers: { question: 0, procrastination: 0 }, // counts found
-            foundTypes: {}, // typeId -> count seen in grid
+            foundTypes: {}, // tier -> { typeId: count } seen in grid
             procrastinationUnlocked: false, // unlocked by clicking "by Cameron" at x:x4 AM
             explosionUsedAt: null,  // timestamp (ms) when explosion was last activated
             fireBombUsedAt: null,   // timestamp (ms) when fireBomb was last activated
@@ -1693,7 +1689,8 @@ bls: {
             { id: 'negative',  name: 'Negative',  chance: 1/625, rarityMult: 25,  filter: 'invert(1) hue-rotate(180deg)',                        labelColor: '#f0abfc' },
         ];
 
-        function rollCellType() {
+        function rollCellType(tier) {
+            if (tier === 0) return null; // base/common tier never gets a type
             const r = Math.random();
             // rarest first
             for (const t of [...TIER_TYPES].sort((a,b) => a.chance - b.chance)) {
@@ -1748,10 +1745,11 @@ bls: {
                     const svgSize = Math.round(baseSvgSize * scaleFactor);
 
                     const svgWrap = document.createElement("div");
-                    const cellType = rollCellType();
+                    const cellType = rollCellType(tier);
                     if (cellType) {
                         if (!state.foundTypes) state.foundTypes = {};
-                        state.foundTypes[cellType.id] = (state.foundTypes[cellType.id] || 0) + 1;
+                        if (!state.foundTypes[tier]) state.foundTypes[tier] = {};
+                        state.foundTypes[tier][cellType.id] = (state.foundTypes[tier][cellType.id] || 0) + 1;
                     }
                     const filterStyle = cellType ? `filter:${cellType.filter};` : '';
                     svgWrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:${tier};pointer-events:none;image-rendering:crisp-edges;${filterStyle}`;
@@ -1798,16 +1796,35 @@ bls: {
         function simulateJob(rollCount, luck, luckMulti) {
             const counts = {};
             let remaining = Math.floor(rollCount);
+
+            // Pass 1: allocate rolls to tiers 21 down to 1 normally.
+            // Track which tiers are "saturated" (p >= 1) — those form the coinflip pool.
+            const saturated = []; // tiers where effective p >= 1
             for (let tier = 21; tier >= 1; tier--) {
                 if (remaining <= 0) break;
                 const p = ((1.0 + luck) * luckMulti) / Math.pow(10, tier);
                 if (!(p > 0)) continue;
-                const lambda = remaining * Math.min(p, 1.0);
+                if (p >= 1.0) {
+                    // luck so high this tier is guaranteed — save for coinflip pool
+                    saturated.push(tier);
+                    continue;
+                }
+                const lambda = remaining * p;
                 let hits = poissonSample(lambda);
                 hits = Math.min(hits, remaining);
                 if (hits > 0) { counts[tier] = (counts[tier] || 0) + hits; remaining -= hits; }
             }
-            if (remaining > 0) counts[0] = (counts[0] || 0) + remaining;
+
+            // Pass 2: remaining rolls get distributed via coinflip across saturated tiers + tier 0.
+            // Each roll independently picks one tier at random (uniform).
+            if (remaining > 0) {
+                const pool = saturated.length > 0 ? [...saturated, 0] : [0];
+                for (let r = 0; r < remaining; r++) {
+                    const picked = pool[Math.floor(Math.random() * pool.length)];
+                    counts[picked] = (counts[picked] || 0) + 1;
+                }
+            }
+
             return counts;
         }
 
@@ -1944,8 +1961,11 @@ bls: {
             const jobs = [];
             const powderLuck = (state.consumables.powder.active) * 0.30;
             for (const bucket of state.pendingRollBuckets) {
-                if (bucket.count > 0)
-                    jobs.push({ rollCount: Math.floor(bucket.count), luck: bucket.luck + powderLuck, luckMulti: bucket.luckMulti });
+                if (bucket.count > 0) {
+                    const isBonus = typeof bucket.slotId === 'string' && bucket.slotId.includes('_bonus_');
+                    const effectiveLuck = isBonus ? activeLuck + bucket.luck + powderLuck : bucket.luck + powderLuck;
+                    jobs.push({ rollCount: Math.floor(bucket.count), luck: effectiveLuck, luckMulti: bucket.luckMulti });
+                }
             }
             if (explosionReady)     jobs.push({ rollCount: 2500000,   luck: activeLuck + 20,    luckMulti: activeLuckMulti });
             if (fireBombReady)      jobs.push({ rollCount: 250000000,  luck: activeLuck + 4,     luckMulti: activeLuckMulti });
@@ -2171,6 +2191,18 @@ bls: {
 
                 textWrap.appendChild(title);
                 textWrap.appendChild(chance);
+                if (i > 0) {
+                    const ft = (state.foundTypes && state.foundTypes[i]) || {};
+                    const typesParts = TIER_TYPES.map(t => {
+                        const tc = ft[t.id] || 0;
+                        const col = tc > 0 ? 'text-gray-300' : 'text-gray-600';
+                        return `<span class="${col}">${tc > 0 ? t.name : '???'}</span><span class="text-gray-600">:${tc.toLocaleString()}</span>`;
+                    }).join('<span class="text-gray-700"> | </span>');
+                    const typesLine = document.createElement("span");
+                    typesLine.className = "text-[9px] font-mono block mt-0.5";
+                    typesLine.innerHTML = `<span class="text-gray-600">types: </span>${typesParts}`;
+                    textWrap.appendChild(typesLine);
+                }
                 left.appendChild(badge);
                 left.appendChild(textWrap);
 
@@ -2189,31 +2221,6 @@ bls: {
             }
             
             document.getElementById("total-rolls-count").innerText = `Total Simulated: ${state.totalSimulated.toLocaleString()}`;
-
-            // --- types section ---
-            const typesSection = document.getElementById("types-section");
-            if (typesSection) {
-                typesSection.innerHTML = '';
-                const ft = state.foundTypes || {};
-                for (const t of TIER_TYPES) {
-                    const count = ft[t.id] || 0;
-                    const found = count > 0;
-                    const row = document.createElement('div');
-                    row.className = `flex justify-between items-center p-2 rounded-xl border ${found ? 'border-gray-700/60 bg-gray-900/30' : 'border-gray-800/40 bg-gray-950/20 opacity-40'} transition-all`;
-                    const preview = document.createElement('div');
-                    preview.style.cssText = `width:16px;height:16px;border-radius:3px;background:#6366f1;filter:${t.filter};flex-shrink:0;`;
-                    const info = document.createElement('div');
-                    info.className = 'flex-1 ml-2';
-                    info.innerHTML = `<span class="font-bold text-xs text-gray-300">${found ? t.name : '???'}</span><span class="text-[10px] text-gray-600 block font-mono">×${t.rarityMult} rarity · 1/${(1/t.chance).toLocaleString()}</span>`;
-                    const cnt = document.createElement('span');
-                    cnt.className = 'font-mono text-xs text-blue-400 font-bold';
-                    cnt.innerText = count.toLocaleString();
-                    row.appendChild(preview);
-                    row.appendChild(info);
-                    row.appendChild(cnt);
-                    typesSection.appendChild(row);
-                }
-            }
 
             // --- unusual tiers section ---
             const unusualSection = document.getElementById("unusual-tiers-section");
@@ -2348,14 +2355,23 @@ bls: {
 
                     for (const reqTier in item.req) {
                         const requiredCount = item.req[reqTier];
-                        const countDiscovered = state.discoveredTiers[reqTier] || 0;
-                        const met = countDiscovered >= requiredCount;
+                        let currentCount, reqLabel;
+                        if (isNaN(reqTier)) {
+                            // consumable requirement (e.g. grabber, powder, ultimateOne)
+                            currentCount = state.consumables[reqTier] ? state.consumables[reqTier].owned : 0;
+                            const cName = CONSUMABLES_CONFIG[reqTier] ? CONSUMABLES_CONFIG[reqTier].name : reqTier;
+                            reqLabel = `${cName}:`;
+                        } else {
+                            currentCount = state.discoveredTiers[reqTier] || 0;
+                            reqLabel = `10^${reqTier}:`;
+                        }
+                        const met = currentCount >= requiredCount;
 
                         const badge = document.createElement("span");
                         badge.className = `text-[9px] font-bold font-mono px-1.5 py-0.5 rounded flex items-center gap-1 border ${
                             met ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
                         }`;
-                        badge.innerHTML = `<span>10^${reqTier}:</span> <span>${countDiscovered.toLocaleString()}/${requiredCount.toLocaleString()}</span>`;
+                        badge.innerHTML = `<span>${reqLabel}</span> <span>${currentCount.toLocaleString()}/${requiredCount.toLocaleString()}</span>`;
                         reqDiv.appendChild(badge);
                     }
                     div.appendChild(reqDiv);
@@ -3010,10 +3026,15 @@ bls: {
             if (isSimulating) return false;
             if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
             const powderLuck = (state.consumables.powder.active) * 0.30;
+            const activeLuck = getLuckBonus();
+            const activeLuckMulti = getLuckMulti();
             const jobs = [];
             for (const bucket of state.pendingRollBuckets) {
-                if (bucket.count > 0)
-                    jobs.push({ rollCount: Math.floor(bucket.count), luck: bucket.luck + powderLuck, luckMulti: bucket.luckMulti });
+                if (bucket.count > 0) {
+                    const isBonus = typeof bucket.slotId === 'string' && bucket.slotId.includes('_bonus_');
+                    const effectiveLuck = isBonus ? activeLuck + bucket.luck + powderLuck : bucket.luck + powderLuck;
+                    jobs.push({ rollCount: Math.floor(bucket.count), luck: effectiveLuck, luckMulti: bucket.luckMulti });
+                }
             }
             const totalRollCount = jobs.reduce((s, j) => s + j.rollCount, 0);
             if (totalRollCount <= 0) return false;
