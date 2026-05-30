@@ -76,7 +76,21 @@
             0% { box-shadow: inset 0 0 12px rgba(236, 72, 153, 0.6), inset 0 0 4px rgba(245, 158, 11, 0.4); }
             100% { box-shadow: inset 0 0 24px rgba(236, 72, 153, 1), inset 0 0 12px rgba(245, 158, 11, 0.8); }
         }
-    </style>
+    </style>    <style id="accessibility-style"></style>
+    <svg style="position:absolute;width:0;height:0" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="cbf-protanopia"><feColorMatrix type="matrix" values="0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0"/></filter>
+        <filter id="cbf-deuteranopia"><feColorMatrix type="matrix" values="0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0"/></filter>
+        <filter id="cbf-tritanopia"><feColorMatrix type="matrix" values="0.95 0.05 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0"/></filter>
+        <filter id="cbf-achromatopsia"><feColorMatrix type="saturate" values="0"/></filter>
+        <filter id="cbf-highcontrast"><feColorMatrix type="matrix" values="4 -1 -1 0 -0.5  -1 4 -1 0 -0.5  -1 -1 4 0 -0.5  0 0 0 1 0"/></filter>
+        <!-- AntiBlur unsharp mask — strength controlled via JS by swapping stdDeviation & amount -->
+        <filter id="antiblur-filter" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+          <feGaussianBlur stdDeviation="0" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k1="0" k2="1" k3="0" k4="0" result="sharp"/>
+        </filter>
+      </defs>
+    </svg>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
 
@@ -115,6 +129,9 @@
             <div class="flex items-center gap-2">
                 <button id="btn-mute" class="p-2.5 bg-gray-800/80 hover:bg-gray-700 text-gray-300 rounded-lg transition-all border border-gray-700/50 flex items-center gap-2 text-sm font-semibold">
                     <span id="mute-icon">🔊</span> <span class="hidden sm:inline">Sound</span>
+                </button>
+                <button id="btn-accessibility" onclick="openAccessibility()" class="p-2.5 bg-gray-800/80 hover:bg-gray-700 text-gray-300 rounded-lg transition-all border border-gray-700/50 flex items-center gap-2 text-sm font-semibold">
+                    ♿ <span class="hidden sm:inline">Access</span>
                 </button>
             </div>
         </div>
@@ -663,6 +680,161 @@
     </div>
 
     <!-- Dynamic Offline Progression Modal -->
+    <!-- Accessibility Modal -->
+    <div id="accessibility-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 flex flex-col gap-5">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-100">♿ Accessibility Settings</h2>
+                <button onclick="closeAccessibility()" class="text-gray-500 hover:text-white text-xl font-bold px-2">✕</button>
+            </div>
+
+            <!-- Color Filter -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Color Filter</label>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="setColorFilter('none')" id="cf-none" class="cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-blue-500 bg-blue-500/20 text-blue-300">None</button>
+                    <button onclick="setColorFilter('protanopia')" id="cf-protanopia" class="cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500">Protanopia (R)</button>
+                    <button onclick="setColorFilter('deuteranopia')" id="cf-deuteranopia" class="cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500">Deuteranopia (G)</button>
+                    <button onclick="setColorFilter('tritanopia')" id="cf-tritanopia" class="cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500">Tritanopia (B)</button>
+                    <button onclick="setColorFilter('achromatopsia')" id="cf-achromatopsia" class="cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500">Achromatopsia (B&W)</button>
+                    <button onclick="setColorFilter('highcontrast')" id="cf-highcontrast" class="cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500">High Contrast</button>
+                </div>
+            </div>
+
+            <!-- Language -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Language</label>
+                <div class="flex gap-2 text-xs">
+                    <button onclick="setLanguage('en')" id="lang-en" class="lang-btn flex-1 px-3 py-2 rounded-lg border font-semibold transition-all border-blue-500 bg-blue-500/20 text-blue-300">🇬🇧 English</button>
+                    <button onclick="setLanguage('fr')" id="lang-fr" class="lang-btn flex-1 px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500">🇫🇷 Français</button>
+                    <button onclick="setLanguage('jp')" id="lang-jp" class="lang-btn flex-1 px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500">🇯🇵 日本語</button>
+                </div>
+            </div>
+
+            <!-- Text Size -->
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Text Size: <span id="text-size-label" class="text-white font-mono">x1.0</span></label>
+                <input type="range" id="text-size-slider" min="10" max="25" step="1" value="10"
+                    oninput="setTextSize(this.value)"
+                    class="w-full accent-blue-500 h-2 rounded-full appearance-none bg-gray-700 cursor-pointer">
+                <div class="flex justify-between text-[10px] text-gray-600 font-mono">
+                    <span>x1.0</span><span>x1.5</span><span>x2.0</span><span>x2.5</span>
+                </div>
+            </div>
+
+            <!-- Reduce Flashing -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-semibold text-gray-200">Reduce Flashing</div>
+                    <div class="text-xs text-gray-500">Removes bright screen flashes on rare hits</div>
+                </div>
+                <button onclick="toggleReduceFlash()" id="reduce-flash-btn" class="w-12 h-6 rounded-full transition-all duration-200 bg-gray-700 relative flex-shrink-0">
+                    <span id="reduce-flash-thumb" class="absolute top-0.5 left-0.5 w-5 h-5 bg-gray-400 rounded-full transition-all duration-200"></span>
+                </button>
+            </div>
+
+            <!-- Highlight Mode -->
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-200">Highlight Mode</div>
+                        <div class="text-xs text-gray-500">Hold any element to see an enlarged label</div>
+                    </div>
+                    <button onclick="toggleHighlight()" id="highlight-btn" class="w-12 h-6 rounded-full transition-all duration-200 bg-gray-700 relative flex-shrink-0">
+                        <span id="highlight-thumb" class="absolute top-0.5 left-0.5 w-5 h-5 bg-gray-400 rounded-full transition-all duration-200"></span>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between pl-1">
+                    <div>
+                        <div class="text-xs font-semibold text-gray-300">Text-to-Speech</div>
+                        <div class="text-xs text-gray-500">Read aloud the highlighted element</div>
+                    </div>
+                    <button onclick="toggleTTS()" id="tts-btn" class="w-12 h-6 rounded-full transition-all duration-200 bg-gray-700 relative flex-shrink-0">
+                        <span id="tts-thumb" class="absolute top-0.5 left-0.5 w-5 h-5 bg-gray-400 rounded-full transition-all duration-200"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Spherical Aberration -->
+            <div class="flex flex-col gap-3 border-t border-gray-800 pt-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-200">🔬 Spherical Aberration</div>
+                        <div class="text-xs text-gray-500">Compensates for vision ghosting/doubling</div>
+                    </div>
+                    <button onclick="toggleSphAb()" id="sphab-btn" class="w-12 h-6 rounded-full transition-all duration-200 bg-gray-700 relative flex-shrink-0">
+                        <span id="sphab-thumb" class="absolute top-0.5 left-0.5 w-5 h-5 bg-gray-400 rounded-full transition-all duration-200"></span>
+                    </button>
+                </div>
+
+                <div id="sphab-panel" class="hidden flex-col gap-3">
+                    <div class="text-xs text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                        Adjust until the ghosting in the preview matches your vision — the copies should cancel out what you see.
+                    </div>
+
+                    <!-- Ghost count -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+                            <span>Copies: 0</span>
+                            <span id="sphab-count-label" class="text-white">Copies: 0</span>
+                            <span>Copies: 10</span>
+                        </div>
+                        <input type="range" id="sphab-count-slider" min="0" max="10" step="1" value="0"
+                            oninput="setSphAbCount(this.value)"
+                            class="w-full accent-violet-500 h-2 rounded-full appearance-none bg-gray-700 cursor-pointer">
+                    </div>
+
+                    <!-- Angle -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+                            <span>-180°</span>
+                            <span id="sphab-angle-label" class="text-white">Angle: 0°</span>
+                            <span>+180°</span>
+                        </div>
+                        <input type="range" id="sphab-angle-slider" min="-180" max="180" step="1" value="0"
+                            oninput="setSphAbAngle(this.value)"
+                            class="w-full accent-violet-500 h-2 rounded-full appearance-none bg-gray-700 cursor-pointer">
+                    </div>
+
+                    <!-- Offset distance -->
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+                            <span>0px</span>
+                            <span id="sphab-dist-label" class="text-white">Distance: 0px</span>
+                            <span>10px</span>
+                        </div>
+                        <input type="range" id="sphab-dist-slider" min="0" max="100" step="1" value="0"
+                            oninput="setSphAbDist(this.value)"
+                            class="w-full accent-violet-500 h-2 rounded-full appearance-none bg-gray-700 cursor-pointer">
+                    </div>
+
+                    <!-- Preview -->
+                    <div id="sphab-preview" class="rounded-xl border border-gray-700 bg-gray-950 p-4 flex flex-col gap-3 overflow-hidden relative">
+                        <div id="sphab-preview-content">
+                            <div class="text-sm font-semibold text-gray-100 leading-snug mb-2">
+                                The quick brown fox jumps over<br>the lazy dog — <span class="text-blue-400 font-mono">10^7 Mythic</span>
+                            </div>
+                            <div class="flex gap-2 flex-wrap mb-2">
+                                <span class="text-xs font-bold px-2 py-1 rounded-lg bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/40 text-yellow-300 font-mono">10^7 Mythic ×42</span>
+                                <span class="text-xs font-bold px-2 py-1 rounded-lg bg-gradient-to-r from-purple-500/20 to-violet-500/20 border border-purple-500/40 text-purple-300 font-mono">10^12 Infernal ×1</span>
+                            </div>
+                            <button class="w-full py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold pointer-events-none select-none">SIMULATE ALL ACCUMULATED ROLLS</button>
+                        </div>
+                    </div>
+
+                    <button onclick="confirmSphAb()" class="w-full py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-bold transition-all">
+                        ✓ Looks right — apply to everything
+                    </button>
+                    <button onclick="resetSphAb()" class="w-full py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 text-xs font-semibold transition-all">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div id="highlight-tooltip" class="fixed z-[9998] pointer-events-none hidden bg-gray-900 border border-gray-600 rounded-xl px-5 py-3 shadow-2xl text-white font-bold text-2xl max-w-xs text-center"></div>
+
     <div id="offline-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-40 flex items-center justify-center p-4 hidden">
         <div class="max-w-sm w-full bg-panelBg border border-blue-500/30 rounded-3xl p-6 shadow-2xl text-center flex flex-col items-center gap-4">
             <div class="w-14 h-14 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-2xl">
@@ -716,6 +888,19 @@
             lastTickTime: Date.now(),
             accumulatedSecs: 0,
             isMuted: false,
+            accessibility: {
+                colorFilter: 'none',
+                language: 'en',
+                textSize: 10,
+                reduceFlash: false,
+                highlightMode: false,
+                tts: false,
+                sphAb: false,
+                sphAbCount: 0,
+                sphAbAngle: 0,
+                sphAbDist: 0,
+                sphAbConfirmed: false
+            },
             timeDriftErrorSecs: 0,
             antiTamperFrozenSecs: 0,
             unusualTiers: { question: 0, procrastination: 0 }, // counts found
@@ -738,7 +923,18 @@
                 explosion: { owned: 0, active: 0 },
                 grandfather: { owned: 0, active: 0 },
                 ultimateOne: { owned: 0, active: 0 },
-                fireBomb: { owned: 0, active: 0 }
+                fireBomb: { owned: 0, active: 0 },
+                everythingHand: { owned: 0, active: 0 },
+                bunBottom: { owned: 0, active: 0 },
+                cheese: { owned: 0, active: 0 },
+                patty: { owned: 0, active: 0 },
+                ketchup: { owned: 0, active: 0 },
+                lettuce: { owned: 0, active: 0 },
+                onion: { owned: 0, active: 0 },
+                patty2: { owned: 0, active: 0 },
+                mayo: { owned: 0, active: 0 },
+                salt: { owned: 0, active: 0 },
+                finalBun: { owned: 0, active: 0 }
             }
         };
 
@@ -966,6 +1162,20 @@ bls: {
     ],
     desc: "just a tiny bit of the power am i right... NO shut up, the.. number isnt intentional. ITS SO YOUR LUCK AND SPEED IS 777%",
     req: { 7: 77777777 }
+},
+burger: {
+    name: "🍔 Burger Slots",
+    grid: 25,
+    gridShape: 'burger',
+    luck: 2.50,
+    speed: 2.50,
+    req: { bunBottom: 1, cheese: 1, patty: 1, ketchup: 1, lettuce: 1, onion: 1, patty2: 1, mayo: 1, salt: 1, finalBun: 1 },
+    desc: "a perfectly assembled burger of luck and speed. the grid is burger-shaped. yes really.",
+    bonusSims: [
+        { intervalSecs: 60, rolls: 250000, luck: 14.0  }, // every 1min: 250k x15 luck
+        { intervalSecs: 60, rolls: 1000000, luck: 0.8  }, // every 1min: 1m x1.8 luck
+        { intervalSecs: 60, rolls: 200,     luck: 4999.0 }, // every 1min: 200 x5000 luck
+    ]
 }
         };
 
@@ -1026,6 +1236,94 @@ bls: {
                 desc: "on simulate, adds 250,000,000 bonus rolls with x4 luck on top of everything else.",
                 cap: 1,
                 color: "from-orange-400 via-red-500 to-rose-600 font-extrabold tracking-widest animate-pulse"
+            },
+            everythingHand: {
+                id: 'everythingHand',
+                name: "Everything Hand 🤌",
+                cost: { 7: 5, 3: 2500, 0: 1000000, 1: 500000 },
+                desc: "on use, ALL items from every other area can spawn in the main 10^n grid — but are x250,000 rarer. usage cap: 1.",
+                cap: 1,
+                color: "from-white via-yellow-200 to-pink-300 font-extrabold animate-pulse"
+            },
+            bunBottom: {
+                id: 'bunBottom',
+                name: "BUN 🍞",
+                cost: { 0: 1 },
+                desc: "a humble bun. the foundation of greatness.",
+                cap: 1,
+                color: "from-yellow-600 to-amber-700"
+            },
+            cheese: {
+                id: 'cheese',
+                name: "CHEESE 🧀",
+                cost: { 1: 10 },
+                desc: "a perfectly melted slice.",
+                cap: 1,
+                color: "from-yellow-400 to-orange-400"
+            },
+            patty: {
+                id: 'patty',
+                name: "PATTY 🥩",
+                cost: { 2: 100 },
+                desc: "the core of the burger. juicy.",
+                cap: 1,
+                color: "from-red-700 to-rose-800"
+            },
+            ketchup: {
+                id: 'ketchup',
+                name: "KETCHUP 🍅",
+                cost: { 3: 1000 },
+                desc: "a classic. timeless.",
+                cap: 1,
+                color: "from-red-500 to-red-700"
+            },
+            lettuce: {
+                id: 'lettuce',
+                name: "LETTUCE 🥬",
+                cost: { 4: 10000 },
+                desc: "fresh and crisp.",
+                cap: 1,
+                color: "from-green-400 to-green-600"
+            },
+            onion: {
+                id: 'onion',
+                name: "ONION 🧅",
+                cost: { 5: 100000 },
+                desc: "brings a tear to the eye. worth it.",
+                cap: 1,
+                color: "from-purple-300 to-violet-400"
+            },
+            patty2: {
+                id: 'patty2',
+                name: "PATTY (again) 🥩",
+                cost: { 6: 1000000 },
+                desc: "double patty. you earned it.",
+                cap: 1,
+                color: "from-red-800 to-rose-900"
+            },
+            mayo: {
+                id: 'mayo',
+                name: "MAYO 🫙",
+                cost: { 7: 10000000 },
+                desc: "controversial. but necessary.",
+                cap: 1,
+                color: "from-gray-100 to-yellow-100"
+            },
+            salt: {
+                id: 'salt',
+                name: "SALT 🧂",
+                cost: { 8: 100000000 },
+                desc: "a pinch or a mountain. no in between.",
+                cap: 1,
+                color: "from-white to-gray-300"
+            },
+            finalBun: {
+                id: 'finalBun',
+                name: "FINAL BUN 🍔",
+                cost: { 9: 1000000000 },
+                desc: "the crown. the top bun. the end.",
+                cap: 1,
+                color: "from-yellow-500 to-amber-600 font-extrabold"
             }
         };
 
@@ -1092,6 +1390,7 @@ bls: {
                     }
                 }
                 if (typeof parsed.isMuted === 'boolean') state.isMuted = parsed.isMuted;
+                if (parsed.accessibility) state.accessibility = Object.assign(state.accessibility, parsed.accessibility);
                 if (typeof parsed.antiTamperFrozenSecs === 'number') state.antiTamperFrozenSecs = parsed.antiTamperFrozenSecs;
                 if (typeof parsed.lastTickTime === 'number') state.lastTickTime = parsed.lastTickTime;
                 
@@ -1607,6 +1906,7 @@ bls: {
         // --- SCREEN FLASH ---
         function flashScreen(tier) {
             if (tier < 6) return;
+            if (state.accessibility && state.accessibility.reduceFlash) return;
             const colors = {
                 6:'#8b5cf6',7:'#ec4899',8:'#f43f5e',9:'#f59e0b',10:'#facc15',
                 11:'#fb923c',12:'#dc2626',13:'#a855f7',14:'#7c3aed',15:'#fbbf24',
@@ -1679,6 +1979,36 @@ bls: {
             return result;
         }
 
+        // Burger grid mask: for a 25x25 grid, which cells are "active" (visible)
+        // Shape: wide bun top, narrow middle (patty layers), wide bun bottom
+        function getBurgerMask(width) {
+            const mask = [];
+            const half = Math.floor(width / 2);
+            for (let row = 0; row < width; row++) {
+                const rowMask = [];
+                const pct = row / (width - 1); // 0 = top, 1 = bottom
+                let activeWidth;
+                if (pct < 0.15 || pct > 0.85) {
+                    // top/bottom bun: full width, rounded
+                    activeWidth = width;
+                } else if (pct < 0.25 || pct > 0.75) {
+                    // bun shoulders: slight taper
+                    activeWidth = Math.round(width * 0.9);
+                } else if (pct >= 0.40 && pct <= 0.60) {
+                    // patty zone: narrower
+                    activeWidth = Math.round(width * 0.7);
+                } else {
+                    activeWidth = Math.round(width * 0.8);
+                }
+                const offset = Math.floor((width - activeWidth) / 2);
+                for (let col = 0; col < width; col++) {
+                    rowMask.push(col >= offset && col < offset + activeWidth);
+                }
+                mask.push(rowMask);
+            }
+            return mask;
+        }
+
         // --- VISUAL GRID GENERATION ---
         // --- TYPES SYSTEM ---
         // Types are rolled per-cell independently when a tier is placed in the grid.
@@ -1704,9 +2034,11 @@ bls: {
             gridContainer.innerHTML = "";
 
             const item = getActiveItemConfig();
-            let grabberBonus = state.consumables.grabber.active;
+            let grabberBonus = state.consumables.grabber ? state.consumables.grabber.active : 0;
             const width = item.grid + grabberBonus;
             const cellCount = width * width;
+            const isBurger = item.gridShape === 'burger';
+            const burgerMask = isBurger ? getBurgerMask(width) : null;
 
             gridContainer.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
             gridContainer.style.gridTemplateRows = `repeat(${width}, minmax(0, 1fr))`;
@@ -1725,6 +2057,17 @@ bls: {
 
             for (let i = 0; i < cellCount; i++) {
                 const cell = document.createElement("div");
+                const row = Math.floor(i / width);
+                const col = i % width;
+
+                // burger shape: hide cells outside the mask
+                if (burgerMask && !burgerMask[row][col]) {
+                    cell.className = 'w-full h-full';
+                    cell.style.visibility = 'hidden';
+                    gridContainer.appendChild(cell);
+                    continue;
+                }
+
                 const tier = displayTiers[i];
 
                 if (tier !== null && tier !== undefined) {
@@ -1997,6 +2340,11 @@ bls: {
                 for (const tier in merged)
                     state.discoveredTiers[tier] = (state.discoveredTiers[tier] || 0) + merged[tier];
                 state.totalSimulated += totalRollCount;
+
+                // --- EVERYTHING HAND: inject area tiers at x250k rarity ---
+                if (state.consumables.everythingHand && state.consumables.everythingHand.active > 0) {
+                    applyEverythingHand(totalRollCount);
+                }
 
                 // --- unusual tier checks ---
                 const unusualHits = checkUnusualTiers(totalRollCount, afkSeconds);
@@ -2654,6 +3002,286 @@ bls: {
                     state.unspentRolls += sim.rolls;
                     addLog(`<span class="text-blue-300 font-semibold">${item.name} bonus: +${sim.rolls.toLocaleString()} rolls (x${(1+sim.luck).toFixed(2)} luck)</span>`);
                 }
+            }
+        }
+
+        // ===== ACCESSIBILITY =====
+        const COLOR_FILTER_IDS = ['none','protanopia','deuteranopia','tritanopia','achromatopsia','highcontrast'];
+
+        function rebuildRootFilter() {
+            const a = state.accessibility;
+            document.documentElement.style.filter = (a.colorFilter && a.colorFilter !== 'none') ? `url(#cbf-${a.colorFilter})` : '';
+        }
+
+        function applyAccessibility() {
+            const a = state.accessibility;
+            // color filter + antiblur handled together
+            rebuildRootFilter();
+            // text size
+            const scale = a.textSize || 10;
+            document.documentElement.style.fontSize = (scale / 10) + 'rem';
+            // highlight active buttons
+            COLOR_FILTER_IDS.forEach(id => {
+                const btn = document.getElementById('cf-' + id);
+                if (!btn) return;
+                if (id === a.colorFilter) {
+                    btn.className = 'cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-blue-500 bg-blue-500/20 text-blue-300';
+                } else {
+                    btn.className = 'cf-btn px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500';
+                }
+            });
+            ['en','fr','jp'].forEach(l => {
+                const btn = document.getElementById('lang-' + l);
+                if (!btn) return;
+                if (l === a.language) {
+                    btn.className = 'lang-btn flex-1 px-3 py-2 rounded-lg border font-semibold transition-all border-blue-500 bg-blue-500/20 text-blue-300';
+                } else {
+                    btn.className = 'lang-btn flex-1 px-3 py-2 rounded-lg border font-semibold transition-all border-gray-700 text-gray-400 hover:border-gray-500';
+                }
+            });
+            const slider = document.getElementById('text-size-slider');
+            if (slider) slider.value = a.textSize || 10;
+            const lbl = document.getElementById('text-size-label');
+            if (lbl) lbl.innerText = 'x' + ((a.textSize || 10) / 10).toFixed(1);
+            setToggle('reduce-flash-btn', 'reduce-flash-thumb', a.reduceFlash);
+            setToggle('highlight-btn', 'highlight-thumb', a.highlightMode);
+            setToggle('tts-btn', 'tts-thumb', a.tts);
+            applySphAbUI();
+        }
+
+        function setToggle(btnId, thumbId, on) {
+            const btn = document.getElementById(btnId);
+            const thumb = document.getElementById(thumbId);
+            if (!btn || !thumb) return;
+            if (on) {
+                btn.className = btn.className.replace('bg-gray-700', 'bg-blue-600');
+                thumb.style.transform = 'translateX(24px)';
+                thumb.style.background = '#fff';
+            } else {
+                btn.className = btn.className.replace('bg-blue-600', 'bg-gray-700');
+                thumb.style.transform = '';
+                thumb.style.background = '#9ca3af';
+            }
+        }
+
+        function openAccessibility() {
+            applyAccessibility();
+            document.getElementById('accessibility-modal').classList.remove('hidden');
+        }
+        function closeAccessibility() {
+            document.getElementById('accessibility-modal').classList.add('hidden');
+            saveGame();
+        }
+
+        function setColorFilter(filter) {
+            state.accessibility.colorFilter = filter;
+            applyAccessibility();
+        }
+        function setLanguage(lang) {
+            state.accessibility.language = lang;
+            applyAccessibility();
+            applyLanguage();
+        }
+        function setTextSize(val) {
+            state.accessibility.textSize = parseInt(val);
+            document.documentElement.style.fontSize = (parseInt(val) / 10) + 'rem';
+            document.getElementById('text-size-label').innerText = 'x' + (parseInt(val) / 10).toFixed(1);
+        }
+        function toggleReduceFlash() {
+            state.accessibility.reduceFlash = !state.accessibility.reduceFlash;
+            applyAccessibility();
+        }
+        function toggleHighlight() {
+            state.accessibility.highlightMode = !state.accessibility.highlightMode;
+            applyAccessibility();
+            setupHighlightListeners();
+        }
+        function toggleTTS() {
+            state.accessibility.tts = !state.accessibility.tts;
+            applyAccessibility();
+        }
+
+        // --- HIGHLIGHT MODE ---
+        let _highlightTimer = null;
+        let _highlightActive = false;
+        const HIGHLIGHT_DELAY = 600; // ms hold before showing
+
+        function setupHighlightListeners() {
+            if (state.accessibility.highlightMode) {
+                document.addEventListener('pointerdown', onHighlightDown, true);
+                document.addEventListener('pointerup', onHighlightUp, true);
+                document.addEventListener('pointermove', onHighlightUp, true);
+            } else {
+                document.removeEventListener('pointerdown', onHighlightDown, true);
+                document.removeEventListener('pointerup', onHighlightUp, true);
+                document.removeEventListener('pointermove', onHighlightUp, true);
+                hideHighlight();
+            }
+        }
+        function onHighlightDown(e) {
+            clearTimeout(_highlightTimer);
+            _highlightTimer = setTimeout(() => {
+                const el = e.target.closest('[data-hl], button, [title]');
+                if (!el) return;
+                const text = el.getAttribute('data-hl') || el.getAttribute('title') || el.innerText.trim().slice(0, 80);
+                if (!text) return;
+                showHighlight(text, e.clientX, e.clientY);
+                if (state.accessibility.tts && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utt = new SpeechSynthesisUtterance(text);
+                    utt.lang = state.accessibility.language === 'jp' ? 'ja-JP' : state.accessibility.language === 'fr' ? 'fr-FR' : 'en-US';
+                    window.speechSynthesis.speak(utt);
+                }
+            }, HIGHLIGHT_DELAY);
+        }
+        function onHighlightUp() {
+            clearTimeout(_highlightTimer);
+            hideHighlight();
+            if (state.accessibility.tts && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+        function showHighlight(text, x, y) {
+            const tt = document.getElementById('highlight-tooltip');
+            tt.innerText = text;
+            tt.classList.remove('hidden');
+            const margin = 16;
+            let top = y + 20;
+            let left = x - tt.offsetWidth / 2;
+            if (top + tt.offsetHeight > window.innerHeight - margin) top = y - tt.offsetHeight - 12;
+            if (left < margin) left = margin;
+            if (left + tt.offsetWidth > window.innerWidth - margin) left = window.innerWidth - tt.offsetWidth - margin;
+            tt.style.top = top + 'px';
+            tt.style.left = left + 'px';
+        }
+        function hideHighlight() {
+            document.getElementById('highlight-tooltip').classList.add('hidden');
+        }
+
+        // --- LANGUAGE STRINGS ---
+        const LANG = {
+            en: { simulate: 'SIMULATE ALL ACCUMULATED ROLLS', sound: 'Sound', access: 'Access' },
+            fr: { simulate: 'SIMULER TOUS LES LANCERS ACCUMULÉS', sound: 'Son', access: 'Accès' },
+            jp: { simulate: 'すべての蓄積ロールをシミュレート', sound: 'サウンド', access: 'アクセス' }
+        };
+        function applyLanguage() {
+            const l = state.accessibility.language || 'en';
+            const t = LANG[l] || LANG.en;
+            const simBtn = document.querySelector('#btn-simulate span:first-child');
+            if (simBtn) simBtn.innerText = t.simulate;
+            const soundSpan = document.querySelector('#btn-mute .hidden');
+            if (soundSpan) soundSpan.innerText = t.sound;
+            const accessSpan = document.querySelector('#btn-accessibility .hidden');
+            if (accessSpan) accessSpan.innerText = t.access;
+        }
+
+        // ===== SPHERICAL ABERRATION =====
+        function toggleSphAb() {
+            state.accessibility.sphAb = !state.accessibility.sphAb;
+            const panel = document.getElementById('sphab-panel');
+            if (state.accessibility.sphAb) { panel.classList.remove('hidden'); panel.classList.add('flex'); }
+            else { panel.classList.add('hidden'); panel.classList.remove('flex'); }
+            setToggle('sphab-btn', 'sphab-thumb', state.accessibility.sphAb);
+            applySphAbGlobal();
+        }
+
+        function setSphAbCount(v) {
+            state.accessibility.sphAbCount = parseInt(v);
+            document.getElementById('sphab-count-label').innerText = `Copies: ${v}`;
+            updateSphAbPreview();
+        }
+        function setSphAbAngle(v) {
+            state.accessibility.sphAbAngle = parseInt(v);
+            document.getElementById('sphab-angle-label').innerText = `Angle: ${v}°`;
+            updateSphAbPreview();
+        }
+        function setSphAbDist(v) {
+            state.accessibility.sphAbDist = parseInt(v);
+            document.getElementById('sphab-dist-label').innerText = `Distance: ${(v/10).toFixed(1)}px`;
+            updateSphAbPreview();
+        }
+
+        // Build CSS drop-shadow string for N ghost copies at given angle+distance
+        function buildSphAbFilter(count, angleDeg, distTenths) {
+            if (count <= 0 || distTenths <= 0) return '';
+            const dist = distTenths / 10;
+            const rad = (angleDeg * Math.PI) / 180;
+            const dx = Math.sin(rad) * dist;
+            const dy = -Math.cos(rad) * dist;
+            const opacity = Math.max(0.04, 0.18 - count * 0.012);
+            const shadows = [];
+            for (let i = 1; i <= count; i++) {
+                shadows.push(`drop-shadow(${(dx*i).toFixed(2)}px ${(dy*i).toFixed(2)}px 0px rgba(255,255,255,${opacity.toFixed(3)}))`);
+            }
+            return shadows.join(' ');
+        }
+
+        function updateSphAbPreview() {
+            const a = state.accessibility;
+            const f = buildSphAbFilter(a.sphAbCount||0, a.sphAbAngle||0, a.sphAbDist||0);
+            const content = document.getElementById('sphab-preview-content');
+            if (content) content.style.filter = f;
+        }
+
+        function confirmSphAb() {
+            const a = state.accessibility;
+            a.sphAbConfirmed = true;
+            applySphAbGlobal();
+            saveGame();
+            const preview = document.getElementById('sphab-preview');
+            if (preview) { preview.style.borderColor = '#22c55e'; setTimeout(() => { if (preview) preview.style.borderColor = ''; }, 800); }
+        }
+
+        function resetSphAb() {
+            const a = state.accessibility;
+            a.sphAbCount = 0; a.sphAbAngle = 0; a.sphAbDist = 0; a.sphAbConfirmed = false;
+            ['sphab-count-slider','sphab-angle-slider','sphab-dist-slider'].forEach(id => { const el = document.getElementById(id); if (el) el.value = 0; });
+            document.getElementById('sphab-count-label').innerText = 'Copies: 0';
+            document.getElementById('sphab-angle-label').innerText = 'Angle: 0°';
+            document.getElementById('sphab-dist-label').innerText = 'Distance: 0.0px';
+            const content = document.getElementById('sphab-preview-content');
+            if (content) content.style.filter = '';
+            applySphAbGlobal();
+            saveGame();
+        }
+
+        function applySphAbGlobal() {
+            const a = state.accessibility;
+            const useIt = a.sphAb && a.sphAbConfirmed && (a.sphAbCount||0) > 0 && (a.sphAbDist||0) > 0;
+            const f = useIt ? buildSphAbFilter(a.sphAbCount, a.sphAbAngle||0, a.sphAbDist) : '';
+            // sphab goes on body so it doesn't fight with the root color filter
+            document.body.style.filter = f;
+        }
+
+        function applySphAbUI() {
+            const a = state.accessibility;
+            setToggle('sphab-btn', 'sphab-thumb', !!a.sphAb);
+            const panel = document.getElementById('sphab-panel');
+            if (panel) {
+                if (a.sphAb) { panel.classList.remove('hidden'); panel.classList.add('flex'); }
+                else { panel.classList.add('hidden'); panel.classList.remove('flex'); }
+            }
+            const cs = document.getElementById('sphab-count-slider'); if (cs) cs.value = a.sphAbCount||0;
+            const as = document.getElementById('sphab-angle-slider'); if (as) as.value = a.sphAbAngle||0;
+            const ds = document.getElementById('sphab-dist-slider');  if (ds) ds.value = a.sphAbDist||0;
+            const cl = document.getElementById('sphab-count-label'); if (cl) cl.innerText = `Copies: ${a.sphAbCount||0}`;
+            const al = document.getElementById('sphab-angle-label'); if (al) al.innerText = `Angle: ${a.sphAbAngle||0}°`;
+            const dl = document.getElementById('sphab-dist-label');  if (dl) dl.innerText = `Distance: ${((a.sphAbDist||0)/10).toFixed(1)}px`;
+        }
+
+        function applyEverythingHand(totalRollCount) {
+            const ehLuck = getLuckBonus();
+            const ehMult = 1 / 250000;
+            const ehTable = [
+                ...ANNOYING_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'annoying'})),
+                ...SERIOUS_TIERS_RAW.filter(t => t.chance < 1).map(t => ({...t, _area:'serious', id: t.id || t.name})),
+                ...ELEMENTS_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'elements', id: t.id || t.name})),
+            ].map(t => ({...t, chance: t.chance * ehMult}));
+            const { counts: ehCounts } = pickBestAreaTier(ehTable, totalRollCount, ehLuck);
+            for (const [name, c] of Object.entries(ehCounts)) {
+                const found = ehTable.find(t => t.name === name);
+                if (!found) continue;
+                const area = found._area || 'serious';
+                if (!state.areaInventory[area]) state.areaInventory[area] = {};
+                state.areaInventory[area][name] = (state.areaInventory[area][name] || 0) + c;
             }
         }
 
@@ -3529,6 +4157,17 @@ bls: {
             if (!state.consumables.grandfather) state.consumables.grandfather = { owned: 0, active: 0 };
             if (!state.consumables.ultimateOne) state.consumables.ultimateOne = { owned: 0, active: 0 };
             if (!state.consumables.fireBomb) state.consumables.fireBomb = { owned: 0, active: 0 };
+            if (!state.consumables.everythingHand) state.consumables.everythingHand = { owned: 0, active: 0 };
+            if (!state.consumables.bunBottom) state.consumables.bunBottom = { owned: 0, active: 0 };
+            if (!state.consumables.cheese) state.consumables.cheese = { owned: 0, active: 0 };
+            if (!state.consumables.patty) state.consumables.patty = { owned: 0, active: 0 };
+            if (!state.consumables.ketchup) state.consumables.ketchup = { owned: 0, active: 0 };
+            if (!state.consumables.lettuce) state.consumables.lettuce = { owned: 0, active: 0 };
+            if (!state.consumables.onion) state.consumables.onion = { owned: 0, active: 0 };
+            if (!state.consumables.patty2) state.consumables.patty2 = { owned: 0, active: 0 };
+            if (!state.consumables.mayo) state.consumables.mayo = { owned: 0, active: 0 };
+            if (!state.consumables.salt) state.consumables.salt = { owned: 0, active: 0 };
+            if (!state.consumables.finalBun) state.consumables.finalBun = { owned: 0, active: 0 };
 
             // Render components with recovered data
             updateVisualGrid([]);
@@ -3536,6 +4175,16 @@ bls: {
             renderSlotsList();
             renderConsumablesList();
             updateHeaderMetrics();
+
+            // Apply accessibility settings from save
+            if (!state.accessibility) state.accessibility = { colorFilter:'none', language:'en', textSize:10, reduceFlash:false, highlightMode:false, tts:false, sphAb:false, sphAbCount:0, sphAbAngle:0, sphAbDist:0, sphAbConfirmed:false };
+            if (state.accessibility.sphAbCount === undefined) state.accessibility.sphAbCount = 0;
+            if (state.accessibility.sphAbAngle === undefined) state.accessibility.sphAbAngle = 0;
+            if (state.accessibility.sphAbDist  === undefined) state.accessibility.sphAbDist  = 0;
+            applyAccessibility();
+            applyLanguage();
+            setupHighlightListeners();
+            applySphAbGlobal();
 
             // Start gamble fluctuation loop
             requestAnimationFrame(processGambleFluctuations);
