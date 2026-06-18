@@ -104,7 +104,7 @@
                 <div>
                     <h1 class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">10^n idleRNG</h1>
                     <p class="text-xs text-gray-400 font-medium flex items-center gap-1">
-                        <span id="by-cameron-btn" onclick="tryUnlockProcrastination()" class="cursor-pointer select-none hover:text-purple-400 transition-colors">by Cameron</span>
+                        <span id="by-cameron-btn" onclick="tryUnlockProcrastination()" class="cursor-pointer select-none hover:text-purple-400 transition-colors">by Cameron and juni</span>
                         <span class="w-1 h-1 rounded-full bg-gray-600"></span>
                         <span id="time-display">Daytime</span>
                         <span id="tod-icon">☀️</span>
@@ -121,7 +121,7 @@
                 <div class="h-8 w-px bg-gray-800"></div>
                 <div class="text-center sm:text-left">
                     <span class="text-gray-400 text-xs block uppercase font-bold tracking-wider">Roll Speed</span>
-                    <span id="roll-rate-display" class="text-sm font-semibold text-green-400 font-mono">+1.0/s</span>
+                    <span id="roll-rate-display" class="text-sm font-semibold text-green-400 font-mono">+Yo enable JS! or the game ERRORED!!!/s</span>
                 </div>
             </div>
 
@@ -146,6 +146,9 @@
             <button onclick="switchArea('serious')" id="area-serious-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Serious</button>
             <button onclick="switchArea('money')" id="area-money-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Money</button>
             <button onclick="switchArea('elements')" id="area-elements-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Elements</button>
+            <button onclick="switchArea('eww')" id="area-eww-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">EWW</button>
+            <button onclick="switchArea('nil')" id="area-nil-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800 hidden">? NIL</button>
+            
         </div>
     </nav>
     <div id="area-main">
@@ -267,6 +270,15 @@
                     <h3 class="font-bold text-base text-gray-200">Equippable Slot Frameworks</h3>
                     <p class="text-xs text-gray-400">craft new frameworks to permanently own them, altering your simulation stats.</p>
                 </div>
+
+                <!-- Slot page tabs -->
+                <div class="grid grid-cols-2 gap-1 bg-gray-950 p-1 rounded-xl border border-gray-800">
+                    <button onclick="switchSlotPage('earlygame')" id="slotpage-earlygame-btn" class="slotpage-btn py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-white transition-all">🌱 Early</button>
+                    <button onclick="switchSlotPage('midgame')" id="slotpage-midgame-btn" class="slotpage-btn py-1.5 text-xs font-bold rounded-lg text-gray-400 hover:text-white transition-all">⚡ Mid</button>
+                    <button onclick="switchSlotPage('endgame')" id="slotpage-endgame-btn" class="slotpage-btn py-1.5 text-xs font-bold rounded-lg text-gray-400 hover:text-white transition-all">🔥 End</button>
+                    <button onclick="switchSlotPage('postgame')" id="slotpage-postgame-btn" class="slotpage-btn py-1.5 text-xs font-bold rounded-lg text-gray-400 hover:text-white transition-all">💀 Post</button>
+                </div>
+                <div class="text-[10px] text-center text-gray-600 font-mono -mt-2" id="slotpage-label">Early Game — Toy, Battery, Dark</div>
 
                 <!-- Slots List -->
                 <div class="space-y-3 max-h-[460px] overflow-y-auto custom-scroll pr-1" id="slots-list">
@@ -768,6 +780,86 @@
         </section>
     </div>
 
+    <!-- EWW DISGUSTING AREA -->
+    <div id="area-eww" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-green-900/40 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-green-300">EWW DISGUSTING</h2>
+                    <span class="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded-md font-mono">14 tiers. gross.</span>
+                </div>
+                <button id="eww-roll-btn" onclick="doEwwRoll()"
+                    class="w-full bg-gradient-to-r from-green-700 to-lime-700 hover:from-green-600 hover:to-lime-600 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
+                    ROLL (ew)
+                </button>
+                <div id="eww-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[200px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Last Roll</h3>
+                </div>
+                <div id="eww-result-display" class="flex-grow flex items-center justify-center text-gray-600 text-sm italic">nothing yet</div>
+            </div>
+        </section>
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <h3 class="font-bold text-base text-gray-200">Tiers</h3>
+                <div class="space-y-1.5 max-h-[400px] overflow-y-auto custom-scroll pr-1" id="eww-tier-list"></div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">EWW Inventory</h3>
+                    <span class="text-xs text-gray-500 font-mono" id="eww-roll-count">0 rolls</span>
+                </div>
+                <div class="space-y-1 max-h-64 overflow-y-auto custom-scroll pr-1" id="eww-area-inventory"></div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">10^n Inventory</h3>
+                    <span class="text-xs text-gray-400 font-semibold" id="eww-total-rolls-count">Total: 0</span>
+                </div>
+                <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="eww-inventory-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- NIL AREA — unlocked by ? slot -->
+    <div id="area-nil" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-700/30 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-300">?  nil</h2>
+                    <span class="text-xs bg-gray-500/10 text-gray-400 border border-gray-500/20 px-2 py-1 rounded-md font-mono">requires ? slot</span>
+                </div>
+                <button id="nil-roll-btn" onclick="doNilRoll()"
+                    class="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
+                    ?
+                </button>
+                <div id="nil-result" class="text-center py-4 text-gray-600 text-sm italic">nothing</div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[200px] shadow-xl">
+                <div id="nil-result-display" class="flex-grow flex items-center justify-center text-gray-700 text-sm italic">?</div>
+            </div>
+        </section>
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <h3 class="font-bold text-base text-gray-200">Tiers</h3>
+                <div class="space-y-1.5 max-h-[300px] overflow-y-auto custom-scroll pr-1" id="nil-tier-list"></div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">Nil Inventory</h3>
+                    <span class="text-xs text-gray-500 font-mono" id="nil-roll-count">0 rolls</span>
+                </div>
+                <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="nil-area-inventory"></div>
+            </div>
+        </section>
+    </div>
+
+    
+              
+            
+
     <!-- Dynamic Offline Progression Modal -->
     <!-- Accessibility Modal -->
     <div id="accessibility-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -976,7 +1068,11 @@
             discoveredTiers: {},
             lastTickTime: Date.now(),
             accumulatedSecs: 0,
-            isMuted: false,
+            ewwRollCount: 0,
+            nilRollCount: 0,
+            refsRollCount: 0,
+            grower: { gridBonus: 0, n: 0, b: 0, lastIdleHour: 0 },
+            juni: { x: 10, y: 0, lastBonusFired: 0 },
             games: {
                 bg: { coins: 0, prestige: 0, ascend: 0, transcend: 0, almighty: 0 },
                 ngu: { currency: 0, upgrades: 0 },
@@ -1162,8 +1258,8 @@
                 req: { 7: 5, 8: 1, 1: 250000 },
                 desc: "expert gears calibrated to yield maximum luck efficiency while humming beautifully.",
                 bonusSims: [
-                    { intervalSecs: 3600, rolls: 500000, luck: 1.0  },  // every 1h: 500k x2 luck
-                    { intervalSecs: 3600, rolls: 30000,  luck: 9.0  },  // every 1h: 30k x10 luck
+                    { intervalSecs: 3600, rolls: 500000, luck: 2.5  },  // every 1h: 500k x3.5 luck
+                    { intervalSecs: 3600, rolls: 75000,  luck: 9.0  },  // every 1h: 75k x10 luck
                 ]
             },
             fantasy: {
@@ -1174,8 +1270,8 @@
                 req: { 8: 1 },
                 desc: "surreal design that defies typical engineering. dual modifiers of high power.",
                 bonusSims: [
-                    { intervalSecs: 600, rolls: 7000,  luck: 2.0  },   // every 10min: 7k x3 luck
-                    { intervalSecs: 600, rolls: 50000, luck: 0.8  },   // every 10min: 50k x1.8 luck
+                    { intervalSecs: 600, rolls: 25000,  luck: 4.0  },   // every 10min: 25k x5 luck
+                    { intervalSecs: 600, rolls: 75000, luck: 2.5  },   // every 10min: 75k x3.5 luck
                 ]
             },
             colossal: {
@@ -1194,23 +1290,46 @@
                 name: "Illusory Slots",
                 grid: 15,
                 luck: 1.80,
-                speed: 0.25,
+                speed: 0.75,
                 req: { 9: 1, 3: 10000, 0: 10000000 },
                 desc: "phantom elements shifting in and out of dimension. wide spatial output reach.",
                 bonusSims: [
-                    { intervalSecs: 300, rolls: 2000,   luck: 7.0  }, // every 5min: 2k x8 luck
-                    { intervalSecs: 300, rolls: 100000, luck: 0.5  }, // every 5min: 100k x1.5 luck
+                    { intervalSecs: 300, rolls: 2000,   luck: 7.0  },
+                    { intervalSecs: 300, rolls: 100000, luck: 0.5  },
                 ]
+            },
+            juni: {
+                name: "oops! juni's bad balancing got this here",
+                grid: 8,
+                luckMulti: 2.5,
+                speed: 2.0,
+                req: { 0: 1e9, 10: 1 },
+                desc: "for active players. wait too long between simulates and the bonus degrades. keep clicking.",
+                bonusSims: [
+                    { intervalSecs: 180, rolls: 125000, luck: 24.0, dynamic: 'juni' },
+                ]
+            },
+            grower: {
+                name: "grower slots",
+                grid: 2,
+                luck: 0.75,
+                speed: 0.50,
+                req: { 0: 1e9, 10: 1 },
+                desc: "idle to grow. simulate to lose 50% of everything you built. patience is power.",
+                isGrower: true,
+                bonusSims: [],
             },
             devil: {
                 name: "Devil Slots",
-                grid: 16,
-                luck: 6.66,
-                speed: -0.66,
+                grid: 6,
+                luck: 0.66,
+                speed: 66.66,
                 req: { 0: 6666666, 6: 66 },
                 desc: "a massive dark frame. incredibly slow roll rate, but luck is extremely high.",
                 bonusSims: [
-                    { intervalSecs: 360, rolls: 666, luck: 65.6 }, // every 6min: 666 rolls x66.6 luck
+                    { intervalSecs: 360, rolls: 666,    luck: 65.6   }, // every 6min: 666 rolls x66.6 luck
+                    { intervalSecs: 360, rolls: 6,      luck: 665.0  }, // every 6min: 6 rolls x666 luck
+                    { intervalSecs: 360, rolls: 666666, luck: -0.34  }, // every 6min: 666,666 rolls x0.66 luck
                 ]
             },
             burnt: {
@@ -1257,19 +1376,53 @@ bls: {
     desc: "just a tiny bit of the power am i right... NO shut up, the.. number isnt intentional. ITS SO YOUR LUCK AND SPEED IS 777%",
     req: { 7: 77777777 }
 },
+stattest: {
+name: "Literally Impossible",
+grid: 25,
+luck: 1000,
+speed: 2000,
+req: { "EGG" : 69420e69420 },
+desc: "UNIQUE STAT TEST"
+},
 burger: {
     name: "🍔 Burger Slots",
     grid: 25,
     luck: 2.50,
     speed: 2.50,
     req: { bunBottom: 1, cheese: 1, patty: 1, ketchup: 1, lettuce: 1, onion: 1, patty2: 1, mayo: 1, salt: 1, finalBun: 1 },
-    desc: "a perfectly assembled burger of luck and speed. the grid is burger-shaped. yes really.",
+    desc: "a perfectly assembled burger of luck and speed. the grid is burger-shaped. yes really.. not anymore.",
     bonusSims: [
-        { intervalSecs: 60, rolls: 250000, luck: 14.0  }, // every 1min: 250k x15 luck
-        { intervalSecs: 60, rolls: 1000000, luck: 0.8  }, // every 1min: 1m x1.8 luck
-        { intervalSecs: 60, rolls: 200,     luck: 4999.0 }, // every 1min: 200 x5000 luck
+        { intervalSecs: 60, rolls: 250000, luck: 14.0  },
+        { intervalSecs: 60, rolls: 1000000, luck: 0.8  },
+        { intervalSecs: 60, rolls: 200,     luck: 4999.0 },
     ]
-}
+},
+question: {
+    name: "?",
+    grid: 12,
+    luck: 4,
+    speed: 3,
+    req: { 9: 7, 10: 1 },
+    desc: "what is this. nobody knows. unlocks something new.",
+    unlocksArea: 'nil',
+    bonusSims: [
+        { intervalSecs: 404, rolls: 404,    luck: 3.04  }, // 404 rolls x4.04 luck
+        { intervalSecs: 404, rolls: 4,      luck: 403.0 }, // 4 rolls x404 luck
+        { intervalSecs: 404, rolls: 404404, luck: -0.596}, // 404,404 rolls x0.404 luck
+    ]
+},
+Bootleg_Bobm: {
+name: "FIRESTARTER SLOTS",
+grid: 14,
+luck: 124,
+speed: -0.95,
+req: {9 : 30, 8 : 70, explosion : 3},
+desc: "a firework infused with slots that looks unbelievably BAD until you give it time...",
+bonusSims: [
+{intervalSecs: 7200, rolls: 2.5e7, luck: 24 },
+{intervalSecs: 7200, rolls: 1, luck: 24999999}
+]
+},
         };
 
         // Consumables specifications
@@ -1334,7 +1487,7 @@ burger: {
                 id: 'everythingHand',
                 name: "Everything Hand 🤌",
                 cost: { 7: 5, 3: 2500, 0: 1000000, 1: 500000 },
-                desc: "on use, ALL items from every other area can spawn in the main 10^n grid — but are x250,000 rarer. usage cap: 1.",
+                desc: "on use, ALL items from every other area (including EWW DISGUSTING) can spawn in the main 10^n grid — but are x50,000 rarer. usage cap: 1.",
                 cap: 1,
                 color: "from-white via-yellow-200 to-pink-300 font-extrabold animate-pulse"
             },
@@ -1428,7 +1581,10 @@ burger: {
 
         function saveGame() {
             state.lastTickTime = Date.now();
-            localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+            const saveStr = JSON.stringify(state);
+            localStorage.setItem(SAVE_KEY, saveStr);
+            // push to server if logged in (debounced — max once per 10s)
+            if (typeof pushSaveToServer === 'function') pushSaveToServer(saveStr);
         }
 
         function loadGame() {
@@ -1461,6 +1617,17 @@ burger: {
                     state.areaInventory.money     = parsed.areaInventory.money     || {};
                     state.areaInventory.rng       = parsed.areaInventory.rng       || {};
                     state.areaInventory.elements  = parsed.areaInventory.elements  || {};
+                    state.areaInventory.eww       = parsed.areaInventory.eww       || {};
+                    state.areaInventory.nil       = parsed.areaInventory.nil       || {};
+                    state.areaInventory.references= parsed.areaInventory.references|| {};
+                }
+                if (typeof parsed.ewwRollCount   === 'number') state.ewwRollCount   = parsed.ewwRollCount;
+                if (typeof parsed.nilRollCount   === 'number') state.nilRollCount   = parsed.nilRollCount;
+                if (typeof parsed.refsRollCount  === 'number') state.refsRollCount  = parsed.refsRollCount;
+                if (parsed.grower) Object.assign(state.grower, parsed.grower);
+                if (parsed.juni) {
+                    if (!state.juni) state.juni = { x:10, y:0, lastBonusFired:0 };
+                    Object.assign(state.juni, parsed.juni);
                 }
                 if (typeof parsed.totalSimulated === 'number') state.totalSimulated = parsed.totalSimulated;
                 
@@ -1646,8 +1813,8 @@ burger: {
         function getLuckBonus() {
             const item = getActiveItemConfig();
             let baseLuck = item.luck !== undefined ? item.luck : 0;
-            
-            // stack active luck powders (+30% each)
+            // grower: luck = 0.75 * (1 + n)
+            if (item.isGrower) baseLuck = 0.75 * (1 + (state.grower.n || 0));
             let powderLuckBoost = (state.consumables.powder.active) * 0.30;
             return baseLuck + powderLuckBoost;
         }
@@ -1660,8 +1827,9 @@ burger: {
         function getSpeedBonus() {
             const item = getActiveItemConfig();
             let baseSpeed = 0.0;
-            
-            if (item.speedDynamic) {
+            if (item.isGrower) {
+                baseSpeed = 0.50 * (1 + (state.grower.b || 0));
+            } else if (item.speedDynamic) {
                 baseSpeed = gambleFluctuation;
             } else if (item.speedSpecial) {
                 const isDay = checkIsDaytime();
@@ -1669,8 +1837,6 @@ burger: {
             } else {
                 baseSpeed = item.speed !== undefined ? item.speed : 0.0;
             }
-            
-            // apply active luck powder speed penalty (-5% each)
             let powderSpeedPenalty = (state.consumables.powder.active) * -0.05;
             return baseSpeed + powderSpeedPenalty;
         }
@@ -1678,20 +1844,14 @@ burger: {
         function getRollRate() {
             const item = getActiveItemConfig();
             const speedMod = getSpeedBonus();
-            
-            // apply active grabber hands (+1 to grid width/height each)
             let grabberBonus = state.consumables.grabber.active;
-            const finalGridWidth = item.grid + grabberBonus;
-            const gridAmount = finalGridWidth * finalGridWidth; 
-            
+            // grower: grid = 2 + gridBonus
+            const baseGrid = item.isGrower ? (2 + (state.grower.gridBonus || 0)) : item.grid;
+            const finalGridWidth = baseGrid + grabberBonus;
+            const gridAmount = finalGridWidth * finalGridWidth;
             let calculatedRate = (1.0 + speedMod) * gridAmount;
-            
-            // apply active lightning gloves speed boost (+35% positive multi stacking each)
             let glovesBoostMultiplier = 1.0 + (0.35 * state.consumables.gloves.active);
-            
-            // apply active grandfather clock speed boost (+0.2x additive stacking each)
             let grandfatherBoostMultiplier = 1.0 + (0.2 * state.consumables.grandfather.active);
-            
             return Math.max(0.1, calculatedRate * glovesBoostMultiplier * grandfatherBoostMultiplier);
         }
 
@@ -2325,6 +2485,10 @@ burger: {
                     let highest = 0;
                     const keys = Object.keys(merged).map(Number);
                     if (keys.length) highest = Math.max(...keys);
+                    const elapsedSecs = totalRollCount / Math.max(getRollRate(), 1);
+                    const item = getActiveItemConfig();
+                    if (typeof onSimulateComplete === 'function')
+                        onSimulateComplete(merged, totalRollCount, highest, state.activeSlotId, item.luck || 0, elapsedSecs);
                     onDone(merged, totalRollCount, highest);
                 }
             }
@@ -2367,8 +2531,26 @@ burger: {
                 displayName: () => (state.unusualTiers.quanneng || 0) > 0 ? '全能的' : '???',
                 color: 'text-yellow-200',
                 bg: 'bg-yellow-900/30 border-yellow-400/40',
-                // checked inside doElementsRoll — no check() here
                 check: () => 0
+            },
+            miguel: {
+                id: 'miguel',
+                name: '"MIGUEL HAHA DID YOU THINK ID GIVE YOU A 404 JOKE OR SOMETHING IM NOT LAME"',
+                displayName: () => (state.unusualTiers.miguel || 0) > 0 ? '"MIGUEL HAHA DID YOU THINK ID GIVE YOU A 404 JOKE OR SOMETHING IM NOT LAME"' : '???',
+                color: 'text-red-400',
+                bg: 'bg-red-900/20 border-red-600/30',
+                // 1/696,900,000 — luck independent, only in nil area with ? equipped
+                check: (totalRollCount) => {
+                    if (state.activeSlotId !== 'question') return 0;
+                    // not affected by luck — raw probability check per roll
+                    const p = 1 / 696900000;
+                    let hits = 0;
+                    for (let i = 0; i < totalRollCount; i++) {
+                        if (Math.random() < p) hits++;
+                        if (hits > 0) break; // cap at 1 per sim for sanity
+                    }
+                    return hits;
+                }
             }
         };
 
@@ -2471,6 +2653,23 @@ burger: {
             state.consumables.salt.active = 0;
             state.consumables.finalBun.active = 0;
 
+            // GROWER SLOTS: apply 50% penalty on simulate
+            if (state.activeSlotId === 'grower' && state.grower) {
+                const g = state.grower;
+                // gridBonus: lose ceil(gridBonus*0.5), round to nearest 2
+                const gridLoss = Math.ceil(g.gridBonus * 0.5);
+                g.gridBonus = Math.max(0, g.gridBonus - (Math.ceil(gridLoss / 2) * 2));
+                // n: lose ceil(n*0.5), round to nearest 0.5
+                const nLoss = Math.ceil(g.n * 0.5 * 2) / 2;
+                g.n = Math.max(0, +(g.n - nLoss).toFixed(1));
+                // b: lose ceil(b*0.5), round to nearest 1.25
+                const bLoss = Math.ceil(g.b * 0.5 / 1.25) * 1.25;
+                g.b = Math.max(0, +(g.b - bLoss).toFixed(2));
+                // reset idle clock
+                g.lastIdleHour = Date.now();
+                addLog(`<span class="text-orange-400">grower penalty: grid -${gridLoss} · luck n→${g.n} · speed b→${g.b}</span>`);
+            }
+
             const simBtn = document.getElementById("btn-simulate");
             simBtn.disabled = true;
             const totalDisplay = jobs.reduce((s, j) => s + j.rollCount, 0);
@@ -2552,14 +2751,25 @@ burger: {
         // Action: freely equipping an already unlocked slot
         function equipSlot(slotId) {
             if (!state.unlockedSlots.includes(slotId)) return;
-            
             const item = ITEMS[slotId];
             state.activeSlotId = slotId;
+            // init grower clock when switching to grower
+            if (slotId === 'grower') {
+                if (!state.grower) state.grower = { gridBonus:0, n:0, b:0, lastIdleHour:0 };
+                if (!state.grower.lastIdleHour) state.grower.lastIdleHour = Date.now();
+            }
+            // reset juni counters when switching to juni
+            if (slotId === 'juni') {
+                if (!state.juni) state.juni = { x:10, y:0, lastBonusFired:0 };
+                state.juni.lastBonusFired = Date.now();
+                state.juni.x = 10;
+                state.juni.y = 0;
+            }
             addLog(`⚡ equipped framework: <span class="text-blue-400 font-bold">${item.name}</span>`);
-            
             updateVisualGrid([]);
             renderSlotsList();
             updateHeaderMetrics();
+            checkNilUnlock();
             saveGame();
         }
 
@@ -2633,13 +2843,45 @@ burger: {
             if (id === 'explosion') state.explosionUsedAt = Date.now();
             if (id === 'fireBomb')  state.fireBombUsedAt  = Date.now();
             
-            // special immediate grandfather clock logic (adds 2 hours of roll generation instantly)
+            // special immediate grandfather clock logic
             if (id === 'grandfather') {
-                const generatedSecs = 7200; // 2 hours
+                const SKIP_SECS = 2700; // 45 minutes
                 const rate = getRollRate();
-                const bonusRolls = generatedSecs * rate;
+                const bonusRolls = SKIP_SECS * rate;
                 addRollsWithSlotLuck(bonusRolls, state.activeSlotId);
-                addLog(`activated <span class="text-green-400 font-bold">${config.name}</span>. speed +0.2x and warp time granted <span class="text-blue-300 font-mono">+${bonusRolls.toLocaleString()} rolls</span>!`);
+
+                // also fast-forward all bonus sim timers by 45 minutes
+                const item = ITEMS[state.activeSlotId];
+                if (item && item.bonusSims) {
+                    if (!state.bonusSimLastFired) state.bonusSimLastFired = {};
+                    const now = Date.now();
+                    let totalBonusRolls = 0;
+                    for (let i = 0; i < item.bonusSims.length; i++) {
+                        const sim = item.bonusSims[i];
+                        const key = `${state.activeSlotId}_${i}`;
+                        const lastFired = state.bonusSimLastFired[key] || (now - sim.intervalSecs * 1000);
+                        const elapsedSecs = (now - lastFired) / 1000 + SKIP_SECS;
+                        const fires = Math.floor(elapsedSecs / sim.intervalSecs);
+                        if (fires > 0) {
+                            const luckMulti = item.luckMulti !== undefined ? item.luckMulti : 1.0;
+                            const bucketKey = `${state.activeSlotId}_bonus_${i}`;
+                            const existing = state.pendingRollBuckets && state.pendingRollBuckets.find(b => b.slotId === bucketKey);
+                            const rollsToAdd = sim.rolls * fires;
+                            if (existing) { existing.count += rollsToAdd; }
+                            else {
+                                if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
+                                state.pendingRollBuckets.push({ slotId: bucketKey, luck: sim.luck, luckMulti, count: rollsToAdd });
+                            }
+                            state.unspentRolls += rollsToAdd;
+                            totalBonusRolls += rollsToAdd;
+                            // set lastFired so the timer starts fresh from now
+                            state.bonusSimLastFired[key] = now - ((elapsedSecs % sim.intervalSecs) * 1000);
+                        }
+                    }
+                    addLog(`🕰️ <span class="text-green-400 font-bold">${config.name}</span> — skipped 45 mins. +${bonusRolls.toLocaleString()} idle rolls, +${totalBonusRolls.toLocaleString()} bonus sim rolls fired!`);
+                } else {
+                    addLog(`🕰️ <span class="text-green-400 font-bold">${config.name}</span> — skipped 45 mins. +${bonusRolls.toLocaleString()} rolls!`);
+                }
             } else {
                 addLog(`✨ activated <span class="text-green-400 font-bold">${config.name}</span>. buff active until next roll simulation.`);
             }
@@ -2752,12 +2994,50 @@ burger: {
             });
         }
 
+        const SLOT_PAGES = {
+            earlygame: {
+                label: 'Early Game — Toy, Battery, Dark',
+                keys: ['toy','battery','dark'],
+            },
+            midgame: {
+                label: 'Mid Game — SolarBeam, Charged, Speed, Sloth, Gamble, 777',
+                keys: ['solarbeam','charged','speed','sloth','gamble','seven'],
+            },
+            endgame: {
+                label: 'End Game — Mechanic, Fantasy, Colossal, Illusory, Devil, Burnt, Juni, Grower, Firestarter',
+                keys: ['mechanic','fantasy','colossal','illusory','devil', 'Bootleg_Bobm', 'burnt','juni','grower'],
+            },
+            postgame: {
+                label: 'Post Game / Not Worth It — Ultimate, BLS, test !!, Burger, ?',
+                keys: ['ultimateSL','bls','camerontest','burger','question', 'stattest',],
+            },
+        };
+
+        let activeSlotPage = 'earlygame';
+
+        function switchSlotPage(page) {
+            activeSlotPage = page;
+            Object.keys(SLOT_PAGES).forEach(p => {
+                const btn = document.getElementById(`slotpage-${p}-btn`);
+                if (!btn) return;
+                if (p === page) {
+                    btn.className = 'slotpage-btn py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-white transition-all';
+                } else {
+                    btn.className = 'slotpage-btn py-1.5 text-xs font-bold rounded-lg text-gray-400 hover:text-white transition-all';
+                }
+            });
+            const lbl = document.getElementById('slotpage-label');
+            if (lbl) lbl.innerText = SLOT_PAGES[page]?.label || '';
+            renderSlotsList();
+        }
+
         function renderSlotsList() {
             const list = document.getElementById("slots-list");
             list.innerHTML = "";
-
-            for (const key in ITEMS) {
+            const pageKeys = SLOT_PAGES[activeSlotPage]?.keys || Object.keys(ITEMS);
+            for (const key of pageKeys) {
                 const item = ITEMS[key];
+                if (!item) continue;
                 const isActive = (state.activeSlotId === key);
                 const isUnlocked = state.unlockedSlots.includes(key);
                 const canAfford = checkHasCost(item.req);
@@ -3002,21 +3282,28 @@ burger: {
             
             // Adjust grid size metrics considering active grabbers
             let grabberBonus = state.consumables.grabber.active;
-            const width = item.grid + grabberBonus;
+            const baseGrid = item.isGrower ? (2 + (state.grower.gridBonus || 0)) : item.grid;
+            const width = baseGrid + grabberBonus;
             document.getElementById("grid-size-stat").innerText = `${width}x${width} (${width * width} cells)`;
-            
-            // Luck parsing format
-            if (item.luckMulti !== undefined) {
+
+            // Luck display
+            if (item.luckMulti !== undefined && !item.isGrower) {
                 document.getElementById("luck-bonus-stat").innerText = `x${item.luckMulti}`;
                 document.getElementById("luck-bonus-stat").className = `font-bold text-red-400`;
             } else {
                 const totalLuck = getLuckBonus();
-                document.getElementById("luck-bonus-stat").innerText = `+${Math.round(totalLuck * 100)}%`;
+                let luckStr = `+${Math.round(totalLuck * 100)}%`;
+                if (item.isGrower) luckStr += ` (n=${state.grower.n})`;
+                if (item.name.includes("juni") && state.juni) luckStr += ` x${item.luckMulti}`;
+                document.getElementById("luck-bonus-stat").innerText = luckStr;
                 document.getElementById("luck-bonus-stat").className = `font-bold text-green-400`;
             }
-            
-            const displaySpeedPercent = Math.round(speedMod * 100);
-            document.getElementById("speed-bonus-stat").innerText = `${displaySpeedPercent >= 0 ? '+' : ''}${displaySpeedPercent}%`;
+
+            const displaySpeedPercent = Math.round(getSpeedBonus() * 100);
+            let speedStr = `${displaySpeedPercent >= 0 ? '+' : ''}${displaySpeedPercent}%`;
+            if (item.isGrower) speedStr += ` (b=${state.grower.b})`;
+            if (item.name.includes("juni") && state.juni) speedStr += ` [x:${state.juni.x} y:${state.juni.y}]`;
+            document.getElementById("speed-bonus-stat").innerText = speedStr;
             document.getElementById("speed-bonus-stat").className = `font-bold ${displaySpeedPercent >= 0 ? 'text-blue-400' : 'text-red-400'}`;
 
             document.getElementById("footer-active-slot").innerText = item.name.toLowerCase();
@@ -3132,18 +3419,33 @@ burger: {
                 const elapsed = (now - lastFired) / 1000;
                 if (elapsed >= sim.intervalSecs) {
                     state.bonusSimLastFired[key] = now;
-                    // add rolls as a special bucket with the sim's own luck
                     const luckMulti = item.luckMulti !== undefined ? item.luckMulti : 1.0;
                     if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
+
+                    let rolls = sim.rolls;
+                    let luck  = sim.luck;
+                    if (sim.dynamic === 'juni') {
+                        if (!state.juni) state.juni = { x:10, y:0, lastBonusFired:0 };
+                        // tick x and y based on time since last bonus fire
+                        const secsSince = (now - (state.juni.lastBonusFired || 0)) / 1000;
+                        const xTicks = Math.floor(secsSince / 5);
+                        const yTicks = Math.floor(secsSince / 3);
+                        state.juni.x = Math.min(250, (state.juni.x || 10) + xTicks * 10);
+                        state.juni.y = Math.min(23,  (state.juni.y || 0)  + yTicks * 5);
+                        rolls = Math.max(500, Math.floor(125000 / state.juni.x));
+                        luck  = Math.max(1, 25 - state.juni.y) - 1; // additive, floor x2 luck
+                        state.juni.lastBonusFired = now;
+                        // reset after firing
+                        state.juni.x = 10;
+                        state.juni.y = 0;
+                    }
+
                     const bucketKey = `${state.activeSlotId}_bonus_${i}`;
                     const existing = state.pendingRollBuckets.find(b => b.slotId === bucketKey);
-                    if (existing) {
-                        existing.count += sim.rolls;
-                    } else {
-                        state.pendingRollBuckets.push({ slotId: bucketKey, luck: sim.luck, luckMulti, count: sim.rolls });
-                    }
-                    state.unspentRolls += sim.rolls;
-                    addLog(`<span class="text-blue-300 font-semibold">${item.name} bonus: +${sim.rolls.toLocaleString()} rolls (x${(1+sim.luck).toFixed(2)} luck)</span>`);
+                    if (existing) { existing.count += rolls; }
+                    else { state.pendingRollBuckets.push({ slotId: bucketKey, luck, luckMulti, count: rolls }); }
+                    state.unspentRolls += rolls;
+                    addLog(`<span class="text-blue-300 font-semibold">${item.name} bonus: +${rolls.toLocaleString()} rolls (x${(1+luck).toFixed(2)} luck)</span>`);
                 }
             }
         }
@@ -3412,11 +3714,13 @@ burger: {
 
         function applyEverythingHand(totalRollCount) {
             const ehLuck = getLuckBonus();
-            const ehMult = 1 / 250000;
+            const ehMult = 1 / 50000; // x50k rarer (was 250k)
             const ehTable = [
                 ...ANNOYING_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'annoying'})),
                 ...SERIOUS_TIERS_RAW.filter(t => t.chance < 1).map(t => ({...t, _area:'serious', id: t.id || t.name})),
                 ...ELEMENTS_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'elements', id: t.id || t.name})),
+                ...EWW_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'eww'})),
+                ...REFS_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'references'})),
             ].map(t => ({...t, chance: t.chance * ehMult}));
             const { counts: ehCounts } = pickBestAreaTier(ehTable, totalRollCount, ehLuck);
             for (const [name, c] of Object.entries(ehCounts)) {
@@ -3778,12 +4082,299 @@ burger: {
             }
         }
 
+        // --- NIL AREA ---
+        const NIL_SVG = [
+            // 0: nil — absolute void, just a faint circle outline
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#374151" stroke-width="0.8" stroke-dasharray="2 2"/><circle cx="10" cy="10" r="0.8" fill="#4b5563"/></svg>`,
+            // 1: MIGUEL HAHA... — question mark in chaos
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#0c0a09"/><text x="10" y="14" text-anchor="middle" font-size="13" font-weight="900" fill="#dc2626" font-family="monospace">?</text><circle cx="10" cy="10" r="9" fill="none" stroke="#7f1d1d" stroke-width="0.5" stroke-dasharray="1 1"/><line x1="3" y1="3" x2="17" y2="17" stroke="#dc2626" stroke-width="0.3" opacity="0.4"/><line x1="17" y1="3" x2="3" y2="17" stroke="#dc2626" stroke-width="0.3" opacity="0.4"/></svg>`,
+        ];
+
+        const NIL_TIERS = [
+            { id:'nil', name:'nil', chance:1, color:'text-gray-500', bg:'bg-gray-900/60 border-gray-800/60', svgIdx:0 },
+        ];
+
+        function nilIsUnlocked() {
+            return state.activeSlotId === 'question' || state.unlockedSlots.includes('question');
+        }
+
+        function renderNilTierList() {
+            const container = document.getElementById('nil-tier-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const tiers = [...NIL_TIERS];
+            // show MIGUEL as a hint if ? slot is equipped (but it's an unusual tier, shown as ???)
+            if (state.activeSlotId === 'question') {
+                tiers.push({ id:'miguel', name: (state.unusualTiers?.miguel||0) > 0 ? '"MIGUEL HAHA DID YOU THINK ID GIVE YOU A 404 JOKE OR SOMETHING IM NOT LAME"' : '???', chance: 1/696900000, color:'text-red-400', bg:'bg-red-900/20 border-red-600/30', svgIdx:1, isUnusual:true });
+            }
+            for (const t of tiers) {
+                const oddsStr = t.chance >= 1 ? '1/1 (always)' : `1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                const row = document.createElement('div');
+                row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${t.bg}`;
+                const svgWrap = document.createElement('div');
+                svgWrap.className = 'w-8 h-8 flex-shrink-0';
+                svgWrap.innerHTML = NIL_SVG[t.svgIdx] ? NIL_SVG[t.svgIdx](32) : '';
+                const info = document.createElement('div');
+                info.className = 'flex-1 min-w-0';
+                info.innerHTML = `<div class="font-bold ${t.color} text-xs leading-tight">${t.name}</div><div class="font-mono text-[10px] text-gray-600 mt-0.5">${oddsStr}${t.isUnusual ? ' · unusual tier · luck-independent' : ''}</div>`;
+                row.appendChild(svgWrap);
+                row.appendChild(info);
+                container.appendChild(row);
+            }
+        }
+
+        function doNilRoll() {
+            if (!nilIsUnlocked()) {
+                document.getElementById('nil-result').innerText = 'equip ? slot first';
+                return;
+            }
+            const btnEl = document.getElementById('nil-roll-btn');
+            const resultEl = document.getElementById('nil-result');
+            const displayEl = document.getElementById('nil-result-display');
+            if (isSimulating) return;
+            const total = state.unspentRolls;
+            if (total <= 0) { resultEl.innerText = 'no rolls'; return; }
+
+            btnEl.disabled = true;
+            resultEl.innerText = '…';
+
+            const nilLuck = getLuckBonus();
+            const tiers = [...NIL_TIERS]; // just nil — MIGUEL is an unusual tier checked by checkUnusualTiers
+            const { best, counts } = pickBestAreaTier(tiers, total, nilLuck);
+
+            if (!state.areaInventory.nil) state.areaInventory.nil = {};
+            for (const [name, c] of Object.entries(counts))
+                state.areaInventory.nil[name] = (state.areaInventory.nil[name] || 0) + c;
+
+            state.nilRollCount = (state.nilRollCount || 0) + total;
+            state.unspentRolls = 0;
+            state.pendingRollBuckets = [];
+
+            // display result
+            if (best.svgIdx !== undefined && NIL_SVG[best.svgIdx]) {
+                displayEl.innerHTML = `<div class="flex flex-col items-center gap-2">${NIL_SVG[best.svgIdx](48)}<div class="font-bold ${best.color} text-sm text-center">${best.name}</div></div>`;
+            } else {
+                displayEl.innerHTML = `<div class="text-center"><div class="font-bold ${best.color} text-sm">${best.name}</div></div>`;
+            }
+
+            resultEl.innerHTML = `<span class="font-bold ${best.color}">${best.name}</span>`;
+            document.getElementById('nil-roll-count').innerText = `${state.nilRollCount.toLocaleString()} rolls`;
+            renderNilInventory();
+            updateHeaderMetrics();
+            btnEl.disabled = false;
+            saveGame();
+        }
+
+        function renderNilInventory() {
+            const inv = state.areaInventory.nil || {};
+            const container = document.getElementById('nil-area-inventory');
+            if (!container) return;
+            const entries = Object.entries(inv).filter(([,c])=>c>0);
+            if (!entries.length) { container.innerHTML = '<div class="text-gray-700 text-xs text-center py-2">?</div>'; return; }
+            container.innerHTML = '';
+            for (const [name, count] of entries) {
+                const t = NIL_TIERS.find(t=>t.name===name||t.id===name) || { svgIdx:0, color:'text-gray-500' };
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 py-1 border-b border-gray-800/40';
+                row.innerHTML = `<div class="w-6 h-6 flex-shrink-0">${NIL_SVG[t.svgIdx ?? 0] ? NIL_SVG[t.svgIdx ?? 0](24) : ''}</div><span class="${t.color} font-semibold text-xs truncate flex-1">${name}</span><span class="text-blue-400 font-mono font-bold text-xs">${count.toLocaleString()}</span>`;
+                container.appendChild(row);
+            }
+        }
+
+        // called when a slot is equipped — show/hide nil tab
+        function checkNilUnlock() {
+            const btn = document.getElementById('area-nil-btn');
+            if (!btn) return;
+            if (nilIsUnlocked()) {
+                btn.classList.remove('hidden');
+                renderNilTierList();
+            }
+        }
+
+        // ===================== REFERENCES AREA =====================
+        const REFS_SVG = [
+            // 0: dirt tile (Terraria)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#8B4513"/><rect x="0" y="0" width="20" height="5" fill="#5a7a2a"/><circle cx="4" cy="3" r="1.5" fill="#3d5e1a"/><circle cx="9" cy="2" r="1" fill="#3d5e1a"/><circle cx="15" cy="3" r="1.5" fill="#3d5e1a"/><rect x="2" y="8" width="3" height="2" fill="#6b3410" opacity="0.5"/><rect x="12" y="13" width="4" height="2" fill="#6b3410" opacity="0.5"/></svg>`,
+            // 1: wood sword (Minecraft)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1a1a2e"/><rect x="9" y="2" width="3" height="3" fill="#8B6914" rx="0.3"/><rect x="9" y="5" width="3" height="3" fill="#a07820"/><rect x="9" y="8" width="3" height="3" fill="#8B6914"/><rect x="9" y="11" width="3" height="3" fill="#a07820"/><rect x="6" y="13" width="9" height="2" fill="#5a3e1a"/><rect x="9" y="15" width="3" height="3" fill="#5a3e1a"/></svg>`,
+            // 2: cookie (Cookie Clicker)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#c8893a" stroke="#8B5e26" stroke-width="0.5"/><circle cx="7" cy="7" r="1.2" fill="#5c3317"/><circle cx="13" cy="8" r="1" fill="#5c3317"/><circle cx="8" cy="13" r="1.2" fill="#5c3317"/><circle cx="13" cy="13" r="0.8" fill="#5c3317"/><circle cx="10" cy="10" r="0.9" fill="#5c3317"/></svg>`,
+            // 3: dance grenade / boogie bomb (Fortnite)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><ellipse cx="10" cy="11" rx="6" ry="7" fill="#7c3aed" stroke="#6d28d9" stroke-width="0.5"/><rect x="8" y="2" width="4" height="3" fill="#4c1d95" rx="0.5"/><text x="10" y="12" text-anchor="middle" font-size="7" fill="#fde68a">♪</text><text x="6" y="8" text-anchor="middle" font-size="4" fill="#fde68a">♫</text><text x="15" y="9" text-anchor="middle" font-size="4" fill="#fde68a">♪</text></svg>`,
+            // 4: TIX (Roblox)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#1f6feb" stroke="#58a6ff" stroke-width="0.6"/><text x="10" y="14" text-anchor="middle" font-size="8" font-weight="900" fill="white" font-family="monospace">TIX</text></svg>`,
+            // 5: yellow orb (Geometry Dash)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="gd" cx="35%" cy="30%"><stop offset="0%" stop-color="#fef08a"/><stop offset="60%" stop-color="#eab308"/><stop offset="100%" stop-color="#854d0e"/></radialGradient></defs><circle cx="10" cy="10" r="8.5" fill="url(#gd)" stroke="#854d0e" stroke-width="0.5"/><circle cx="7" cy="7" r="2" fill="white" opacity="0.35"/></svg>`,
+            // 6: toxic cola / Nuka-Cola (Fallout)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="7" y="1" width="6" height="2" fill="#374151" rx="0.5"/><path d="M6,3 Q5,5 5,7 L5,17 Q5,19 10,19 Q15,19 15,17 L15,7 Q15,5 14,3 Z" fill="#15803d" stroke="#16a34a" stroke-width="0.5"/><ellipse cx="10" cy="11" rx="3.5" ry="2" fill="#22c55e" opacity="0.4"/><text x="10" y="13" text-anchor="middle" font-size="3.5" fill="#bbf7d0" font-weight="700">NUKA</text><circle cx="10" cy="7" r="1.5" fill="#4ade80" opacity="0.6"/></svg>`,
+            // 7: NrG drink (Henry Stickmin)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="6" y="2" width="8" height="16" fill="#1e3a5f" rx="1"/><rect x="6" y="2" width="8" height="5" fill="#facc15"/><text x="10" y="6.5" text-anchor="middle" font-size="3.5" fill="#1e3a5f" font-weight="900">NrG</text><text x="10" y="13" text-anchor="middle" font-size="5" fill="#facc15" font-weight="900">⚡</text></svg>`,
+            // 8: peashooter (PvZ)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#22c55e" stroke="#15803d" stroke-width="0.7"/><circle cx="10" cy="10" r="4" fill="#16a34a"/><ellipse cx="10" cy="7" rx="2" ry="3" fill="#15803d"/><circle cx="7" cy="9" r="1.5" fill="#86efac"/><circle cx="13" cy="9" r="1.5" fill="#86efac"/><circle cx="10" cy="14" r="2" fill="#4ade80"/></svg>`,
+            // 9: shark (Hungry Shark)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><path d="M2,12 Q6,6 10,10 Q14,6 18,12 Q14,16 10,14 Q6,16 2,12 Z" fill="#6b7280"/><path d="M10,4 L8,10 L12,10 Z" fill="#9ca3af"/><circle cx="13" cy="11" r="1" fill="#1c1917"/><path d="M7,13 L8,15 L9,13 L10,15 L11,13 L12,15 L13,13" stroke="white" stroke-width="0.5" fill="none"/></svg>`,
+            // 10: stickman / Mr. Game & Watch
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1c1917"/><circle cx="10" cy="4" r="2.5" fill="white"/><line x1="10" y1="6.5" x2="10" y2="13" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="9" x2="14" y2="9" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="13" x2="7" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="13" x2="13" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+            // 11: NOOB (Roblox)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="6" y="2" width="8" height="7" fill="#ffff00" rx="1"/><rect x="6" y="9" width="8" height="7" fill="#1565c0"/><rect x="3" y="9" width="3" height="5" fill="#1565c0" rx="0.5"/><rect x="14" y="9" width="3" height="5" fill="#1565c0" rx="0.5"/><rect x="6" y="16" width="3" height="3" fill="#1565c0" rx="0.5"/><rect x="11" y="16" width="3" height="3" fill="#1565c0" rx="0.5"/><rect x="7" y="4" width="2" height="2" fill="#1565c0"/><rect x="11" y="4" width="2" height="2" fill="#1565c0"/></svg>`,
+            // 12: scary pizza / Pizzaface (Pizza Tower)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#f97316" stroke="#c2410c" stroke-width="0.5"/><circle cx="6" cy="7" r="2.5" fill="#fef08a" stroke="#854d0e" stroke-width="0.3"/><circle cx="14" cy="7" r="2.5" fill="#fef08a" stroke="#854d0e" stroke-width="0.3"/><circle cx="6" cy="7" r="1" fill="#1c1917"/><circle cx="14" cy="7" r="1" fill="#1c1917"/><path d="M5,13 Q10,18 15,13" stroke="#1c1917" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="11" r="1" fill="#dc2626"/><circle cx="13" cy="11" r="0.8" fill="#dc2626"/></svg>`,
+            // 13: winged golfball (Flappy Golf)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="11" r="6" fill="white" stroke="#d1d5db" stroke-width="0.5"/><circle cx="8" cy="10" r="0.8" fill="#9ca3af"/><circle cx="11" cy="8" r="0.8" fill="#9ca3af"/><circle cx="12" cy="12" r="0.8" fill="#9ca3af"/><path d="M4,8 Q1,5 3,3 Q5,1 6,5 Z" fill="#86efac" stroke="#15803d" stroke-width="0.4"/><path d="M16,8 Q19,5 17,3 Q15,1 14,5 Z" fill="#86efac" stroke="#15803d" stroke-width="0.4"/></svg>`,
+            // 14: stupid pixie thing / Navi (Zelda)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="nv" cx="50%" cy="50%"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></radialGradient></defs><circle cx="10" cy="10" r="8" fill="url(#nv)"/><circle cx="10" cy="10" r="2.5" fill="#93c5fd" stroke="#bfdbfe" stroke-width="0.5"/><circle cx="10" cy="10" r="1" fill="white"/><path d="M7,6 Q4,4 6,8" stroke="#bfdbfe" stroke-width="0.8" fill="none" opacity="0.7"/><path d="M13,6 Q16,4 14,8" stroke="#bfdbfe" stroke-width="0.8" fill="none" opacity="0.7"/></svg>`,
+            // 15: killbot (Roblox sphere rocket bot)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="kb" cx="35%" cy="30%"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#7f1d1d"/></radialGradient></defs><circle cx="10" cy="10" r="7.5" fill="url(#kb)" stroke="#dc2626" stroke-width="0.5"/><circle cx="8" cy="9" r="1.5" fill="#fef2f2"/><circle cx="12" cy="9" r="1.5" fill="#fef2f2"/><circle cx="8" cy="9" r="0.7" fill="#1c1917"/><circle cx="12" cy="9" r="0.7" fill="#1c1917"/><rect x="17" y="9" width="2" height="2" fill="#6b7280" rx="0.3"/><rect x="1" y="9" width="2" height="2" fill="#6b7280" rx="0.3"/></svg>`,
+            // 16: golden star (Super Mario)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><polygon points="10,1 12.4,7.5 19.5,7.5 14,12 16,18.5 10,14.5 4,18.5 6,12 0.5,7.5 7.6,7.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.5"/><circle cx="7" cy="9" r="1" fill="white" opacity="0.5"/></svg>`,
+            // 17: companion cube (Portal)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="#9ca3af" rx="2" stroke="#6b7280" stroke-width="0.5"/><rect x="4" y="4" width="12" height="12" fill="#d1d5db" rx="1"/><circle cx="10" cy="10" r="3.5" fill="#f9a8d4" stroke="#ec4899" stroke-width="0.5"/><circle cx="10" cy="10" r="1.5" fill="#be185d"/><line x1="4" y1="10" x2="6.5" y2="10" stroke="#ec4899" stroke-width="0.8"/><line x1="13.5" y1="10" x2="16" y2="10" stroke="#ec4899" stroke-width="0.8"/><line x1="10" y1="4" x2="10" y2="6.5" stroke="#ec4899" stroke-width="0.8"/><line x1="10" y1="13.5" x2="10" y2="16" stroke="#ec4899" stroke-width="0.8"/></svg>`,
+            // 18: GOLDEN PAN (TF2)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="gp" cx="35%" cy="30%"><stop offset="0%" stop-color="#fef08a"/><stop offset="100%" stop-color="#92400e"/></radialGradient></defs><ellipse cx="9" cy="12" rx="7" ry="5" fill="url(#gp)" stroke="#92400e" stroke-width="0.6"/><rect x="14" y="9" width="5" height="2" fill="#d97706" rx="1"/><ellipse cx="9" cy="10" rx="5" ry="3" fill="#fde68a" opacity="0.5"/></svg>`,
+            // 19: CREEPER face (Minecraft — Revenge)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1a1a2e"/><rect x="3" y="2" width="14" height="16" fill="#16a34a" rx="1"/><rect x="5" y="5" width="3" height="3" fill="#1c1917"/><rect x="12" y="5" width="3" height="3" fill="#1c1917"/><rect x="7" y="10" width="6" height="2" fill="#1c1917"/><rect x="5" y="12" width="3" height="4" fill="#1c1917"/><rect x="12" y="12" width="3" height="4" fill="#1c1917"/></svg>`,
+            // 20: SOUL (Undertale/Deltarune)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#0c0a09"/><path d="M10,4 C7,4 4,6 4,9 C4,13 10,17 10,17 C10,17 16,13 16,9 C16,6 13,4 10,4 Z" fill="#ef4444" stroke="#dc2626" stroke-width="0.5"/></svg>`,
+            // 21: bonk (TF2 — Scout bat)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="9" y="1" width="3" height="10" fill="#6b7280" rx="1" transform="rotate(20 10 10)"/><ellipse cx="12" cy="14" rx="5" ry="4" fill="#ef4444" stroke="#dc2626" stroke-width="0.5" transform="rotate(20 10 10)"/><text x="10" y="19" text-anchor="middle" font-size="4" fill="#fef08a" font-weight="900">BONK</text></svg>`,
+            // 22: pawn (Chess)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="5" r="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.5"/><path d="M7,8 Q6,11 5,14 L15,14 Q14,11 13,8 Z" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.5"/><rect x="4" y="14" width="12" height="2.5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.5" rx="0.5"/></svg>`,
+            // 23: ALMIGHTY PEEL P50 (BeamNG)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="2" y="8" width="16" height="7" fill="#fbbf24" rx="1" stroke="#d97706" stroke-width="0.5"/><rect x="4" y="6" width="12" height="4" fill="#fef08a" rx="0.5"/><circle cx="5" cy="16" r="2" fill="#1c1917" stroke="#374151" stroke-width="0.5"/><circle cx="15" cy="16" r="2" fill="#1c1917" stroke="#374151" stroke-width="0.5"/><rect x="6" y="7" width="3" height="2" fill="#7dd3fc" opacity="0.8"/><rect x="11" y="7" width="3" height="2" fill="#7dd3fc" opacity="0.8"/></svg>`,
+            // 24: queen (Chess — replaces pawn)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="3" r="2" fill="#fbbf24" stroke="#d97706" stroke-width="0.5"/><circle cx="4" cy="5" r="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.4"/><circle cx="16" cy="5" r="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.4"/><path d="M3,7 L4,5 L7,9 L10,5 L13,9 L16,5 L17,7 L15,14 L5,14 Z" fill="#fbbf24" stroke="#d97706" stroke-width="0.4"/><rect x="4" y="14" width="12" height="2.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.4" rx="0.5"/></svg>`,
+            // 25: DIAMONDS!!! (Minecraft)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1a1a2e"/><rect x="6" y="6" width="3" height="3" fill="#22d3ee"/><rect x="9" y="6" width="3" height="3" fill="#67e8f9"/><rect x="12" y="6" width="2" height="2" fill="#22d3ee"/><rect x="6" y="9" width="3" height="3" fill="#22d3ee"/><rect x="9" y="9" width="3" height="3" fill="#a5f3fc"/><rect x="12" y="9" width="2" height="3" fill="#22d3ee"/><rect x="7" y="12" width="6" height="2" fill="#0e7490"/></svg>`,
+            // 26: GOLDEN COOKIE (Cookie Clicker — replaces cookie)
+            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="gcook" cx="35%" cy="30%"><stop offset="0%" stop-color="#fef08a"/><stop offset="70%" stop-color="#d97706"/><stop offset="100%" stop-color="#92400e"/></radialGradient></defs><circle cx="10" cy="10" r="8.5" fill="url(#gcook)" stroke="#92400e" stroke-width="0.5"/><circle cx="7" cy="7" r="1.2" fill="#78350f"/><circle cx="13" cy="8" r="1" fill="#78350f"/><circle cx="8" cy="13" r="1.2" fill="#78350f"/><circle cx="13" cy="13" r="0.8" fill="#78350f"/><circle cx="10" cy="10" r="0.9" fill="#78350f"/><circle cx="7" cy="7" r="0.5" fill="#fef9c3"/><circle cx="13" cy="8" r="0.4" fill="#fef9c3"/></svg>`,
+        ];
+
+        const REFS_TIERS = [
+            { id:'dirt',        name:'dirt tile',      game:'Terraria',          chance:1,                   color:'text-amber-700',   bg:'bg-amber-900/20 border-amber-800/40',   svgIdx:0 },
+            { id:'woodsword',   name:'wood sword',     game:'Minecraft',         chance:1/5,                 color:'text-amber-500',   bg:'bg-amber-900/20 border-amber-700/30',   svgIdx:1 },
+            { id:'cookie',      name:'cookie',         game:'Cookie Clicker',    chance:1/25,                color:'text-orange-400',  bg:'bg-orange-900/20 border-orange-700/30', svgIdx:2 },
+            { id:'boogiebomb',  name:'dance grenade',  game:'Fortnite',          chance:1/50,                color:'text-violet-400',  bg:'bg-violet-900/20 border-violet-700/30', svgIdx:3 },
+            { id:'tix',         name:'tix',            game:'Roblox',            chance:1/100,               color:'text-blue-400',    bg:'bg-blue-900/20 border-blue-700/30',     svgIdx:4 },
+            { id:'yelloworb',   name:'yellow orb',     game:'Geometry Dash',     chance:1/250,               color:'text-yellow-400',  bg:'bg-yellow-900/20 border-yellow-700/30', svgIdx:5 },
+            { id:'toxiccola',   name:'toxic cola',     game:'Fallout',           chance:1/333,               color:'text-green-400',   bg:'bg-green-900/20 border-green-700/30',   svgIdx:6 },
+            { id:'nrg',         name:'NrG drink',      game:'Henry Stickmin',    chance:1/500,               color:'text-sky-300',     bg:'bg-sky-900/20 border-sky-700/30',       svgIdx:7 },
+            { id:'peashooter',  name:'peashooter',     game:'PvZ',               chance:1/1000,              color:'text-green-300',   bg:'bg-green-900/20 border-green-600/30',   svgIdx:8 },
+            { id:'shark',       name:'shark',          game:'Hungry Shark',      chance:1/5000,              color:'text-gray-300',    bg:'bg-gray-800/60 border-gray-600/40',     svgIdx:9 },
+            { id:'stickman',    name:'stickman',       game:'Mr. Game & Watch',  chance:1/10000,             color:'text-white',       bg:'bg-stone-900/80 border-stone-600/40',   svgIdx:10 },
+            { id:'noob',        name:'NOOB',           game:'Roblox',            chance:1/50000,             color:'text-yellow-300',  bg:'bg-yellow-900/20 border-yellow-600/30', svgIdx:11 },
+            { id:'pizzaface',   name:'scary pizza',    game:'Pizza Tower',       chance:1/125000,            color:'text-orange-300',  bg:'bg-orange-900/20 border-orange-600/30', svgIdx:12 },
+            { id:'flappygolf',  name:'winged golfball',game:'Flappy Golf',       chance:1/500000,            color:'text-green-200',   bg:'bg-green-900/20 border-green-500/30',   svgIdx:13 },
+            { id:'navi',        name:'stupid pixie thing', game:'TLoZ series',   chance:1/1000000,           color:'text-blue-200',    bg:'bg-blue-900/20 border-blue-400/30',     svgIdx:14 },
+            { id:'killbot',     name:'killbot',        game:'Roblox',            chance:1/2011000,           color:'text-red-300',     bg:'bg-red-900/20 border-red-600/30',       svgIdx:15 },
+            { id:'goldenstar',  name:'golden star',    game:'Super Mario',       chance:1/5000000,           color:'text-yellow-200',  bg:'bg-yellow-900/20 border-yellow-400/30', svgIdx:16 },
+            { id:'companioncube',name:'companion cube',game:'Portal',            chance:1/10000000,          color:'text-pink-300',    bg:'bg-pink-900/20 border-pink-500/30',     svgIdx:17 },
+            { id:'goldenpan',   name:'GOLDEN PAN',     game:'TF2',               chance:1/25000000,          color:'text-yellow-300',  bg:'bg-yellow-800/30 border-yellow-500/40', svgIdx:18 },
+            { id:'creeper',     name:'CREEPER? aw MAN',game:'Minecraft',         chance:1/50000000,          color:'text-green-300',   bg:'bg-green-900/20 border-green-500/40',   svgIdx:19 },
+            { id:'soul',        name:'SOUL',           game:'Undertale/Deltarune',chance:1/77777777,         color:'text-red-400',     bg:'bg-red-950/60 border-red-600/40',       svgIdx:20 },
+            { id:'bonk',        name:'bonk',           game:'TF2',               chance:1/125000000,         color:'text-red-300',     bg:'bg-red-900/20 border-red-500/30',       svgIdx:21 },
+            { id:'pawn',        name:'pawn',           game:'Chess',             chance:1/500000000,         color:'text-gray-200',    bg:'bg-gray-800/60 border-gray-400/30',     svgIdx:22 },
+            { id:'peelp50',     name:'ALMIGHTY PEEL P50', game:'BeamNG Drive',   chance:1/1500000000,        color:'text-yellow-200',  bg:'bg-yellow-900/20 border-yellow-400/40', svgIdx:23 },
+            { id:'queen',       name:'queen',          game:'Chess',             chance:1/5, replaces:'pawn',color:'text-yellow-300',  bg:'bg-yellow-800/30 border-yellow-500/40', svgIdx:24 },
+            { id:'diamonds',    name:'DIAMONDS!!!',    game:'Minecraft',         chance:1/10000000000,       color:'text-cyan-300',    bg:'bg-cyan-900/20 border-cyan-500/40',     svgIdx:25 },
+            { id:'goldencookie',name:'GOLDEN COOKIE',  game:'Cookie Clicker',    chance:1/3111111111.08, replaces:'cookie', color:'text-yellow-200', bg:'bg-yellow-700/30 border-yellow-400/50', svgIdx:26 },
+        ];
+
+        let refsGridTiers = [];
+
+        function renderRefsTierList() {
+            const container = document.getElementById('refs-tier-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const realOdds = computeRealOdds(REFS_TIERS);
+            const sorted = [...REFS_TIERS].sort((a,b) => (realOdds[a.id]||a.chance) - (realOdds[b.id]||b.chance));
+            for (const t of sorted) {
+                const odds = realOdds[t.id] || t.chance;
+                const oddsStr = odds >= 1 ? '1/1' : `1/${(1/odds)<1e12?(1/odds).toLocaleString(undefined,{maximumFractionDigits:0}):(1/odds).toExponential(2)}`;
+                const row = document.createElement('div');
+                row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${t.bg}`;
+                row.innerHTML = `<div class="w-7 h-7 flex-shrink-0">${REFS_SVG[t.svgIdx](28)}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold ${t.color} text-xs leading-tight">${t.name}${t.replaces?`<span class="text-gray-600 text-[9px]"> (replaces ${t.replaces})</span>`:''}</div>
+                        <div class="text-[10px] text-gray-500 font-mono">${oddsStr} · <span class="text-gray-600">${t.game}</span></div>
+                    </div>`;
+                container.appendChild(row);
+            }
+        }
+
+        function renderRefsGrid(tierHits) {
+            const container = document.getElementById('refs-grid');
+            if (!container) return;
+            const item = getActiveItemConfig();
+            const width = (item.isGrower ? 2 + (state.grower.gridBonus||0) : item.grid) + (state.consumables.grabber?.active||0);
+            container.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
+            container.innerHTML = '';
+            // build display list: fill with hits proportionally, rest with dirt
+            const cells = [];
+            for (const [id, count] of Object.entries(tierHits)) {
+                const t = REFS_TIERS.find(t=>t.id===id||t.name===id);
+                if (t) for (let i=0; i<Math.min(count, Math.ceil(width*width/Object.keys(tierHits).length)); i++) cells.push(t);
+            }
+            while (cells.length < width*width) cells.push(REFS_TIERS[0]);
+            cells.sort(()=>Math.random()-0.5);
+            for (let i=0; i<width*width; i++) {
+                const t = cells[i] || REFS_TIERS[0];
+                const cell = document.createElement('div');
+                cell.className = 'w-full h-full aspect-square';
+                cell.innerHTML = REFS_SVG[t.svgIdx] ? REFS_SVG[t.svgIdx](32) : '';
+                container.appendChild(cell);
+            }
+        }
+
+        function renderRefsInventory() {
+            const inv = state.areaInventory.references || {};
+            const container = document.getElementById('refs-inventory');
+            if (!container) return;
+            const entries = Object.entries(inv).filter(([,c])=>c>0).sort((a,b)=>{
+                const ta=REFS_TIERS.find(t=>t.id===a[0]||t.name===a[0]);
+                const tb=REFS_TIERS.find(t=>t.id===b[0]||t.name===b[0]);
+                return (ta?.chance||1)-(tb?.chance||1);
+            });
+            if (!entries.length) { container.innerHTML='<div class="text-gray-600 text-xs text-center py-2">Nothing yet</div>'; return; }
+            container.innerHTML='';
+            for (const [id,count] of entries) {
+                const t=REFS_TIERS.find(t=>t.id===id||t.name===id)||{svgIdx:0,color:'text-gray-400',name:id};
+                const row=document.createElement('div');
+                row.className='flex items-center gap-2 py-1 border-b border-gray-800/40';
+                row.innerHTML=`<div class="w-6 h-6 flex-shrink-0">${REFS_SVG[t.svgIdx]?REFS_SVG[t.svgIdx](24):''}</div><span class="${t.color} font-semibold text-xs truncate flex-1">${t.name}</span><span class="text-[10px] text-gray-600">${t.game||''}</span><span class="text-blue-400 font-mono font-bold text-xs ml-1">${count.toLocaleString()}</span>`;
+                container.appendChild(row);
+            }
+        }
+
+        function doRefsRoll() {
+            const btnEl = document.getElementById('refs-roll-btn');
+            const resultEl = document.getElementById('refs-result');
+            if (isSimulating) return;
+            const total = Math.floor(state.unspentRolls);
+            if (total < 1) { resultEl.innerText = 'No rolls available'; return; }
+            btnEl.disabled = true;
+            resultEl.innerHTML = `<span class="text-gray-400 italic">Simulating ${total.toLocaleString()} rolls…</span>`;
+            simulateAreaRolls((merged, simTotal, highest) => {
+                const { best, counts } = pickBestAreaTier(REFS_TIERS, simTotal, getLuckBonus());
+                if (!state.areaInventory.references) state.areaInventory.references = {};
+                for (const [name,c] of Object.entries(counts))
+                    state.areaInventory.references[name] = (state.areaInventory.references[name]||0) + c;
+                state.refsRollCount = (state.refsRollCount||0) + simTotal;
+                document.getElementById('refs-roll-count').innerText = `${state.refsRollCount.toLocaleString()} rolls`;
+                resultEl.innerHTML = `<div class="flex flex-col items-center gap-2">${REFS_SVG[best.svgIdx](48)}<span class="font-bold ${best.color} text-sm">${best.name}</span><span class="text-[10px] text-gray-600">${best.game}</span><span class="text-xs text-gray-500">${simTotal.toLocaleString()} rolls · best 10^n: 10^${highest}</span></div>`;
+                renderRefsGrid(counts);
+                renderRefsInventory();
+                if (best.svgIdx > 20) flashScreen(21);
+                else if (best.svgIdx > 15) flashScreen(12);
+                else if (best.svgIdx > 10) flashScreen(7);
+                btnEl.disabled = false;
+                saveGame();
+            });
+        }
+
         function gameTick() {
             if (state.antiTamperFrozenSecs > 0) {
                 state.antiTamperFrozenSecs--;
-                if (state.antiTamperFrozenSecs <= 0) {
-                    clearTamperVisuals();
-                }
+                if (state.antiTamperFrozenSecs <= 0) clearTamperVisuals();
                 state.lastTickTime = Date.now();
                 saveGame();
                 return;
@@ -3793,12 +4384,31 @@ burger: {
             addRollsWithSlotLuck(currentRate, state.activeSlotId);
             processBonusSims();
             gamesTick(performance.now());
-            state.lastTickTime = Date.now();
 
+            const now = Date.now();
+
+            // --- GROWER SLOTS IDLE TICK ---
+            if (state.activeSlotId === 'grower') {
+                if (!state.grower) state.grower = { gridBonus:0, n:0, b:0, lastIdleHour:0 };
+                const lastHour = state.grower.lastIdleHour || 0;
+                const hoursSince = (now - lastHour) / 3600000;
+                if (hoursSince >= 1) {
+                    const hoursGained = Math.floor(hoursSince);
+                    for (let h = 0; h < hoursGained; h++) {
+                        if (state.grower.gridBonus < 18) state.grower.gridBonus = Math.min(18, state.grower.gridBonus + 2);
+                        if (state.grower.n < 9) state.grower.n = Math.min(9, +(state.grower.n + 0.5).toFixed(1));
+                        if (state.grower.b < 10) state.grower.b = Math.min(10, +(state.grower.b + 1.25).toFixed(2));
+                    }
+                    state.grower.lastIdleHour = now - ((hoursSince % 1) * 3600000);
+                }
+            }
+
+            // grower and juni ticks are handled in processBonusSims / equipSlot
+
+            state.lastTickTime = now;
             const isDay = checkIsDaytime();
             document.getElementById("time-display").innerText = isDay ? "Daytime" : "Nighttime";
             document.getElementById("tod-icon").innerText = isDay ? "☀️" : "🌙";
-
             updateHeaderMetrics();
             saveGame();
         }
@@ -4345,7 +4955,7 @@ burger: {
         }
 
         function switchArea(area) {
-            ['main','rng','annoying','serious','money','elements'].forEach(a => {
+            ['main','rng','annoying','serious','money','elements','eww','nil','references'].forEach(a => {
                 const el = document.getElementById(`area-${a}`);
                 const btn = document.getElementById(`area-${a}-btn`);
                 if (!el || !btn) return;
@@ -4359,6 +4969,147 @@ burger: {
                     btn.classList.add('text-gray-400','hover:text-white','hover:bg-gray-800');
                 }
             });
+        }
+
+        // --- EWW DISGUSTING AREA ---
+        // SVGs indexed 0-12 matching EWW_TIERS order
+        const EWW_SVG = [
+            // 0: grosscrystal — murky slimy crystal
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4d7c0f"/><stop offset="100%" stop-color="#1a2e05"/></linearGradient></defs><polygon points="10,1 17,6 17,14 10,19 3,14 3,6" fill="url(#gc)" stroke="#65a30d" stroke-width="0.6"/><polygon points="10,4 14,7 14,13 10,16 6,13 6,7" fill="#1a2e05" opacity="0.5"/><line x1="10" y1="1" x2="10" y2="19" stroke="#84cc16" stroke-width="0.3" opacity="0.4"/></svg>`,
+            // 1: 2 literal lines — two vertical bars
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="5" y="1" width="3" height="18" fill="#a3e635" rx="1"/><rect x="12" y="1" width="3" height="18" fill="#a3e635" rx="1"/></svg>`,
+            // 2: e — euler's number, mathematical elegance but wrong place
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#1e1b4b" stroke="#818cf8" stroke-width="0.8"/><text x="10" y="14" text-anchor="middle" font-size="11" font-weight="900" fill="#a5b4fc" font-family="serif" font-style="italic">e</text></svg>`,
+            // 3: impossible (no) — red X in a circle
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#450a0a" stroke="#dc2626" stroke-width="1"/><line x1="4" y1="4" x2="16" y2="16" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="4" x2="4" y2="16" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/><text x="10" y="19.5" text-anchor="middle" font-size="3.5" fill="#fca5a5" font-weight="700">NO</text></svg>`,
+            // 4: BUN+KETCHUP+PATTY tier — tiny burger
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><ellipse cx="10" cy="7" rx="7" ry="4" fill="#d97706"/><rect x="3" y="10" width="14" height="3" fill="#7f1d1d"/><ellipse cx="10" cy="13.5" rx="7" ry="3" fill="#d97706"/><ellipse cx="10" cy="10" rx="6" ry="1" fill="#16a34a" opacity="0.7"/></svg>`,
+            // 5: electric G — glowing letter G with electricity
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="eg"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0e7490"/></radialGradient></defs><circle cx="10" cy="10" r="9" fill="#083344" stroke="#22d3ee" stroke-width="0.7"/><text x="10" y="14.5" text-anchor="middle" font-size="12" font-weight="900" fill="url(#eg)" font-family="monospace">G</text><line x1="2" y1="3" x2="5" y2="8" stroke="#67e8f9" stroke-width="0.5" opacity="0.6"/><line x1="18" y1="4" x2="15" y2="9" stroke="#67e8f9" stroke-width="0.5" opacity="0.6"/></svg>`,
+            // 6: pleasant stone — smooth rounded pebble
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="ps" cx="35%" cy="30%"><stop offset="0%" stop-color="#d1d5db"/><stop offset="100%" stop-color="#6b7280"/></radialGradient></defs><ellipse cx="10" cy="11" rx="8" ry="7" fill="url(#ps)" stroke="#9ca3af" stroke-width="0.5"/><ellipse cx="8" cy="8" rx="2" ry="1.2" fill="white" opacity="0.3" transform="rotate(-15 8 8)"/></svg>`,
+            // 7: BLUE PEPPERONI YUMMY — blue circle with pepperoni texture
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#1d4ed8" stroke="#3b82f6" stroke-width="0.6"/><circle cx="7" cy="7" r="1.5" fill="#1e40af"/><circle cx="13" cy="8" r="1.5" fill="#1e40af"/><circle cx="8" cy="13" r="1.5" fill="#1e40af"/><circle cx="14" cy="13" r="1.5" fill="#1e40af"/><circle cx="10" cy="10" r="1" fill="#1e40af"/><text x="10" y="20.5" text-anchor="middle" font-size="3" fill="#93c5fd">yummy</text></svg>`,
+            // 8: SKELETON BIGGER THAN YOUR SCREEN — tiny skull
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="sk"><stop offset="0%" stop-color="#f5f5f4"/><stop offset="100%" stop-color="#a8a29e"/></radialGradient></defs><ellipse cx="10" cy="8" rx="7" ry="7" fill="url(#sk)" stroke="#d6d3d1" stroke-width="0.5"/><rect x="5" y="13" width="10" height="4" fill="url(#sk)" stroke="#d6d3d1" stroke-width="0.5" rx="1"/><circle cx="7.5" cy="8" r="2" fill="#1c1917"/><circle cx="12.5" cy="8" r="2" fill="#1c1917"/><rect x="6" y="15" width="2" height="3" fill="#1c1917" rx="0.3"/><rect x="9" y="15" width="2" height="3" fill="#1c1917" rx="0.3"/><rect x="12" y="15" width="2" height="3" fill="#1c1917" rx="0.3"/></svg>`,
+            // 9: BAG WITH WATER INSIDE BUT ITS INSANELY REALISTIC — realistic water bag
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="wb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bae6fd" stop-opacity="0.8"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0.9"/></linearGradient></defs><path d="M6,2 Q10,1 14,2 L15,4 Q17,5 17,8 L17,15 Q17,18 10,18 Q3,18 3,15 L3,8 Q3,5 5,4 Z" fill="url(#wb)" stroke="#38bdf8" stroke-width="0.6"/><ellipse cx="10" cy="9" rx="4" ry="2" fill="#7dd3fc" opacity="0.4"/><line x1="7" y1="2.5" x2="13" y2="2.5" stroke="#e0f2fe" stroke-width="1" opacity="0.7"/></svg>`,
+            // 10: MOST DISGUSTING TIER EVER — vomit emoji style
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="9" r="8" fill="#4d7c0f" stroke="#65a30d" stroke-width="0.7"/><circle cx="7.5" cy="7.5" r="1.5" fill="#1a2e05"/><circle cx="12.5" cy="7.5" r="1.5" fill="#1a2e05"/><path d="M6,12 Q10,16 14,12" stroke="#1a2e05" stroke-width="1.2" fill="none"/><path d="M9,17 Q10,20 11,17 Q12,20 13,18" stroke="#65a30d" stroke-width="1" fill="#84cc16" opacity="0.8"/></svg>`,
+            // 11: i lied this is disgusting and overstimulating — pure chaos
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#0c0a09"/><circle cx="5" cy="5" r="3" fill="#f43f5e" opacity="0.9"/><circle cx="15" cy="5" r="3" fill="#a855f7" opacity="0.9"/><circle cx="5" cy="15" r="3" fill="#22d3ee" opacity="0.9"/><circle cx="15" cy="15" r="3" fill="#eab308" opacity="0.9"/><circle cx="10" cy="10" r="4" fill="#f97316" opacity="0.7"/><line x1="0" y1="0" x2="20" y2="20" stroke="#84cc16" stroke-width="0.8"/><line x1="20" y1="0" x2="0" y2="20" stroke="#ec4899" stroke-width="0.8"/><line x1="10" y1="0" x2="10" y2="20" stroke="#67e8f9" stroke-width="0.5" opacity="0.6"/><line x1="0" y1="10" x2="20" y2="10" stroke="#fb923c" stroke-width="0.5" opacity="0.6"/></svg>`,
+            // 12: G bottle with fruit punch juice — bottle shape, deep red
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><linearGradient id="gbt" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fee2e2"/><stop offset="30%" stop-color="#dc2626"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient></defs><rect x="8" y="1" width="4" height="3" fill="#6b7280" rx="0.5"/><path d="M7,4 Q5,6 5,8 L5,16 Q5,19 10,19 Q15,19 15,16 L15,8 Q15,6 13,4 Z" fill="url(#gbt)" stroke="#fca5a5" stroke-width="0.5"/><ellipse cx="10" cy="11" rx="3" ry="2" fill="#ef4444" opacity="0.3"/><text x="10" y="15" text-anchor="middle" font-size="3" fill="#fecaca" font-weight="700">G</text></svg>`,
+        ];
+
+        const EWW_TIERS = [
+            { id:'grosscrystal',      name:'grosscrystal',                                              chance:1,              color:'text-gray-400',    bg:'bg-gray-900/60 border-gray-800',                 svgIdx:0 },
+            { id:'twolines',          name:'2 literal lines',                                           chance:1/69,           color:'text-lime-400',    bg:'bg-lime-900/20 border-lime-700/30',              svgIdx:1, render:'twolines' },
+            { id:'e',                 name:'e',                                                          chance:1/271.82818285,  color:'text-blue-300',    bg:'bg-blue-900/20 border-blue-700/30',              svgIdx:2 },
+            { id:'impossible',        name:'"impossible (no)"',                                          chance:1/420.69,        color:'text-orange-300',  bg:'bg-orange-900/20 border-orange-700/30',          svgIdx:3 },
+            { id:'bunpatty',          name:'THIS TIER REQUIRES YOU TO USE A BUN, KETCHUP, AND A PATTY', chance:1/2500,          color:'text-yellow-300',  bg:'bg-yellow-900/20 border-yellow-700/30',          svgIdx:4, req:{ bunBottom:1, ketchup:1, patty:1 } },
+            { id:'electricg',         name:'electric G',                                                 chance:1/100000,        color:'text-cyan-300',    bg:'bg-cyan-900/20 border-cyan-700/30',              svgIdx:5 },
+            { id:'pleasantstone',     name:'pleasant stone',                                             chance:1/250000,        color:'text-green-300',   bg:'bg-green-900/20 border-green-700/30',            svgIdx:6, replaces:'grosscrystal' },
+            { id:'bluepepperoni',     name:'BLUE PEPPERONI YUMMY',                                       chance:1/69000000,      color:'text-blue-400',    bg:'bg-blue-900/20 border-blue-500/30',              svgIdx:7 },
+            { id:'skeleton',          name:'SKELETON THATS BIGGER THEN YOUR SCREEN',                     chance:1/4000,          color:'text-gray-200',    bg:'bg-gray-800/60 border-gray-500/40',              svgIdx:8, replaces:'electricg', render:'skeleton' },
+            { id:'bagwater',          name:'BAG WITH WATER INSIDE BUT ITS INSANELY REALISTIC',           chance:1/6969690000,    color:'text-sky-300',     bg:'bg-sky-900/20 border-sky-600/30',                svgIdx:9 },
+            { id:'mostdisgusting',    name:'MOST DISGUSTING TIER EVER',                                  chance:1/1000000000,    color:'text-red-400',     bg:'bg-red-900/20 border-red-600/30',                svgIdx:10, replaces:'pleasantstone' },
+            { id:'ilied',             name:'"i lied this is disgusting and overstimulating"',            chance:1/8787878873682726, color:'text-pink-300',  bg:'bg-pink-900/20 border-pink-600/30',             svgIdx:11 },
+            { id:'gbottle',           name:'"G bottle with fruit punch juice (we called it this to not have issues sry :( h)"', chance:1/1e308, color:'text-red-300', bg:'bg-gradient-to-r from-red-900/20 to-orange-900/20 border-red-500/40', svgIdx:12, replaces:'electricg' },
+        ];
+
+        function renderEwwTierList() {
+            const container = document.getElementById('eww-tier-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const realOdds = computeRealOdds(EWW_TIERS);
+            const sorted = [...EWW_TIERS].sort((a,b) => a.chance - b.chance);
+            for (const t of sorted) {
+                const odds = realOdds[t.id] || t.chance;
+                const oddsStr = odds >= 1 ? '1/1 (always)' : `1 / ${(1/odds) < 1e15 ? (1/odds).toLocaleString(undefined,{maximumFractionDigits:0}) : (1/odds).toExponential(2)}`;
+                const row = document.createElement('div');
+                row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${t.bg}`;
+                const svgWrap = document.createElement('div');
+                svgWrap.className = 'w-8 h-8 flex-shrink-0';
+                svgWrap.innerHTML = EWW_SVG[t.svgIdx] ? EWW_SVG[t.svgIdx](32) : '';
+                const info = document.createElement('div');
+                info.className = 'flex-1 min-w-0';
+                const reqBadge = t.req ? `<span class="text-[9px] text-yellow-500 font-mono"> · ⚠ requires items</span>` : '';
+                info.innerHTML = `<div class="font-bold ${t.color} text-xs leading-tight">${t.name}${t.replaces ? `<span class="text-gray-600 text-[9px]"> (replaces ${t.replaces})</span>` : ''}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">${oddsStr}${reqBadge}</div>`;
+                row.appendChild(svgWrap);
+                row.appendChild(info);
+                container.appendChild(row);
+            }
+        }
+
+        function doEwwRoll() {
+            const btnEl = document.getElementById('eww-roll-btn');
+            const resultEl = document.getElementById('eww-result');
+            const displayEl = document.getElementById('eww-result-display');
+            if (isSimulating) return;
+            const total = state.unspentRolls;
+            if (total <= 0) { resultEl.innerText = 'No rolls!'; return; }
+
+            // check consumable requirements for gated tiers (bunpatty)
+            // temporarily mark which gated tiers are available
+            const ewwTable = EWW_TIERS.filter(t => {
+                if (!t.req) return true;
+                return Object.entries(t.req).every(([k,v]) => (state.consumables[k]?.active || 0) >= v);
+            });
+
+            btnEl.disabled = true;
+            resultEl.innerText = 'Rolling…';
+            const ewwLuck = Math.sqrt(1 + getLuckBonus()) - 1; // same sqrt nerf as money
+            const { best, counts } = pickBestAreaTier(ewwTable, total, ewwLuck);
+
+            if (!state.areaInventory.eww) state.areaInventory.eww = {};
+            for (const [name, c] of Object.entries(counts))
+                state.areaInventory.eww[name] = (state.areaInventory.eww[name] || 0) + c;
+
+            state.ewwRollCount = (state.ewwRollCount || 0) + total;
+            state.unspentRolls = 0;
+            state.pendingRollBuckets = [];
+
+            // show SVG result — skeleton stays big, twolines stays wide, others use SVG
+            if (best.render === 'skeleton') {
+                displayEl.innerHTML = `<div style="font-size:min(30vw,200px);text-align:center">💀</div>`;
+            } else if (best.render === 'twolines') {
+                displayEl.innerHTML = `<div style="display:flex;gap:8px;justify-content:center;align-items:center">
+                    <div style="width:5px;height:125px;background:#a3e635;border-radius:2px"></div>
+                    <div style="width:5px;height:125px;background:#a3e635;border-radius:2px"></div>
+                </div>`;
+            } else if (best.svgIdx !== undefined && EWW_SVG[best.svgIdx]) {
+                displayEl.innerHTML = `<div class="flex flex-col items-center gap-2">${EWW_SVG[best.svgIdx](64)}<div class="font-bold ${best.color} text-sm text-center">${best.name}</div></div>`;
+            } else {
+                displayEl.innerHTML = `<div class="text-center"><div class="font-bold ${best.color} text-sm">${best.name}</div></div>`;
+            }
+
+            resultEl.innerHTML = `<span class="font-bold ${best.color}">${best.name}</span>`;
+            document.getElementById('eww-roll-count').innerText = `${state.ewwRollCount.toLocaleString()} rolls`;
+            renderEwwInventory();
+            updateHeaderMetrics();
+            btnEl.disabled = false;
+            saveGame();
+        }
+
+        function renderEwwInventory() {
+            const inv = state.areaInventory.eww || {};
+            const container = document.getElementById('eww-area-inventory');
+            if (!container) return;
+            const entries = Object.entries(inv).filter(([,c])=>c>0).sort((a,b)=>{
+                const ta = EWW_TIERS.find(t=>t.name===a[0]||t.id===a[0]);
+                const tb = EWW_TIERS.find(t=>t.name===b[0]||t.id===b[0]);
+                return (ta?.chance||1) - (tb?.chance||1);
+            });
+            if (!entries.length) { container.innerHTML = '<div class="text-gray-600 text-xs text-center py-2">Nothing found yet</div>'; return; }
+            container.innerHTML = '';
+            for (const [name, count] of entries) {
+                const t = EWW_TIERS.find(t=>t.name===name||t.id===name) || {};
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 py-1 border-b border-gray-800/40';
+                row.innerHTML = `<div class="w-6 h-6 flex-shrink-0">${EWW_SVG[t.svgIdx] ? EWW_SVG[t.svgIdx](24) : ''}</div><span class="${t.color||'text-gray-400'} font-semibold text-xs truncate flex-1">${name}</span><span class="text-blue-400 font-mono font-bold text-xs">${count.toLocaleString()}</span>`;
+                container.appendChild(row);
+            }
         }
 
         // --- MONEY AREA ---
@@ -4749,11 +5500,1009 @@ burger: {
             renderAreaInventory('money',     'money-area-inventory',     'money-roll-count');
             renderAreaInventory('rng',       'rng-area-inventory',       'rng-roll-count');
             renderAreaInventory('elements',  'elements-area-inventory',  'elements-roll-count');
+            renderEwwInventory();
+            renderEwwTierList();
+            document.getElementById('eww-roll-count').innerText = `${(state.ewwRollCount||0).toLocaleString()} rolls`;
+            renderNilInventory();
+            renderNilTierList();
+            if (document.getElementById('nil-roll-count'))
+                document.getElementById('nil-roll-count').innerText = `${(state.nilRollCount||0).toLocaleString()} rolls`;
+            checkNilUnlock();
+            renderRefsTierList();
+            renderRefsInventory();
+            if (document.getElementById('refs-roll-count'))
+                document.getElementById('refs-roll-count').innerText = `${(state.refsRollCount||0).toLocaleString()} rolls`;
         }
 
         // Force final state save before unload
         window.onbeforeunload = function() {
+            syncGamesToState();
             saveGame();
         };</script>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ONLINE FEATURES UI
+         ═══════════════════════════════════════════════════════ -->
+
+    <!-- Floating action buttons (bottom-right) -->
+    <div class="fixed bottom-4 right-4 flex flex-col gap-2 z-40">
+        <!-- Login/User button -->
+        <button id="online-user-btn" onclick="openAuthOrProfile()"
+            class="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-all shadow-lg flex items-center justify-center text-xl"
+            title="Account">
+            <span id="online-user-icon">🔒</span>
+        </button>
+        <!-- Chat button -->
+        <button id="online-chat-btn" onclick="toggleChat()"
+            class="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-all shadow-lg flex items-center justify-center text-xl relative"
+            title="Global Chat">
+            💬
+            <span id="chat-unread-dot" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-gray-900"></span>
+        </button>
+        <!-- Trade button -->
+        <button id="online-trade-btn" onclick="openTradePanel()"
+            class="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-all shadow-lg flex items-center justify-center text-xl relative"
+            title="Trading">
+            🔄
+            <span id="trade-inbox-dot" class="hidden absolute top-0 right-0 w-3 h-3 bg-yellow-400 rounded-full border-2 border-gray-900"></span>
+        </button>
+        <!-- Dev panel (only shown for admins) -->
+        <button id="online-dev-btn" onclick="openDevPanel()"
+            style="display:none"
+            class="w-12 h-12 rounded-full bg-purple-900/80 border border-purple-600 hover:bg-purple-800 transition-all shadow-lg items-center justify-center text-xl"
+            title="Dev Panel">
+            🛠️
+        </button>
+    </div>
+
+    <!-- ── AUTH MODAL ──────────────────────────────────────── -->
+    <div id="auth-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-100" id="auth-modal-title">Sign In</h2>
+                <button onclick="closeAuthModal()" class="text-gray-500 hover:text-white text-xl font-bold px-2">✕</button>
+            </div>
+            <div id="auth-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+            <input id="auth-username" type="text" placeholder="Username" maxlength="24" autocomplete="username"
+                class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all">
+            <input id="auth-password" type="password" placeholder="Password" maxlength="128" autocomplete="current-password"
+                class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all">
+            <button onclick="submitAuth()" id="auth-submit-btn"
+                class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all">
+                Sign In
+            </button>
+            <button onclick="toggleAuthMode()" class="text-xs text-gray-500 hover:text-gray-300 transition-colors text-center">
+                <span id="auth-toggle-text">Don't have an account? Sign up</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── PROFILE MODAL ───────────────────────────────────── -->
+    <div id="profile-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-100">Profile</h2>
+                <button onclick="closeProfileModal()" class="text-gray-500 hover:text-white text-xl font-bold px-2">✕</button>
+            </div>
+            <div class="bg-gray-800/60 rounded-xl p-4 flex flex-col gap-1">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Logged in as</div>
+                <div id="profile-display" class="text-xl font-bold text-white font-mono"></div>
+                <div id="profile-admin-badge" class="hidden text-xs text-purple-400 font-semibold">🛠️ Developer</div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Your Serials</div>
+                <div id="profile-serials" class="space-y-1 max-h-40 overflow-y-auto text-xs font-mono text-gray-400">
+                    <div class="text-gray-600">Loading…</div>
+                </div>
+            </div>
+            <button onclick="logOut()" class="w-full py-2.5 rounded-xl bg-red-600/20 border border-red-600/30 hover:bg-red-600/30 text-red-400 font-bold text-sm transition-all">
+                Log Out
+            </button>
+        </div>
+    </div>
+
+    <!-- ── CHAT PANEL ──────────────────────────────────────── -->
+    <div id="chat-panel" class="fixed bottom-20 right-4 w-80 max-h-[70vh] bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl z-40 flex flex-col hidden">
+        <div class="flex justify-between items-center px-4 py-3 border-b border-gray-800">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-sm text-gray-100">💬 Global Chat</span>
+                <span id="chat-online-count" class="text-xs text-green-400 font-mono">0 online</span>
+            </div>
+            <button onclick="toggleChat()" class="text-gray-500 hover:text-white text-sm font-bold">✕</button>
+        </div>
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-2 min-h-0" style="max-height:300px">
+            <div class="text-xs text-gray-600 text-center">Connect to chat</div>
+        </div>
+        <div id="chat-input-area" class="p-3 border-t border-gray-800 flex gap-2">
+            <input id="chat-input" type="text" placeholder="Message…" maxlength="300"
+                class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                onkeydown="if(event.key==='Enter')sendChatMessage()">
+            <button onclick="sendChatMessage()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white text-xs font-bold transition-all">→</button>
+        </div>
+        <div id="chat-login-prompt" class="hidden p-3 border-t border-gray-800 text-center text-xs text-gray-500">
+            <button onclick="openAuthOrProfile()" class="text-blue-400 hover:underline">Sign in</button> to chat
+        </div>
+    </div>
+
+    <!-- ── TRADE PANEL ─────────────────────────────────────── -->
+    <div id="trade-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-5 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-100">🔄 Trading</h2>
+                <button onclick="closeTradePanel()" class="text-gray-500 hover:text-white text-xl font-bold px-2">✕</button>
+            </div>
+
+            <!-- Sub tabs -->
+            <div class="grid grid-cols-3 bg-gray-950 p-1 rounded-xl gap-1 text-xs">
+                <button onclick="switchTradeTab('inbox')" id="trade-tab-inbox" class="py-1.5 font-bold rounded-lg bg-gray-800 text-white">Inbox</button>
+                <button onclick="switchTradeTab('send')" id="trade-tab-send" class="py-1.5 font-bold rounded-lg text-gray-400 hover:text-white">Send Offer</button>
+                <button onclick="switchTradeTab('sent')" id="trade-tab-sent" class="py-1.5 font-bold rounded-lg text-gray-400 hover:text-white">Sent</button>
+            </div>
+
+            <!-- Inbox -->
+            <div id="trade-pane-inbox" class="flex flex-col gap-2">
+                <div id="trade-inbox-list" class="space-y-2 text-xs text-gray-400">
+                    <div class="text-gray-600 text-center py-4">Loading…</div>
+                </div>
+            </div>
+
+            <!-- Send offer -->
+            <div id="trade-pane-send" class="hidden flex-col gap-3">
+                <input id="trade-to" type="text" placeholder="Recipient username"
+                    class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+                <div class="text-xs text-gray-500 font-semibold uppercase">You offer (tiers, e.g. 7:3,9:1)</div>
+                <input id="trade-offer-tiers" type="text" placeholder="tier:qty,tier:qty  e.g. 7:3,9:1"
+                    class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+                <div class="text-xs text-gray-500 font-semibold uppercase">You want back (optional)</div>
+                <input id="trade-want-tiers" type="text" placeholder="tier:qty  e.g. 11:1"
+                    class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
+                <div id="trade-send-error" class="hidden text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+                <button onclick="submitTradeOffer()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all">Send Offer</button>
+            </div>
+
+            <!-- Sent -->
+            <div id="trade-pane-sent" class="hidden flex-col gap-2">
+                <div id="trade-sent-list" class="space-y-2 text-xs text-gray-400">
+                    <div class="text-gray-600 text-center py-4">Loading…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── DEV PANEL ───────────────────────────────────────── -->
+    <div id="dev-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-purple-700/50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-purple-300">🛠️ Dev Panel</h2>
+                <button onclick="closeDevPanel()" class="text-gray-500 hover:text-white text-xl font-bold px-2">✕</button>
+            </div>
+
+            <!-- Stats -->
+            <div id="dev-stats" class="grid grid-cols-2 gap-2 text-xs"></div>
+
+            <!-- Broadcast -->
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Broadcast Message</div>
+                <div class="flex gap-2">
+                    <input id="dev-broadcast-msg" type="text" placeholder="Message to all players…"
+                        class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500">
+                    <button onclick="devBroadcast()" class="px-3 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl text-white text-xs font-bold transition-all">Send</button>
+                </div>
+            </div>
+
+            <!-- Grant items -->
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Grant Items to User</div>
+                <input id="dev-grant-user" type="text" placeholder="Username"
+                    class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500">
+                <select id="dev-grant-type" onchange="devUpdateGrantDropdown()" class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                    <option value="tier">10^n Tier</option>
+                    <option value="slot">Slot</option>
+                    <option value="consumable">Consumable</option>
+                    <option value="eww">EWW Tier</option>
+                    <option value="annoying">Annoying Tier</option>
+                    <option value="serious">Serious Tier</option>
+                </select>
+                <!-- tier -->
+                <div id="dev-grant-tier-row" class="flex gap-2">
+                    <select id="dev-grant-tier-val" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                        <option value="0">10^0 Common</option><option value="1">10^1 Uncommon</option><option value="2">10^2 Rare</option>
+                        <option value="3">10^3 Epic</option><option value="4">10^4 Legendary</option><option value="5">10^5 Mythical</option>
+                        <option value="6">10^6 Ultra</option><option value="7">10^7 Mythic</option><option value="8">10^8 Cosmic</option>
+                        <option value="9">10^9 Celestial</option><option value="10">10^10 Ethereal</option><option value="11">10^11 Infernal</option>
+                        <option value="12">10^12 Divine</option><option value="13">10^13 Quantum</option><option value="14">10^14 Nexus</option>
+                        <option value="15">10^15 Temporal</option><option value="16">10^16 Fractal</option><option value="17">10^17 Singularity</option>
+                        <option value="18">10^18 Omniscient</option><option value="19">10^19 Transcendent</option><option value="20">10^20 Absolute</option>
+                        <option value="21">10^21 Fisher</option>
+                    </select>
+                    <input id="dev-grant-tier-qty" type="number" placeholder="qty" value="1" min="1" class="w-20 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                </div>
+                <!-- slot -->
+                <div id="dev-grant-slot-row" class="hidden">
+                    <select id="dev-grant-slot-val" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                        <option value="toy">Toy Slots</option><option value="battery">Battery Slots</option><option value="dark">Dark Slots</option>
+                        <option value="solarbeam">Solar Beam Slots</option><option value="charged">Charged Slots</option><option value="speed">Speed Slots</option>
+                        <option value="sloth">Sloth Slots</option><option value="gamble">Gamble Slots</option><option value="seven">Seven Slots</option>
+                        <option value="mechanic">Mechanic Slots</option><option value="fantasy">Fantasy Slots</option><option value="illusory">Illusory Slots</option>
+                        <option value="devil">Devil Slots</option><option value="burnt">Burnt Slots</option><option value="juni">Juni Bad Balancing</option><option value="grower">Grower Slots</option>
+                        <option value="ultimateSL">Ultimate Slots</option><option value="bls">Big Lucky Slots</option><option value="burger">Burger Slots</option><option value="question">?</option>
+                    </select>
+                </div>
+                <!-- consumable -->
+                <div id="dev-grant-consumable-row" class="hidden flex gap-2">
+                    <select id="dev-grant-consumable-val" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                        <option value="gloves">Gloves</option><option value="powder">Luck Powder</option><option value="grabber">Grabber Hand</option>
+                        <option value="explosion">Explosion</option><option value="grandfather">Grandfather Clock</option><option value="ultimateOne">Ultimate ONE</option>
+                        <option value="fireBomb">Fire Bomb</option><option value="everythingHand">Everything Hand</option>
+                        <option value="bunBottom">BUN</option><option value="cheese">CHEESE</option><option value="patty">PATTY</option>
+                        <option value="ketchup">KETCHUP</option><option value="lettuce">LETTUCE</option><option value="onion">ONION</option>
+                        <option value="patty2">PATTY (again)</option><option value="mayo">MAYO</option><option value="salt">SALT</option><option value="finalBun">FINAL BUN</option>
+                    </select>
+                    <input id="dev-grant-consumable-qty" type="number" placeholder="qty" value="1" min="1" class="w-20 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                </div>
+                <!-- eww tier -->
+                <div id="dev-grant-eww-row" class="hidden flex gap-2">
+                    <select id="dev-grant-eww-val" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                        <option value="grosscrystal">grosscrystal</option><option value="twolines">2 literal lines</option>
+                        <option value="e">e</option><option value="impossible">"impossible (no)"</option>
+                        <option value="bunpatty">BUN+KETCHUP+PATTY tier</option><option value="electricg">electric G</option>
+                        <option value="pleasantstone">pleasant stone</option><option value="bluepepperoni">BLUE PEPPERONI YUMMY</option>
+                        <option value="skeleton">SKELETON THATS BIGGER THEN YOUR SCREEN</option>
+                        <option value="bagwater">BAG WITH WATER INSIDE</option><option value="mostdisgusting">MOST DISGUSTING TIER EVER</option>
+                        <option value="ilied">"i lied this is disgusting"</option><option value="gbottle">G bottle</option>
+                    </select>
+                    <input id="dev-grant-eww-qty" type="number" placeholder="qty" value="1" min="1" class="w-20 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                </div>
+                <!-- annoying tier -->
+                <div id="dev-grant-annoying-row" class="hidden flex gap-2">
+                    <select id="dev-grant-annoying-val" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                        <option value="🟫 Loser Square">Loser Square</option><option value="🟥 Evil Square">Evil Square</option>
+                        <option value="🥚 AMAZING EGG">AMAZING EGG</option><option value='🏆 "totally real 10^21"'>totally real 10^21</option>
+                        <option value="🔺 ANNOYING STUPID 3D TRIANGLE">ANNOYING STUPID 3D TRIANGLE</option>
+                    </select>
+                    <input id="dev-grant-annoying-qty" type="number" placeholder="qty" value="1" min="1" class="w-20 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                </div>
+                <!-- serious tier -->
+                <div id="dev-grant-serious-row" class="hidden flex gap-2">
+                    <select id="dev-grant-serious-val" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                        <option value="square">square</option><option value="circle">circle</option><option value="pizza">pizza</option>
+                        <option value="clock">clock</option><option value="soda">soda</option><option value="dave">dave</option>
+                        <option value="doorknob">DOORKNOB</option><option value="pillow">pillow</option><option value="goldbar">gold bar</option>
+                        <option value="big">big</option><option value="frank">FRANK</option><option value="door">DOOR</option>
+                        <option value="sgc">SUPER GAMBLE CRYSTAL</option>
+                    </select>
+                    <input id="dev-grant-serious-qty" type="number" placeholder="qty" value="1" min="1" class="w-20 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                </div>
+                <button onclick="devGrant()" class="w-full py-2 bg-green-700 hover:bg-green-600 rounded-xl text-white text-xs font-bold transition-all">Grant</button>
+            </div>
+
+            <!-- Invalidate serial -->
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Invalidate Serial</div>
+                <div class="flex gap-2">
+                    <input id="dev-serial-id" type="number" placeholder="tier (e.g. 8)"
+                        class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500">
+                    <input id="dev-serial-num" type="number" placeholder="#num"
+                        class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500">
+                    <button onclick="devInvalidateSerial()" class="px-3 py-2 bg-red-700 hover:bg-red-600 rounded-xl text-white text-xs font-bold transition-all">Zap</button>
+                </div>
+            </div>
+
+            <!-- User list -->
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Users</div>
+                <div id="dev-user-list" class="space-y-1 max-h-48 overflow-y-auto text-xs font-mono text-gray-400"></div>
+            </div>
+
+            <!-- Recent serials -->
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Recent Serials</div>
+                <div id="dev-serial-list" class="space-y-1 max-h-48 overflow-y-auto text-xs font-mono text-gray-400"></div>
+            </div>
+
+            <!-- Debug -->
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Debug</div>
+                <button onclick="devDebugSession()" class="py-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-gray-300 text-xs font-bold transition-all">🔍 Show Session Info</button>
+            </div>
+
+            <!-- Save management -->
+            <div class="flex flex-col gap-2">
+                <div class="text-xs text-gray-500 uppercase font-semibold">Save Management</div>
+                <div class="flex gap-2">
+                    <input id="dev-save-user" type="text" placeholder="Username"
+                        class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500">
+                    <button onclick="devWipeSave()" class="px-3 py-2 bg-red-800 hover:bg-red-700 rounded-xl text-white text-xs font-bold transition-all">Wipe</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── SERIAL TOAST ─────────────────────────────────────── -->
+    <div id="serial-toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none" style="max-width:280px"></div>
+
+    <script>
+    // ═══════════════════════════════════════════════════════════
+    // ONLINE FEATURES JS
+    // ═══════════════════════════════════════════════════════════
+
+    const API = ''; // empty = same origin
+    let onlineSession = null; // { username, display, isAdmin }
+    let chatWs = null;
+    let chatOpen = false;
+    let chatUnread = 0;
+    let authMode = 'login'; // 'login' | 'signup'
+
+    // ── init ──────────────────────────────────────────────────
+    const REMEMBER_KEY = '10n_remember_token';
+
+    // ── server save ───────────────────────────────────────────
+    let _savePushTimer = null;
+    function pushSaveToServer(saveStr) {
+        if (!onlineSession) return;
+        clearTimeout(_savePushTimer);
+        _savePushTimer = setTimeout(async () => {
+            try {
+                await fetch(API + '/save', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ save: saveStr }),
+                });
+            } catch {}
+        }, 10000); // debounce: push at most once per 10s
+    }
+
+    async function pullSaveFromServer() {
+        try {
+            const r = await fetch(API + '/save', { credentials: 'same-origin' });
+            if (!r.ok) return false;
+            const data = await r.json();
+            if (!data.save) return false;
+
+            // compare server vs local — use whichever has higher totalSimulated
+            const serverParsed = JSON.parse(data.save);
+            const localRaw = localStorage.getItem(SAVE_KEY);
+            const localParsed = localRaw ? JSON.parse(localRaw) : null;
+            const serverTotal = serverParsed.totalSimulated || 0;
+            const localTotal  = localParsed ? (localParsed.totalSimulated || 0) : 0;
+
+            if (serverTotal >= localTotal) {
+                // server save wins — load it
+                localStorage.setItem(SAVE_KEY, data.save);
+                // reload game state from the new localStorage value
+                loadGame();
+                renderAll();
+                console.log(`[save] loaded server save (${serverTotal.toLocaleString()} total rolls)`);
+            } else {
+                // local save is ahead — push it up
+                pushSaveToServer(localRaw);
+                console.log(`[save] local save ahead, pushing to server`);
+            }
+            return true;
+        } catch(e) {
+            console.warn('[save] could not pull from server:', e.message);
+            return false;
+        }
+    }
+
+    function renderAll() {
+        if (typeof renderInventoryList  === 'function') renderInventoryList();
+        if (typeof renderSlotsList      === 'function') renderSlotsList();
+        if (typeof renderConsumablesList=== 'function') renderConsumablesList();
+        if (typeof updateHeaderMetrics  === 'function') updateHeaderMetrics();
+        if (typeof updateVisualGrid     === 'function') updateVisualGrid([]);
+    }
+
+    async function initOnline() {
+        try {
+            // first try existing session cookie
+            const r = await fetch(API + '/auth/me', { credentials: 'same-origin' });
+            if (r.ok) {
+                onlineSession = await r.json();
+                onSessionReady();
+                return;
+            }
+            // session expired — try remember token
+            const token = localStorage.getItem(REMEMBER_KEY);
+            if (token) {
+                const r2 = await fetch(API + '/auth/reauth', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rememberToken: token }),
+                });
+                if (r2.ok) {
+                    const data = await r2.json();
+                    if (data.rememberToken) localStorage.setItem(REMEMBER_KEY, data.rememberToken);
+                    onlineSession = data;
+                    onSessionReady();
+                } else {
+                    localStorage.removeItem(REMEMBER_KEY);
+                }
+            }
+        } catch(e) { /* server not available */ }
+    }
+
+    function onSessionReady() {
+        if (!onlineSession) return;
+        document.getElementById('online-user-icon').innerText = '👤';
+        if (onlineSession.isAdmin) {
+            document.getElementById('online-dev-btn').style.display = 'inline-flex';
+        } else {
+            document.getElementById('online-dev-btn').style.display = 'none';
+        }
+        // pull server save — server always wins on conflict
+        pullSaveFromServer().then(() => {
+            connectChat();
+            checkTradeInbox();
+        });
+    }
+
+    // ── auth ──────────────────────────────────────────────────
+    function openAuthOrProfile() {
+        if (onlineSession) { openProfileModal(); }
+        else { openAuthModal(); }
+    }
+    function openAuthModal() {
+        authMode = 'login';
+        updateAuthMode();
+        document.getElementById('auth-error').classList.add('hidden');
+        document.getElementById('auth-username').value = '';
+        document.getElementById('auth-password').value = '';
+        document.getElementById('auth-modal').classList.remove('hidden');
+    }
+    function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+
+    function toggleAuthMode() {
+        authMode = authMode === 'login' ? 'signup' : 'login';
+        updateAuthMode();
+    }
+    function updateAuthMode() {
+        const isLogin = authMode === 'login';
+        document.getElementById('auth-modal-title').innerText = isLogin ? 'Sign In' : 'Create Account';
+        document.getElementById('auth-submit-btn').innerText = isLogin ? 'Sign In' : 'Sign Up';
+        document.getElementById('auth-toggle-text').innerText = isLogin
+            ? "Don't have an account? Sign up"
+            : 'Already have an account? Sign in';
+    }
+
+    async function submitAuth() {
+        const username = document.getElementById('auth-username').value.trim();
+        const password = document.getElementById('auth-password').value;
+        if (!username || !password) return showAuthError('Fill in both fields');
+        const btn = document.getElementById('auth-submit-btn');
+        btn.disabled = true; btn.innerText = '…';
+        try {
+            const r = await fetch(API + `/auth/${authMode === 'login' ? 'login' : 'signup'}`, {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await r.json();
+            if (!r.ok) { showAuthError(data.error || 'Error'); }
+            else {
+                if (data.rememberToken) localStorage.setItem(REMEMBER_KEY, data.rememberToken);
+                onlineSession = data;
+                closeAuthModal();
+                onSessionReady();
+            }
+        } catch(e) { showAuthError('Server unreachable'); }
+        btn.disabled = false; updateAuthMode();
+    }
+
+    function showAuthError(msg) {
+        const el = document.getElementById('auth-error');
+        el.innerText = msg; el.classList.remove('hidden');
+    }
+
+    async function logOut() {
+        const token = localStorage.getItem(REMEMBER_KEY);
+        await fetch(API + '/auth/logout', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rememberToken: token }),
+        }).catch(() => {});
+        localStorage.removeItem(REMEMBER_KEY);
+        onlineSession = null;
+        document.getElementById('online-user-icon').innerText = '🔒';
+        document.getElementById('online-dev-btn').style.display = 'none';
+        closeProfileModal();
+        if (chatWs) { chatWs.close(); chatWs = null; }
+    }
+
+    // ── profile ───────────────────────────────────────────────
+    function openProfileModal() {
+        document.getElementById('profile-display').innerText = onlineSession.display;
+        const badge = document.getElementById('profile-admin-badge');
+        if (onlineSession.isAdmin) badge.classList.remove('hidden'); else badge.classList.add('hidden');
+        loadMySerials();
+        document.getElementById('profile-modal').classList.remove('hidden');
+    }
+    function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+
+    async function loadMySerials() {
+        const el = document.getElementById('profile-serials');
+        try {
+            const r = await fetch(API + '/rolls/serials/mine', { credentials: 'same-origin' });
+            const data = await r.json();
+            if (!data.length) { el.innerHTML = '<div class="text-gray-600">No serials yet</div>'; return; }
+            el.innerHTML = data.slice(0, 30).map(s =>
+                `<div class="flex justify-between gap-2 py-0.5 border-b border-gray-800/50">
+                    <span class="text-blue-400">#${s.serial_num}</span>
+                    <span class="text-gray-300">10^${s.tier}</span>
+                    <span class="text-gray-600">${new Date(s.rolled_at*1000).toLocaleDateString()}</span>
+                </div>`
+            ).join('');
+        } catch(e) { el.innerHTML = '<div class="text-gray-600">Unavailable</div>'; }
+    }
+
+    // ── serial submission after simulate ─────────────────────
+    async function submitRollsOnline(rollCount, highestTier, elapsedSecs, slotId, luck, tierCounts) {
+        if (!onlineSession) return;
+        try {
+            const r = await fetch(API + '/rolls/submit', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rollCount, highestTier, elapsedSecs, slotId, luck, tierCounts }),
+            });
+            const data = await r.json();
+            if (data.serials && data.serials.length) {
+                showSerialToast(data.serials);
+            }
+        } catch(e) { /* server down, ignore */ }
+    }
+
+    function showSerialToast(serials) {
+        if (!serials || !serials.length) return;
+        const container = document.getElementById('serial-toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'pointer-events-auto bg-gray-900 border border-yellow-500/40 rounded-xl px-4 py-3 shadow-2xl text-xs font-mono';
+        const lines = serials.map(s => {
+            const num = s.serial_num ?? s.serialNum ?? '?';
+            return `<div class="text-gray-300 mt-0.5">#${num} · 10^${s.tier} · ${s.display || ''}</div>`;
+        }).join('');
+        toast.innerHTML = `<div class="text-yellow-300 font-bold mb-1">🏷️ ${serials.length > 1 ? serials.length + ' Serials Issued!' : 'Serial Issued!'}</div>${lines}`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity 0.5s'; setTimeout(()=>toast.remove(),500); }, 6000);
+    }
+
+    // ── chat ──────────────────────────────────────────────────
+    function toggleChat() {
+        const panel = document.getElementById('chat-panel');
+        chatOpen = !chatOpen;
+        panel.classList.toggle('hidden', !chatOpen);
+        if (chatOpen) {
+            chatUnread = 0;
+            document.getElementById('chat-unread-dot').classList.add('hidden');
+            if (!chatWs && onlineSession) connectChat();
+            if (!onlineSession) {
+                document.getElementById('chat-input-area').classList.add('hidden');
+                document.getElementById('chat-login-prompt').classList.remove('hidden');
+            }
+        }
+    }
+
+    function connectChat() {
+        if (!onlineSession) return;
+        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${proto}://${location.host}/ws/chat`;
+        try {
+            chatWs = new WebSocket(wsUrl);
+        } catch(e) { return; }
+
+        chatWs.onopen = () => {
+            document.getElementById('chat-input-area').classList.remove('hidden');
+            document.getElementById('chat-login-prompt').classList.add('hidden');
+        };
+
+        chatWs.onmessage = (e) => {
+            try {
+                const msg = JSON.parse(e.data);
+                handleChatMsg(msg);
+            } catch {}
+        };
+
+        chatWs.onclose = () => {
+            chatWs = null;
+            // retry after 5s
+            setTimeout(() => { if (onlineSession) connectChat(); }, 5000);
+        };
+    }
+
+    function handleChatMsg(msg) {
+        if (msg.type === 'history') {
+            const el = document.getElementById('chat-messages');
+            el.innerHTML = '';
+            msg.messages.forEach(m => appendChatMsg(m));
+            el.scrollTop = el.scrollHeight;
+            fetchOnlineCount();
+            return;
+        }
+        if (msg.type === 'chat' || msg.type === 'system' || msg.type === 'server_announcement') {
+            appendChatMsg(msg);
+            if (!chatOpen) {
+                chatUnread++;
+                document.getElementById('chat-unread-dot').classList.remove('hidden');
+            }
+            return;
+        }
+        if (msg.type === 'chat_delete') {
+            document.getElementById(`chat-msg-${msg.id}`)?.remove();
+            return;
+        }
+        if (msg.type === 'chat_clear') {
+            document.getElementById('chat-messages').innerHTML = '';
+            return;
+        }
+        if (msg.type === 'server_announcement') {
+            appendChatMsg({ ...msg, display: '📢 SERVER' });
+        }
+    }
+
+    function appendChatMsg(msg) {
+        const el = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.id = msg.id ? `chat-msg-${msg.id}` : '';
+        div.className = 'text-xs';
+        if (msg.type === 'system') {
+            div.className += ' text-gray-600 italic text-center';
+            div.innerText = msg.message;
+        } else {
+            const isDev = msg.is_dev;
+            const nameColor = isDev ? 'text-purple-400' : 'text-blue-400';
+            const devBadge = isDev ? '<span class="text-purple-500 text-[9px]">🛠️</span> ' : '';
+            const deleteBtn = (onlineSession && onlineSession.isAdmin)
+                ? `<button onclick="devDeleteChatMsg(${msg.id})" class="text-gray-700 hover:text-red-500 ml-1 text-[9px]">✕</button>` : '';
+            div.innerHTML = `<span class="${nameColor} font-bold">${devBadge}${escHtml(msg.display || msg.username)}</span>: <span class="text-gray-300">${escHtml(msg.message)}</span>${deleteBtn}`;
+        }
+        el.appendChild(div);
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text || !chatWs || chatWs.readyState !== WebSocket.OPEN) return;
+        chatWs.send(JSON.stringify({ type: 'chat', message: text }));
+        input.value = '';
+    }
+
+    async function fetchOnlineCount() {
+        try {
+            const r = await fetch(API + '/chat/online', { credentials: 'same-origin' });
+            const data = await r.json();
+            document.getElementById('chat-online-count').innerText = `${data.length} online`;
+        } catch {}
+    }
+
+    // ── trading ───────────────────────────────────────────────
+    function openTradePanel() {
+        if (!onlineSession) { openAuthModal(); return; }
+        document.getElementById('trade-modal').classList.remove('hidden');
+        switchTradeTab('inbox');
+    }
+    function closeTradePanel() { document.getElementById('trade-modal').classList.add('hidden'); }
+
+    function switchTradeTab(tab) {
+        ['inbox','send','sent'].forEach(t => {
+            document.getElementById(`trade-tab-${t}`).className = 'py-1.5 font-bold rounded-lg ' + (t === tab ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white');
+            document.getElementById(`trade-pane-${t}`).classList.toggle('hidden', t !== tab);
+            document.getElementById(`trade-pane-${t}`).classList.toggle('flex', t === tab && t !== 'inbox');
+        });
+        if (tab === 'inbox') loadTradeInbox();
+        if (tab === 'sent')  loadTradeSent();
+    }
+
+    async function checkTradeInbox() {
+        if (!onlineSession) return;
+        try {
+            const r = await fetch(API + '/trade/inbox', { credentials: 'same-origin' });
+            const data = await r.json();
+            if (data.length) document.getElementById('trade-inbox-dot').classList.remove('hidden');
+            else document.getElementById('trade-inbox-dot').classList.add('hidden');
+        } catch {}
+    }
+
+    async function loadTradeInbox() {
+        const el = document.getElementById('trade-inbox-list');
+        el.innerHTML = '<div class="text-gray-600 text-center py-4">Loading…</div>';
+        try {
+            const r = await fetch(API + '/trade/inbox', { credentials: 'same-origin' });
+            const data = await r.json();
+            if (!data.length) { el.innerHTML = '<div class="text-gray-600 text-center py-4">No pending trades</div>'; return; }
+            el.innerHTML = data.map(t => `
+                <div class="bg-gray-800/60 rounded-xl p-3 flex flex-col gap-2 border border-gray-700/50">
+                    <div class="flex justify-between"><span class="text-gray-300 font-bold">From: ${escHtml(t.from_user)}</span><span class="text-gray-600">#${t.id}</span></div>
+                    <div class="text-gray-400">Offers: ${fmtTradeItems(t.offer)}</div>
+                    ${Object.keys(t.want||{}).length ? `<div class="text-gray-400">Wants: ${fmtTradeItems(t.want)}</div>` : ''}
+                    <div class="flex gap-2">
+                        <button onclick="respondTrade(${t.id},'accept')" class="flex-1 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-white font-bold transition-all">Accept</button>
+                        <button onclick="respondTrade(${t.id},'decline')" class="flex-1 py-1.5 bg-red-600/50 hover:bg-red-600 rounded-lg text-white font-bold transition-all">Decline</button>
+                    </div>
+                </div>`).join('');
+        } catch(e) { el.innerHTML = '<div class="text-gray-600 text-center py-4">Unavailable</div>'; }
+    }
+
+    async function loadTradeSent() {
+        const el = document.getElementById('trade-sent-list');
+        el.innerHTML = '<div class="text-gray-600 text-center py-4">Loading…</div>';
+        try {
+            const r = await fetch(API + '/trade/sent', { credentials: 'same-origin' });
+            const data = await r.json();
+            if (!data.length) { el.innerHTML = '<div class="text-gray-600 text-center py-4">No trades sent</div>'; return; }
+            el.innerHTML = data.map(t => `
+                <div class="bg-gray-800/60 rounded-xl p-3 flex flex-col gap-1.5 border border-gray-700/50">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300 font-bold">To: ${escHtml(t.to_user)}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${t.status==='accepted'?'bg-green-500/20 text-green-400':t.status==='pending'?'bg-yellow-500/20 text-yellow-400':'bg-gray-700 text-gray-500'}">${t.status}</span>
+                    </div>
+                    <div class="text-gray-500">Offered: ${fmtTradeItems(t.offer)}</div>
+                    ${t.status === 'pending' ? `<button onclick="cancelTrade(${t.id})" class="py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300 text-xs font-bold transition-all">Cancel</button>` : ''}
+                </div>`).join('');
+        } catch(e) { el.innerHTML = '<div class="text-gray-600 text-center py-4">Unavailable</div>'; }
+    }
+
+    async function submitTradeOffer() {
+        const to    = document.getElementById('trade-to').value.trim();
+        const offerRaw = document.getElementById('trade-offer-tiers').value.trim();
+        const wantRaw  = document.getElementById('trade-want-tiers').value.trim();
+        const errEl = document.getElementById('trade-send-error');
+        errEl.classList.add('hidden');
+        if (!to || !offerRaw) { errEl.innerText = 'Fill in recipient and offer'; errEl.classList.remove('hidden'); return; }
+        const offer = { tiers: parseTierInput(offerRaw) };
+        const want  = wantRaw ? { tiers: parseTierInput(wantRaw) } : {};
+        try {
+            const r = await fetch(API + '/trade/offer', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to, offer, want }),
+            });
+            const data = await r.json();
+            if (!r.ok) { errEl.innerText = data.error || 'Error'; errEl.classList.remove('hidden'); }
+            else { switchTradeTab('sent'); }
+        } catch(e) { errEl.innerText = 'Server unreachable'; errEl.classList.remove('hidden'); }
+    }
+
+    async function respondTrade(id, action) {
+        try {
+            await fetch(API + `/trade/${action}/${id}`, { method: 'POST', credentials: 'same-origin' });
+            loadTradeInbox();
+            checkTradeInbox();
+        } catch {}
+    }
+
+    async function cancelTrade(id) {
+        try {
+            await fetch(API + `/trade/cancel/${id}`, { method: 'POST', credentials: 'same-origin' });
+            loadTradeSent();
+        } catch {}
+    }
+
+    function parseTierInput(str) {
+        const result = {};
+        str.split(',').forEach(part => {
+            const [t, q] = part.trim().split(':');
+            if (t && q) result[parseInt(t)] = parseInt(q);
+        });
+        return result;
+    }
+
+    function fmtTradeItems(items) {
+        if (!items) return 'nothing';
+        const parts = [];
+        if (items.tiers) for (const [t, q] of Object.entries(items.tiers)) parts.push(`${q}× 10^${t}`);
+        if (items.consumables) for (const [k, q] of Object.entries(items.consumables)) parts.push(`${q}× ${k}`);
+        return parts.join(', ') || 'nothing';
+    }
+
+    // ── dev panel ─────────────────────────────────────────────
+    function openDevPanel() {
+        if (!onlineSession) { openAuthModal(); return; }
+        if (!onlineSession.isAdmin) return;
+        document.getElementById('dev-modal').classList.remove('hidden');
+        loadDevStats();
+        loadDevUsers();
+        loadDevSerials();
+    }
+    function closeDevPanel() { document.getElementById('dev-modal').classList.add('hidden'); }
+
+    function devToast(msg, isError = true) {
+        const container = document.getElementById('serial-toast-container');
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto rounded-xl px-4 py-3 shadow-2xl text-xs font-mono border ${
+            isError
+                ? 'bg-red-950 border-red-500/40 text-red-300'
+                : 'bg-gray-900 border-green-500/40 text-green-300'
+        }`;
+        toast.innerHTML = `<div class="font-bold mb-0.5">${isError ? '❌ Dev Panel Error' : '✅ Dev Panel'}</div><div class="text-[11px] break-all">${escHtml(String(msg))}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity 0.4s'; setTimeout(()=>toast.remove(),400); }, 6000);
+    }
+
+    async function loadDevStats() {
+        try {
+            const r = await fetch(API + '/dev/stats', { credentials: 'same-origin' });
+            if (!r.ok) { devToast(`/dev/stats → ${r.status}: ${(await r.json()).error}`); return; }
+            const d = await r.json();
+            document.getElementById('dev-stats').innerHTML = Object.entries(d).map(([k,v]) =>
+                `<div class="bg-gray-800/60 rounded-xl p-2 text-center"><div class="text-gray-500 text-[10px] uppercase">${k}</div><div class="text-white font-bold font-mono">${v}</div></div>`
+            ).join('');
+        } catch(e) { devToast(`/dev/stats fetch failed: ${e.message}`); }
+    }
+
+    async function loadDevUsers() {
+        try {
+            const r = await fetch(API + '/dev/users', { credentials: 'same-origin' });
+            if (!r.ok) { devToast(`/dev/users → ${r.status}: ${(await r.json()).error}`); document.getElementById('dev-user-list').innerHTML = ''; return; }
+            const data = await r.json();
+            document.getElementById('dev-user-list').innerHTML = data.map(u =>
+                `<div class="flex justify-between items-center py-0.5 border-b border-gray-800/50">
+                    <span class="text-gray-300">${escHtml(u.display)}</span>
+                    <button onclick="devDeleteUser('${escHtml(u.username)}')" class="text-red-600 hover:text-red-400 text-[10px]">delete</button>
+                </div>`
+            ).join('') || '<div class="text-gray-600">No users</div>';
+        } catch(e) { devToast(`/dev/users fetch failed: ${e.message}`); }
+    }
+
+    async function loadDevSerials() {
+        try {
+            const r = await fetch(API + '/dev/serials?limit=20', { credentials: 'same-origin' });
+            if (!r.ok) { devToast(`/dev/serials → ${r.status}: ${(await r.json()).error}`); document.getElementById('dev-serial-list').innerHTML = ''; return; }
+            const data = await r.json();
+            document.getElementById('dev-serial-list').innerHTML = data.map(s =>
+                `<div class="flex justify-between items-center py-0.5 border-b border-gray-800/50 ${s.invalidated ? 'opacity-40 line-through' : ''}">
+                    <span class="text-blue-400">#${s.serial_num}</span>
+                    <span class="text-gray-300">10^${s.tier}</span>
+                    <span class="text-gray-500">${escHtml(s.display)}</span>
+                    <button onclick="devInvalidateSerial(${s.tier},${s.serial_num})" class="text-red-600 hover:text-red-400 text-[10px]">zap</button>
+                </div>`
+            ).join('') || '<div class="text-gray-600">No serials yet</div>';
+        } catch(e) { devToast(`/dev/serials fetch failed: ${e.message}`); }
+    }
+
+    async function devBroadcast() {
+        const msg = document.getElementById('dev-broadcast-msg').value.trim();
+        if (!msg) return;
+        try {
+            await fetch(API + '/dev/broadcast', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg }),
+            });
+            devToast('Broadcast sent!', false);
+            document.getElementById('dev-broadcast-msg').value = '';
+        } catch(e) { devToast('Error: ' + e.message); }
+    }
+
+    function devUpdateGrantDropdown() {
+        const type = document.getElementById('dev-grant-type').value;
+        ['tier','slot','consumable','eww','annoying','serious'].forEach(t => {
+            const row = document.getElementById(`dev-grant-${t}-row`);
+            if (row) row.classList.toggle('hidden', t !== type);
+        });
+    }
+
+    async function devGrant() {
+        const user = document.getElementById('dev-grant-user').value.trim();
+        if (!user) return;
+        const type = document.getElementById('dev-grant-type').value;
+        let body = {};
+
+        if (type === 'tier') {
+            const tier = document.getElementById('dev-grant-tier-val').value;
+            const qty = parseInt(document.getElementById('dev-grant-tier-qty').value) || 1;
+            body = { tiers: { [tier]: qty } };
+        } else if (type === 'slot') {
+            const slotId = document.getElementById('dev-grant-slot-val').value;
+            body = { slot: slotId };
+        } else if (type === 'consumable') {
+            const key = document.getElementById('dev-grant-consumable-val').value;
+            const qty = parseInt(document.getElementById('dev-grant-consumable-qty').value) || 1;
+            body = { consumables: { [key]: qty } };
+        } else if (type === 'eww') {
+            const id = document.getElementById('dev-grant-eww-val').value;
+            const qty = parseInt(document.getElementById('dev-grant-eww-qty').value) || 1;
+            body = { areaItem: { area: 'eww', id, qty } };
+        } else if (type === 'annoying') {
+            const name = document.getElementById('dev-grant-annoying-val').value;
+            const qty = parseInt(document.getElementById('dev-grant-annoying-qty').value) || 1;
+            body = { areaItem: { area: 'annoying', id: name, qty } };
+        } else if (type === 'serious') {
+            const id = document.getElementById('dev-grant-serious-val').value;
+            const qty = parseInt(document.getElementById('dev-grant-serious-qty').value) || 1;
+            body = { areaItem: { area: 'serious', id, qty } };
+        }
+
+        try {
+            const r = await fetch(API + `/dev/users/${encodeURIComponent(user)}/grant`, {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            const d = await r.json();
+            d.ok ? devToast('Granted!', false) : devToast(d.error);
+        } catch(e) { devToast('Grant failed: ' + e.message); }
+    }
+
+    async function devInvalidateSerial(tier, serialNum) {
+        const t = tier || parseInt(document.getElementById('dev-serial-id').value);
+        const n = serialNum || parseInt(document.getElementById('dev-serial-num').value);
+        if (!t || !n) return;
+        try {
+            await fetch(API + '/dev/serials/invalidate', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier: t, serial_num: n, note: 'invalidated via dev panel' }),
+            });
+            devToast(`Serial #${n} (10^${t}) invalidated`, false);
+            loadDevSerials();
+        } catch(e) { devToast('Invalidate failed: ' + e.message); }
+    }
+
+    async function devDeleteUser(username) {
+        if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
+        try {
+            await fetch(API + `/dev/users/${encodeURIComponent(username)}`, { method: 'DELETE', credentials: 'same-origin' });
+            devToast(`Deleted ${username}`, false);
+            loadDevUsers();
+        } catch(e) { devToast('Delete failed: ' + e.message); }
+    }
+
+    async function devDeleteChatMsg(id) {
+        try {
+            await fetch(API + `/dev/chat/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+        } catch {}
+    }
+
+    async function devDebugSession() {
+        try {
+            const r = await fetch(API + '/debug/session', { credentials: 'same-origin' });
+            const d = await r.json();
+            const info = [
+                `sessionID: ${d.sessionID}`,
+                `username: ${d.session?.username || '(none)'}`,
+                `display: ${d.session?.display || '(none)'}`,
+                `cookies: ${d.cookies}`,
+                `protocol: ${d.protocol} / forwarded: ${d.forwarded}`,
+                `secure: ${d.secure}`,
+            ].join('\n');
+            devToast(info, false);
+            console.log('[debug/session]', d);
+        } catch(e) { devToast('Debug fetch failed: ' + e.message); }
+    }
+
+    async function devWipeSave() {
+        const user = document.getElementById('dev-save-user').value.trim();
+        if (!user) return;
+        if (!confirm(`Wipe server save for "${user}"? This cannot be undone.`)) return;
+        try {
+            const r = await fetch(API + `/dev/saves/${encodeURIComponent(user)}`, { method: 'DELETE', credentials: 'same-origin' });
+            const d = await r.json();
+            d.ok ? devToast(`Save wiped for ${user}`, false) : devToast(d.error);
+        } catch(e) { devToast('Wipe failed: ' + e.message); }
+    }
+
+    // ── utils ─────────────────────────────────────────────────
+    function escHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Hook into simulate to submit rolls online
+    // Called from inside simulateRolls after results are finalized
+    function onSimulateComplete(merged, totalRollCount, highest, slotId, luck, elapsedSecs) {
+        submitRollsOnline(totalRollCount, highest, elapsedSecs, slotId, luck, merged).catch(() => {});
+        // sync inventory to server
+        if (onlineSession) {
+            fetch(API + '/trade/sync', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tiers: state.discoveredTiers }),
+            }).catch(() => {});
+        }
+    }
+
+    // Init on page load
+    window.addEventListener('load', () => { initOnline(); }, { once: false });
+    </script>
 </body>
 </html>
