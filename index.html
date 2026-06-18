@@ -977,9 +977,8 @@
             accumulatedSecs: 0,
             ewwRollCount: 0,
             nilRollCount: 0,
-            refsRollCount: 0,
             grower: { gridBonus: 0, n: 0, b: 0, lastIdleHour: 0 },
-            juni: { x: 10, y: 0, lastBonusFired: 0 },
+            juni: { x: 1, y: 0, lastBonusFired: Date.now() },
             games: {
                 bg: { coins: 0, prestige: 0, ascend: 0, transcend: 0, almighty: 0 },
                 ngu: { currency: 0, upgrades: 0 },
@@ -1524,15 +1523,14 @@ bonusSims: [
                     state.areaInventory.elements  = parsed.areaInventory.elements  || {};
                     state.areaInventory.eww       = parsed.areaInventory.eww       || {};
                     state.areaInventory.nil       = parsed.areaInventory.nil       || {};
-                    state.areaInventory.references= parsed.areaInventory.references|| {};
                 }
                 if (typeof parsed.ewwRollCount   === 'number') state.ewwRollCount   = parsed.ewwRollCount;
                 if (typeof parsed.nilRollCount   === 'number') state.nilRollCount   = parsed.nilRollCount;
-                if (typeof parsed.refsRollCount  === 'number') state.refsRollCount  = parsed.refsRollCount;
                 if (parsed.grower) Object.assign(state.grower, parsed.grower);
                 if (parsed.juni) {
-                    if (!state.juni) state.juni = { x:10, y:0, lastBonusFired:0 };
+                    if (!state.juni) state.juni = { x:1, y:0, lastBonusFired:Date.now() };
                     Object.assign(state.juni, parsed.juni);
+                    if (!state.juni.lastBonusFired) state.juni.lastBonusFired = Date.now();
                 }
                 if (typeof parsed.totalSimulated === 'number') state.totalSimulated = parsed.totalSimulated;
                 
@@ -1611,9 +1609,6 @@ bonusSims: [
         }
 
 
-        // --- SECURITY / CLOCK INTEGRITY SYSTEM (ANTI TIME TAMPER) ---
-        let referenceDriftSecs = null;
-
         function addLog(msg) {
             const timestamp = new Date().toLocaleTimeString();
             const logBox = document.getElementById("tamper-logs");
@@ -1624,7 +1619,67 @@ bonusSims: [
             logBox.scrollTop = logBox.scrollHeight;
         }
 
+        // --- SECURITY / CLOCK INTEGRITY SYSTEM ---
+        let referenceDriftSecs = null;
 
+        async function fetchSecureTime() {
+            try {
+                const res = await fetch("https://www.cloudflare.com/cdn-cgi/trace", { cache: "no-store" });
+                if (!res.ok) throw new Error("Cloudflare unreachable");
+                const text = await res.text();
+                const tsLine = text.split("\n").find(l => l.startsWith("ts="));
+                if (!tsLine) throw new Error("Malformed packet");
+                const cloudEpochSecs = parseFloat(tsLine.split("=")[1]);
+                const localEpochSecs = Date.now() / 1000;
+                const drift = localEpochSecs - cloudEpochSecs;
+                if (referenceDriftSecs === null) {
+                    referenceDriftSecs = drift;
+                } else {
+                    const driftShift = Math.abs(drift - referenceDriftSecs);
+                    if (driftShift >= 120) {
+                        flagTamper(driftShift);
+                    } else if (driftShift >= 30) {
+                        showTamperWarning(driftShift);
+                    } else {
+                        clearTamperVisuals();
+                    }
+                }
+            } catch(e) { /* network unavailable, skip check */ }
+        }
+
+        function showTamperWarning(shiftAmount) {
+            const el = document.getElementById('tamper-warning-toast');
+            if (!el) return;
+            el.innerText = `⚠️ Clock drift detected: ${shiftAmount.toFixed(1)}s. Correct your system clock or idle gains may be frozen.`;
+            el.classList.remove('hidden');
+            clearTimeout(el._hideTimer);
+            el._hideTimer = setTimeout(() => el.classList.add('hidden'), 10000);
+        }
+
+        function flagTamper(shiftAmount) {
+            state.antiTamperFrozenSecs = Math.max(state.antiTamperFrozenSecs, Math.round(shiftAmount));
+            saveGame();
+            const amountEl = document.getElementById('blocker-drift-amount');
+            if (amountEl) amountEl.innerText = Math.round(shiftAmount);
+            const blocker = document.getElementById('tamper-blocker');
+            if (blocker) blocker.classList.remove('hidden');
+        }
+
+        function clearTamperVisuals() {
+            state.antiTamperFrozenSecs = 0;
+            saveGame();
+            const blocker = document.getElementById('tamper-blocker');
+            if (blocker) blocker.classList.add('hidden');
+            const toast = document.getElementById('tamper-warning-toast');
+            if (toast) toast.classList.add('hidden');
+        }
+
+        async function requestClockRevalidation() {
+            referenceDriftSecs = null;
+            await fetchSecureTime();
+        }
+
+        function securityCheckLoop() { fetchSecureTime(); }
 
         // --- MODIFIERS AND CORE STAT CALCULATIONS ---
         function checkIsDaytime() {
@@ -2586,9 +2641,9 @@ bonusSims: [
             }
             // reset juni counters when switching to juni
             if (slotId === 'juni') {
-                if (!state.juni) state.juni = { x:10, y:0, lastBonusFired:0 };
+                if (!state.juni) state.juni = { x:1, y:0, lastBonusFired:Date.now() };
                 state.juni.lastBonusFired = Date.now();
-                state.juni.x = 10;
+                state.juni.x = 1;
                 state.juni.y = 0;
             }
             addLog(`⚡ equipped framework: <span class="text-blue-400 font-bold">${item.name}</span>`);
@@ -3250,18 +3305,18 @@ bonusSims: [
                     let rolls = sim.rolls;
                     let luck  = sim.luck;
                     if (sim.dynamic === 'juni') {
-                        if (!state.juni) state.juni = { x:10, y:0, lastBonusFired:0 };
+                        if (!state.juni) state.juni = { x:1, y:0, lastBonusFired:Date.now() };
                         // tick x and y based on time since last bonus fire
-                        const secsSince = (now - (state.juni.lastBonusFired || 0)) / 1000;
+                        const secsSince = (now - (state.juni.lastBonusFired || Date.now())) / 1000;
                         const xTicks = Math.floor(secsSince / 5);
                         const yTicks = Math.floor(secsSince / 3);
-                        state.juni.x = Math.min(250, (state.juni.x || 10) + xTicks * 10);
+                        state.juni.x = Math.min(250, (state.juni.x || 1) + xTicks * 10);
                         state.juni.y = Math.min(23,  (state.juni.y || 0)  + yTicks * 5);
                         rolls = Math.max(500, Math.floor(125000 / state.juni.x));
                         luck  = Math.max(1, 25 - state.juni.y) - 1; // additive, floor x2 luck
                         state.juni.lastBonusFired = now;
                         // reset after firing
-                        state.juni.x = 10;
+                        state.juni.x = 1;
                         state.juni.y = 0;
                     }
 
@@ -3545,7 +3600,6 @@ bonusSims: [
                 ...SERIOUS_TIERS_RAW.filter(t => t.chance < 1).map(t => ({...t, _area:'serious', id: t.id || t.name})),
                 ...ELEMENTS_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'elements', id: t.id || t.name})),
                 ...EWW_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'eww'})),
-                ...REFS_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'references'})),
             ].map(t => ({...t, chance: t.chance * ehMult}));
             const { counts: ehCounts } = pickBestAreaTier(ehTable, totalRollCount, ehLuck);
             for (const [name, c] of Object.entries(ehCounts)) {
@@ -4014,186 +4068,6 @@ bonusSims: [
                 btn.classList.remove('hidden');
                 renderNilTierList();
             }
-        }
-
-        // ===================== REFERENCES AREA =====================
-        const REFS_SVG = [
-            // 0: dirt tile (Terraria)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#8B4513"/><rect x="0" y="0" width="20" height="5" fill="#5a7a2a"/><circle cx="4" cy="3" r="1.5" fill="#3d5e1a"/><circle cx="9" cy="2" r="1" fill="#3d5e1a"/><circle cx="15" cy="3" r="1.5" fill="#3d5e1a"/><rect x="2" y="8" width="3" height="2" fill="#6b3410" opacity="0.5"/><rect x="12" y="13" width="4" height="2" fill="#6b3410" opacity="0.5"/></svg>`,
-            // 1: wood sword (Minecraft)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1a1a2e"/><rect x="9" y="2" width="3" height="3" fill="#8B6914" rx="0.3"/><rect x="9" y="5" width="3" height="3" fill="#a07820"/><rect x="9" y="8" width="3" height="3" fill="#8B6914"/><rect x="9" y="11" width="3" height="3" fill="#a07820"/><rect x="6" y="13" width="9" height="2" fill="#5a3e1a"/><rect x="9" y="15" width="3" height="3" fill="#5a3e1a"/></svg>`,
-            // 2: cookie (Cookie Clicker)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#c8893a" stroke="#8B5e26" stroke-width="0.5"/><circle cx="7" cy="7" r="1.2" fill="#5c3317"/><circle cx="13" cy="8" r="1" fill="#5c3317"/><circle cx="8" cy="13" r="1.2" fill="#5c3317"/><circle cx="13" cy="13" r="0.8" fill="#5c3317"/><circle cx="10" cy="10" r="0.9" fill="#5c3317"/></svg>`,
-            // 3: dance grenade / boogie bomb (Fortnite)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><ellipse cx="10" cy="11" rx="6" ry="7" fill="#7c3aed" stroke="#6d28d9" stroke-width="0.5"/><rect x="8" y="2" width="4" height="3" fill="#4c1d95" rx="0.5"/><text x="10" y="12" text-anchor="middle" font-size="7" fill="#fde68a">♪</text><text x="6" y="8" text-anchor="middle" font-size="4" fill="#fde68a">♫</text><text x="15" y="9" text-anchor="middle" font-size="4" fill="#fde68a">♪</text></svg>`,
-            // 4: TIX (Roblox)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#1f6feb" stroke="#58a6ff" stroke-width="0.6"/><text x="10" y="14" text-anchor="middle" font-size="8" font-weight="900" fill="white" font-family="monospace">TIX</text></svg>`,
-            // 5: yellow orb (Geometry Dash)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="gd" cx="35%" cy="30%"><stop offset="0%" stop-color="#fef08a"/><stop offset="60%" stop-color="#eab308"/><stop offset="100%" stop-color="#854d0e"/></radialGradient></defs><circle cx="10" cy="10" r="8.5" fill="url(#gd)" stroke="#854d0e" stroke-width="0.5"/><circle cx="7" cy="7" r="2" fill="white" opacity="0.35"/></svg>`,
-            // 6: toxic cola / Nuka-Cola (Fallout)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="7" y="1" width="6" height="2" fill="#374151" rx="0.5"/><path d="M6,3 Q5,5 5,7 L5,17 Q5,19 10,19 Q15,19 15,17 L15,7 Q15,5 14,3 Z" fill="#15803d" stroke="#16a34a" stroke-width="0.5"/><ellipse cx="10" cy="11" rx="3.5" ry="2" fill="#22c55e" opacity="0.4"/><text x="10" y="13" text-anchor="middle" font-size="3.5" fill="#bbf7d0" font-weight="700">NUKA</text><circle cx="10" cy="7" r="1.5" fill="#4ade80" opacity="0.6"/></svg>`,
-            // 7: NrG drink (Henry Stickmin)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="6" y="2" width="8" height="16" fill="#1e3a5f" rx="1"/><rect x="6" y="2" width="8" height="5" fill="#facc15"/><text x="10" y="6.5" text-anchor="middle" font-size="3.5" fill="#1e3a5f" font-weight="900">NrG</text><text x="10" y="13" text-anchor="middle" font-size="5" fill="#facc15" font-weight="900">⚡</text></svg>`,
-            // 8: peashooter (PvZ)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#22c55e" stroke="#15803d" stroke-width="0.7"/><circle cx="10" cy="10" r="4" fill="#16a34a"/><ellipse cx="10" cy="7" rx="2" ry="3" fill="#15803d"/><circle cx="7" cy="9" r="1.5" fill="#86efac"/><circle cx="13" cy="9" r="1.5" fill="#86efac"/><circle cx="10" cy="14" r="2" fill="#4ade80"/></svg>`,
-            // 9: shark (Hungry Shark)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><path d="M2,12 Q6,6 10,10 Q14,6 18,12 Q14,16 10,14 Q6,16 2,12 Z" fill="#6b7280"/><path d="M10,4 L8,10 L12,10 Z" fill="#9ca3af"/><circle cx="13" cy="11" r="1" fill="#1c1917"/><path d="M7,13 L8,15 L9,13 L10,15 L11,13 L12,15 L13,13" stroke="white" stroke-width="0.5" fill="none"/></svg>`,
-            // 10: stickman / Mr. Game & Watch
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1c1917"/><circle cx="10" cy="4" r="2.5" fill="white"/><line x1="10" y1="6.5" x2="10" y2="13" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="9" x2="14" y2="9" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="13" x2="7" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="13" x2="13" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-            // 11: NOOB (Roblox)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="6" y="2" width="8" height="7" fill="#ffff00" rx="1"/><rect x="6" y="9" width="8" height="7" fill="#1565c0"/><rect x="3" y="9" width="3" height="5" fill="#1565c0" rx="0.5"/><rect x="14" y="9" width="3" height="5" fill="#1565c0" rx="0.5"/><rect x="6" y="16" width="3" height="3" fill="#1565c0" rx="0.5"/><rect x="11" y="16" width="3" height="3" fill="#1565c0" rx="0.5"/><rect x="7" y="4" width="2" height="2" fill="#1565c0"/><rect x="11" y="4" width="2" height="2" fill="#1565c0"/></svg>`,
-            // 12: scary pizza / Pizzaface (Pizza Tower)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="#f97316" stroke="#c2410c" stroke-width="0.5"/><circle cx="6" cy="7" r="2.5" fill="#fef08a" stroke="#854d0e" stroke-width="0.3"/><circle cx="14" cy="7" r="2.5" fill="#fef08a" stroke="#854d0e" stroke-width="0.3"/><circle cx="6" cy="7" r="1" fill="#1c1917"/><circle cx="14" cy="7" r="1" fill="#1c1917"/><path d="M5,13 Q10,18 15,13" stroke="#1c1917" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="11" r="1" fill="#dc2626"/><circle cx="13" cy="11" r="0.8" fill="#dc2626"/></svg>`,
-            // 13: winged golfball (Flappy Golf)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="11" r="6" fill="white" stroke="#d1d5db" stroke-width="0.5"/><circle cx="8" cy="10" r="0.8" fill="#9ca3af"/><circle cx="11" cy="8" r="0.8" fill="#9ca3af"/><circle cx="12" cy="12" r="0.8" fill="#9ca3af"/><path d="M4,8 Q1,5 3,3 Q5,1 6,5 Z" fill="#86efac" stroke="#15803d" stroke-width="0.4"/><path d="M16,8 Q19,5 17,3 Q15,1 14,5 Z" fill="#86efac" stroke="#15803d" stroke-width="0.4"/></svg>`,
-            // 14: stupid pixie thing / Navi (Zelda)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="nv" cx="50%" cy="50%"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></radialGradient></defs><circle cx="10" cy="10" r="8" fill="url(#nv)"/><circle cx="10" cy="10" r="2.5" fill="#93c5fd" stroke="#bfdbfe" stroke-width="0.5"/><circle cx="10" cy="10" r="1" fill="white"/><path d="M7,6 Q4,4 6,8" stroke="#bfdbfe" stroke-width="0.8" fill="none" opacity="0.7"/><path d="M13,6 Q16,4 14,8" stroke="#bfdbfe" stroke-width="0.8" fill="none" opacity="0.7"/></svg>`,
-            // 15: killbot (Roblox sphere rocket bot)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="kb" cx="35%" cy="30%"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#7f1d1d"/></radialGradient></defs><circle cx="10" cy="10" r="7.5" fill="url(#kb)" stroke="#dc2626" stroke-width="0.5"/><circle cx="8" cy="9" r="1.5" fill="#fef2f2"/><circle cx="12" cy="9" r="1.5" fill="#fef2f2"/><circle cx="8" cy="9" r="0.7" fill="#1c1917"/><circle cx="12" cy="9" r="0.7" fill="#1c1917"/><rect x="17" y="9" width="2" height="2" fill="#6b7280" rx="0.3"/><rect x="1" y="9" width="2" height="2" fill="#6b7280" rx="0.3"/></svg>`,
-            // 16: golden star (Super Mario)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><polygon points="10,1 12.4,7.5 19.5,7.5 14,12 16,18.5 10,14.5 4,18.5 6,12 0.5,7.5 7.6,7.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.5"/><circle cx="7" cy="9" r="1" fill="white" opacity="0.5"/></svg>`,
-            // 17: companion cube (Portal)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" fill="#9ca3af" rx="2" stroke="#6b7280" stroke-width="0.5"/><rect x="4" y="4" width="12" height="12" fill="#d1d5db" rx="1"/><circle cx="10" cy="10" r="3.5" fill="#f9a8d4" stroke="#ec4899" stroke-width="0.5"/><circle cx="10" cy="10" r="1.5" fill="#be185d"/><line x1="4" y1="10" x2="6.5" y2="10" stroke="#ec4899" stroke-width="0.8"/><line x1="13.5" y1="10" x2="16" y2="10" stroke="#ec4899" stroke-width="0.8"/><line x1="10" y1="4" x2="10" y2="6.5" stroke="#ec4899" stroke-width="0.8"/><line x1="10" y1="13.5" x2="10" y2="16" stroke="#ec4899" stroke-width="0.8"/></svg>`,
-            // 18: GOLDEN PAN (TF2)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="gp" cx="35%" cy="30%"><stop offset="0%" stop-color="#fef08a"/><stop offset="100%" stop-color="#92400e"/></radialGradient></defs><ellipse cx="9" cy="12" rx="7" ry="5" fill="url(#gp)" stroke="#92400e" stroke-width="0.6"/><rect x="14" y="9" width="5" height="2" fill="#d97706" rx="1"/><ellipse cx="9" cy="10" rx="5" ry="3" fill="#fde68a" opacity="0.5"/></svg>`,
-            // 19: CREEPER face (Minecraft — Revenge)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1a1a2e"/><rect x="3" y="2" width="14" height="16" fill="#16a34a" rx="1"/><rect x="5" y="5" width="3" height="3" fill="#1c1917"/><rect x="12" y="5" width="3" height="3" fill="#1c1917"/><rect x="7" y="10" width="6" height="2" fill="#1c1917"/><rect x="5" y="12" width="3" height="4" fill="#1c1917"/><rect x="12" y="12" width="3" height="4" fill="#1c1917"/></svg>`,
-            // 20: SOUL (Undertale/Deltarune)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#0c0a09"/><path d="M10,4 C7,4 4,6 4,9 C4,13 10,17 10,17 C10,17 16,13 16,9 C16,6 13,4 10,4 Z" fill="#ef4444" stroke="#dc2626" stroke-width="0.5"/></svg>`,
-            // 21: bonk (TF2 — Scout bat)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="9" y="1" width="3" height="10" fill="#6b7280" rx="1" transform="rotate(20 10 10)"/><ellipse cx="12" cy="14" rx="5" ry="4" fill="#ef4444" stroke="#dc2626" stroke-width="0.5" transform="rotate(20 10 10)"/><text x="10" y="19" text-anchor="middle" font-size="4" fill="#fef08a" font-weight="900">BONK</text></svg>`,
-            // 22: pawn (Chess)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="5" r="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.5"/><path d="M7,8 Q6,11 5,14 L15,14 Q14,11 13,8 Z" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.5"/><rect x="4" y="14" width="12" height="2.5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.5" rx="0.5"/></svg>`,
-            // 23: ALMIGHTY PEEL P50 (BeamNG)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="2" y="8" width="16" height="7" fill="#fbbf24" rx="1" stroke="#d97706" stroke-width="0.5"/><rect x="4" y="6" width="12" height="4" fill="#fef08a" rx="0.5"/><circle cx="5" cy="16" r="2" fill="#1c1917" stroke="#374151" stroke-width="0.5"/><circle cx="15" cy="16" r="2" fill="#1c1917" stroke="#374151" stroke-width="0.5"/><rect x="6" y="7" width="3" height="2" fill="#7dd3fc" opacity="0.8"/><rect x="11" y="7" width="3" height="2" fill="#7dd3fc" opacity="0.8"/></svg>`,
-            // 24: queen (Chess — replaces pawn)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="3" r="2" fill="#fbbf24" stroke="#d97706" stroke-width="0.5"/><circle cx="4" cy="5" r="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.4"/><circle cx="16" cy="5" r="1.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.4"/><path d="M3,7 L4,5 L7,9 L10,5 L13,9 L16,5 L17,7 L15,14 L5,14 Z" fill="#fbbf24" stroke="#d97706" stroke-width="0.4"/><rect x="4" y="14" width="12" height="2.5" fill="#fbbf24" stroke="#d97706" stroke-width="0.4" rx="0.5"/></svg>`,
-            // 25: DIAMONDS!!! (Minecraft)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect width="20" height="20" fill="#1a1a2e"/><rect x="6" y="6" width="3" height="3" fill="#22d3ee"/><rect x="9" y="6" width="3" height="3" fill="#67e8f9"/><rect x="12" y="6" width="2" height="2" fill="#22d3ee"/><rect x="6" y="9" width="3" height="3" fill="#22d3ee"/><rect x="9" y="9" width="3" height="3" fill="#a5f3fc"/><rect x="12" y="9" width="2" height="3" fill="#22d3ee"/><rect x="7" y="12" width="6" height="2" fill="#0e7490"/></svg>`,
-            // 26: GOLDEN COOKIE (Cookie Clicker — replaces cookie)
-            (s)=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="gcook" cx="35%" cy="30%"><stop offset="0%" stop-color="#fef08a"/><stop offset="70%" stop-color="#d97706"/><stop offset="100%" stop-color="#92400e"/></radialGradient></defs><circle cx="10" cy="10" r="8.5" fill="url(#gcook)" stroke="#92400e" stroke-width="0.5"/><circle cx="7" cy="7" r="1.2" fill="#78350f"/><circle cx="13" cy="8" r="1" fill="#78350f"/><circle cx="8" cy="13" r="1.2" fill="#78350f"/><circle cx="13" cy="13" r="0.8" fill="#78350f"/><circle cx="10" cy="10" r="0.9" fill="#78350f"/><circle cx="7" cy="7" r="0.5" fill="#fef9c3"/><circle cx="13" cy="8" r="0.4" fill="#fef9c3"/></svg>`,
-        ];
-
-        const REFS_TIERS = [
-            { id:'dirt',        name:'dirt tile',      game:'Terraria',          chance:1,                   color:'text-amber-700',   bg:'bg-amber-900/20 border-amber-800/40',   svgIdx:0 },
-            { id:'woodsword',   name:'wood sword',     game:'Minecraft',         chance:1/5,                 color:'text-amber-500',   bg:'bg-amber-900/20 border-amber-700/30',   svgIdx:1 },
-            { id:'cookie',      name:'cookie',         game:'Cookie Clicker',    chance:1/25,                color:'text-orange-400',  bg:'bg-orange-900/20 border-orange-700/30', svgIdx:2 },
-            { id:'boogiebomb',  name:'dance grenade',  game:'Fortnite',          chance:1/50,                color:'text-violet-400',  bg:'bg-violet-900/20 border-violet-700/30', svgIdx:3 },
-            { id:'tix',         name:'tix',            game:'Roblox',            chance:1/100,               color:'text-blue-400',    bg:'bg-blue-900/20 border-blue-700/30',     svgIdx:4 },
-            { id:'yelloworb',   name:'yellow orb',     game:'Geometry Dash',     chance:1/250,               color:'text-yellow-400',  bg:'bg-yellow-900/20 border-yellow-700/30', svgIdx:5 },
-            { id:'toxiccola',   name:'toxic cola',     game:'Fallout',           chance:1/333,               color:'text-green-400',   bg:'bg-green-900/20 border-green-700/30',   svgIdx:6 },
-            { id:'nrg',         name:'NrG drink',      game:'Henry Stickmin',    chance:1/500,               color:'text-sky-300',     bg:'bg-sky-900/20 border-sky-700/30',       svgIdx:7 },
-            { id:'peashooter',  name:'peashooter',     game:'PvZ',               chance:1/1000,              color:'text-green-300',   bg:'bg-green-900/20 border-green-600/30',   svgIdx:8 },
-            { id:'shark',       name:'shark',          game:'Hungry Shark',      chance:1/5000,              color:'text-gray-300',    bg:'bg-gray-800/60 border-gray-600/40',     svgIdx:9 },
-            { id:'stickman',    name:'stickman',       game:'Mr. Game & Watch',  chance:1/10000,             color:'text-white',       bg:'bg-stone-900/80 border-stone-600/40',   svgIdx:10 },
-            { id:'noob',        name:'NOOB',           game:'Roblox',            chance:1/50000,             color:'text-yellow-300',  bg:'bg-yellow-900/20 border-yellow-600/30', svgIdx:11 },
-            { id:'pizzaface',   name:'scary pizza',    game:'Pizza Tower',       chance:1/125000,            color:'text-orange-300',  bg:'bg-orange-900/20 border-orange-600/30', svgIdx:12 },
-            { id:'flappygolf',  name:'winged golfball',game:'Flappy Golf',       chance:1/500000,            color:'text-green-200',   bg:'bg-green-900/20 border-green-500/30',   svgIdx:13 },
-            { id:'navi',        name:'stupid pixie thing', game:'TLoZ series',   chance:1/1000000,           color:'text-blue-200',    bg:'bg-blue-900/20 border-blue-400/30',     svgIdx:14 },
-            { id:'killbot',     name:'killbot',        game:'Roblox',            chance:1/2011000,           color:'text-red-300',     bg:'bg-red-900/20 border-red-600/30',       svgIdx:15 },
-            { id:'goldenstar',  name:'golden star',    game:'Super Mario',       chance:1/5000000,           color:'text-yellow-200',  bg:'bg-yellow-900/20 border-yellow-400/30', svgIdx:16 },
-            { id:'companioncube',name:'companion cube',game:'Portal',            chance:1/10000000,          color:'text-pink-300',    bg:'bg-pink-900/20 border-pink-500/30',     svgIdx:17 },
-            { id:'goldenpan',   name:'GOLDEN PAN',     game:'TF2',               chance:1/25000000,          color:'text-yellow-300',  bg:'bg-yellow-800/30 border-yellow-500/40', svgIdx:18 },
-            { id:'creeper',     name:'CREEPER? aw MAN',game:'Minecraft',         chance:1/50000000,          color:'text-green-300',   bg:'bg-green-900/20 border-green-500/40',   svgIdx:19 },
-            { id:'soul',        name:'SOUL',           game:'Undertale/Deltarune',chance:1/77777777,         color:'text-red-400',     bg:'bg-red-950/60 border-red-600/40',       svgIdx:20 },
-            { id:'bonk',        name:'bonk',           game:'TF2',               chance:1/125000000,         color:'text-red-300',     bg:'bg-red-900/20 border-red-500/30',       svgIdx:21 },
-            { id:'pawn',        name:'pawn',           game:'Chess',             chance:1/500000000,         color:'text-gray-200',    bg:'bg-gray-800/60 border-gray-400/30',     svgIdx:22 },
-            { id:'peelp50',     name:'ALMIGHTY PEEL P50', game:'BeamNG Drive',   chance:1/1500000000,        color:'text-yellow-200',  bg:'bg-yellow-900/20 border-yellow-400/40', svgIdx:23 },
-            { id:'queen',       name:'queen',          game:'Chess',             chance:1/5, replaces:'pawn',color:'text-yellow-300',  bg:'bg-yellow-800/30 border-yellow-500/40', svgIdx:24 },
-            { id:'diamonds',    name:'DIAMONDS!!!',    game:'Minecraft',         chance:1/10000000000,       color:'text-cyan-300',    bg:'bg-cyan-900/20 border-cyan-500/40',     svgIdx:25 },
-            { id:'goldencookie',name:'GOLDEN COOKIE',  game:'Cookie Clicker',    chance:1/3111111111.08, replaces:'cookie', color:'text-yellow-200', bg:'bg-yellow-700/30 border-yellow-400/50', svgIdx:26 },
-        ];
-
-        let refsGridTiers = [];
-
-        function renderRefsTierList() {
-            const container = document.getElementById('refs-tier-list');
-            if (!container) return;
-            container.innerHTML = '';
-            const realOdds = computeRealOdds(REFS_TIERS);
-            const sorted = [...REFS_TIERS].sort((a,b) => (realOdds[a.id]||a.chance) - (realOdds[b.id]||b.chance));
-            for (const t of sorted) {
-                const odds = realOdds[t.id] || t.chance;
-                const oddsStr = odds >= 1 ? '1/1' : `1/${(1/odds)<1e12?(1/odds).toLocaleString(undefined,{maximumFractionDigits:0}):(1/odds).toExponential(2)}`;
-                const row = document.createElement('div');
-                row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${t.bg}`;
-                row.innerHTML = `<div class="w-7 h-7 flex-shrink-0">${REFS_SVG[t.svgIdx](28)}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold ${t.color} text-xs leading-tight">${t.name}${t.replaces?`<span class="text-gray-600 text-[9px]"> (replaces ${t.replaces})</span>`:''}</div>
-                        <div class="text-[10px] text-gray-500 font-mono">${oddsStr} · <span class="text-gray-600">${t.game}</span></div>
-                    </div>`;
-                container.appendChild(row);
-            }
-        }
-
-        function renderRefsGrid(tierHits) {
-            const container = document.getElementById('refs-grid');
-            if (!container) return;
-            const item = getActiveItemConfig();
-            const width = (item.isGrower ? 2 + (state.grower.gridBonus||0) : item.grid) + (state.consumables.grabber?.active||0);
-            container.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
-            container.innerHTML = '';
-            // build display list: fill with hits proportionally, rest with dirt
-            const cells = [];
-            for (const [id, count] of Object.entries(tierHits)) {
-                const t = REFS_TIERS.find(t=>t.id===id||t.name===id);
-                if (t) for (let i=0; i<Math.min(count, Math.ceil(width*width/Object.keys(tierHits).length)); i++) cells.push(t);
-            }
-            while (cells.length < width*width) cells.push(REFS_TIERS[0]);
-            cells.sort(()=>Math.random()-0.5);
-            for (let i=0; i<width*width; i++) {
-                const t = cells[i] || REFS_TIERS[0];
-                const cell = document.createElement('div');
-                cell.className = 'w-full h-full aspect-square';
-                cell.innerHTML = REFS_SVG[t.svgIdx] ? REFS_SVG[t.svgIdx](32) : '';
-                container.appendChild(cell);
-            }
-        }
-
-        function renderRefsInventory() {
-            const inv = state.areaInventory.references || {};
-            const container = document.getElementById('refs-inventory');
-            if (!container) return;
-            const entries = Object.entries(inv).filter(([,c])=>c>0).sort((a,b)=>{
-                const ta=REFS_TIERS.find(t=>t.id===a[0]||t.name===a[0]);
-                const tb=REFS_TIERS.find(t=>t.id===b[0]||t.name===b[0]);
-                return (ta?.chance||1)-(tb?.chance||1);
-            });
-            if (!entries.length) { container.innerHTML='<div class="text-gray-600 text-xs text-center py-2">Nothing yet</div>'; return; }
-            container.innerHTML='';
-            for (const [id,count] of entries) {
-                const t=REFS_TIERS.find(t=>t.id===id||t.name===id)||{svgIdx:0,color:'text-gray-400',name:id};
-                const row=document.createElement('div');
-                row.className='flex items-center gap-2 py-1 border-b border-gray-800/40';
-                row.innerHTML=`<div class="w-6 h-6 flex-shrink-0">${REFS_SVG[t.svgIdx]?REFS_SVG[t.svgIdx](24):''}</div><span class="${t.color} font-semibold text-xs truncate flex-1">${t.name}</span><span class="text-[10px] text-gray-600">${t.game||''}</span><span class="text-blue-400 font-mono font-bold text-xs ml-1">${count.toLocaleString()}</span>`;
-                container.appendChild(row);
-            }
-        }
-
-        function doRefsRoll() {
-            const btnEl = document.getElementById('refs-roll-btn');
-            const resultEl = document.getElementById('refs-result');
-            if (isSimulating) return;
-            const total = Math.floor(state.unspentRolls);
-            if (total < 1) { resultEl.innerText = 'No rolls available'; return; }
-            btnEl.disabled = true;
-            resultEl.innerHTML = `<span class="text-gray-400 italic">Simulating ${total.toLocaleString()} rolls…</span>`;
-            simulateAreaRolls((merged, simTotal, highest) => {
-                const { best, counts } = pickBestAreaTier(REFS_TIERS, simTotal, getLuckBonus());
-                if (!state.areaInventory.references) state.areaInventory.references = {};
-                for (const [name,c] of Object.entries(counts))
-                    state.areaInventory.references[name] = (state.areaInventory.references[name]||0) + c;
-                state.refsRollCount = (state.refsRollCount||0) + simTotal;
-                document.getElementById('refs-roll-count').innerText = `${state.refsRollCount.toLocaleString()} rolls`;
-                resultEl.innerHTML = `<div class="flex flex-col items-center gap-2">${REFS_SVG[best.svgIdx](48)}<span class="font-bold ${best.color} text-sm">${best.name}</span><span class="text-[10px] text-gray-600">${best.game}</span><span class="text-xs text-gray-500">${simTotal.toLocaleString()} rolls · best 10^n: 10^${highest}</span></div>`;
-                renderRefsGrid(counts);
-                renderRefsInventory();
-                if (best.svgIdx > 20) flashScreen(21);
-                else if (best.svgIdx > 15) flashScreen(12);
-                else if (best.svgIdx > 10) flashScreen(7);
-                btnEl.disabled = false;
-                saveGame();
-            });
         }
 
         function gameTick() {
@@ -4776,7 +4650,7 @@ bonusSims: [
         }
 
         function switchArea(area) {
-            ['main','rng','annoying','serious','money','elements','eww','nil','references'].forEach(a => {
+            ['main','rng','annoying','serious','money','elements','eww','nil'].forEach(a => {
                 const el = document.getElementById(`area-${a}`);
                 const btn = document.getElementById(`area-${a}-btn`);
                 if (!el || !btn) return;
@@ -5282,11 +5156,16 @@ bonusSims: [
 
             // Start standard game clock intervals
             setInterval(gameTick, 1000);
+            setInterval(securityCheckLoop, 30000);
+
+            // Trigger baseline secure clock handshake
+            fetchSecureTime();
 
             // Handle visibility state shifts (tab swapping / page minimization background gains)
             document.addEventListener("visibilitychange", function() {
                 if (!document.hidden) {
                     handleOfflineAccumulation();
+                    fetchSecureTime();
                 } else {
                     syncGamesToState();
                     state.lastTickTime = Date.now();
@@ -5324,10 +5203,6 @@ bonusSims: [
             if (document.getElementById('nil-roll-count'))
                 document.getElementById('nil-roll-count').innerText = `${(state.nilRollCount||0).toLocaleString()} rolls`;
             checkNilUnlock();
-            renderRefsTierList();
-            renderRefsInventory();
-            if (document.getElementById('refs-roll-count'))
-                document.getElementById('refs-roll-count').innerText = `${(state.refsRollCount||0).toLocaleString()} rolls`;
         }
 
         // Force final state save before unload
@@ -5336,7 +5211,19 @@ bonusSims: [
             saveGame();
         };</script>
 
+    <!-- Anti-tamper warning toast -->
+    <div id="tamper-warning-toast" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full mx-4 bg-yellow-900/90 border border-yellow-500/50 text-yellow-200 text-sm font-semibold px-4 py-3 rounded-xl shadow-2xl backdrop-blur-sm text-center"></div>
 
+    <!-- Anti-tamper blocker modal -->
+    <div id="tamper-blocker" class="hidden fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex items-center justify-center">
+        <div class="max-w-sm w-full mx-4 bg-gray-950 border border-red-700/60 rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl text-center">
+            <div class="text-5xl">🕐</div>
+            <h2 class="text-red-400 font-bold text-xl">Clock Tamper Detected</h2>
+            <p class="text-gray-300 text-sm">Your system clock shifted by <span id="blocker-drift-amount" class="text-red-300 font-bold">?</span> seconds. Idle progress is frozen until your clock is corrected.</p>
+            <p class="text-gray-500 text-xs">This protects against time-based cheating. If your clock is correct, click below to re-verify.</p>
+            <button onclick="requestClockRevalidation()" class="mt-2 px-6 py-2.5 bg-red-700 hover:bg-red-600 text-white font-bold rounded-lg transition-all text-sm">Revalidate My Clock</button>
+        </div>
+    </div>
 
 </body>
 </html>
