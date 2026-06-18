@@ -1329,6 +1329,33 @@ bonusSims: [
 {intervalSecs: 7200, rolls: 1, luck: 24999999}
 ]
 },
+titanium: {
+    name: "Titaniumbreaker Slots",
+    grid: 13,
+    luck: 1.25,        // +125%
+    speed: 2.75,       // +375%
+    req: { 10: 10, 8: 500, 9: 35 },
+    desc: "the ultimate slots for gaining big stuff. semi strong active use!!",
+    bonusSims: [
+        // Every 25 seconds — 5k rolls x5 luck
+        { intervalSecs: 25, rolls: 5000, luck: 4.0 },
+        
+        // Every 10 minutes — 88,888 rolls x8.88 luck
+        { intervalSecs: 600, rolls: 88888, luck: 7.88 },
+        
+        // Every 10 minutes — 27,850 rolls x75 luck
+        { intervalSecs: 600, rolls: 27850, luck: 74.0 },
+        
+        // Every 20 minutes — 77,500 rolls x155 luck
+        { intervalSecs: 1200, rolls: 77500, luck: 154.0 },
+        
+        // Every 20 minutes — 15 rolls x125k luck
+        { intervalSecs: 1200, rolls: 15, luck: 124999 },
+        
+        // Every 20 minutes — 125 rolls x5,555 luck
+        { intervalSecs: 1200, rolls: 125, luck: 5554.0 },
+    ]
+}
         };
 
         // Consumables specifications
@@ -2886,7 +2913,7 @@ bonusSims: [
             },
             endgame: {
                 label: 'End Game — Mechanic, Fantasy, Colossal, Illusory, Devil, Burnt, Juni, Grower, Firestarter',
-                keys: ['mechanic','fantasy','colossal','illusory','devil', 'Bootleg_Bobm', 'burnt','juni','grower'],
+                keys: ['mechanic','fantasy','colossal','illusory','devil', 'Bootleg_Bobm', 'burnt','juni','grower', 'titanium'],
             },
             postgame: {
                 label: 'Post Game / Not Worth It — Ultimate, BLS, test !!, Burger, ?',
