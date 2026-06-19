@@ -147,6 +147,7 @@
             <button onclick="switchArea('money')" id="area-money-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Money</button>
             <button onclick="switchArea('elements')" id="area-elements-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">Elements</button>
             <button onclick="switchArea('eww')" id="area-eww-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">EWW</button>
+            <button onclick="switchArea('rgb')" id="area-rgb-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800">RGB</button>
             <button onclick="switchArea('nil')" id="area-nil-btn" class="area-btn flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-white hover:bg-gray-800 hidden">? NIL</button>
             
         </div>
@@ -730,6 +731,42 @@
         </section>
     </div>
 
+    <!-- RGB AREA -->
+    <div id="area-rgb" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <section class="lg:col-span-7 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-200">RGB</h2>
+                    <span class="text-xs bg-fuchsia-500/10 text-fuchsia-300 border border-fuchsia-500/20 px-2 py-1 rounded-md font-mono">6 tiers · 1 unusual</span>
+                </div>
+                <button id="rgb-roll-btn" onclick="doRgbRoll()"
+                    class="w-full bg-gradient-to-r from-red-600 via-green-600 to-blue-600 hover:opacity-90 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none">
+                    ROLL
+                </button>
+                <div id="rgb-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[200px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Last Roll</h3>
+                </div>
+                <div id="rgb-result-display" class="flex-grow flex items-center justify-center text-gray-600 text-sm italic">nothing yet</div>
+            </div>
+        </section>
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-4">
+                <h3 class="font-bold text-base text-gray-200">Tiers</h3>
+                <div class="space-y-1.5 max-h-[400px] overflow-y-auto custom-scroll pr-1" id="rgb-tier-list"></div>
+            </div>
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-base text-gray-200">RGB Inventory</h3>
+                    <span class="text-xs text-gray-500 font-mono" id="rgb-roll-count">0 rolls</span>
+                </div>
+                <div class="space-y-1 max-h-64 overflow-y-auto custom-scroll pr-1" id="rgb-area-inventory"></div>
+            </div>
+        </section>
+    </div>
+
     <!-- NIL AREA — unlocked by ? slot -->
     <div id="area-nil" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <section class="lg:col-span-7 flex flex-col gap-4">
@@ -1010,8 +1047,10 @@
                 serious:  {},
                 money:    {},
                 rng:      {},
-                elements: {}
+                elements: {},
+                rgb:      {}
             },
+            rgbRollCount: 0,
             consumables: {
                 gloves: { owned: 0, active: 0 },
                 powder: { owned: 0, active: 0 },
@@ -1325,8 +1364,8 @@ speed: -0.95,
 req: {9 : 30, 8 : 70, explosion : 3},
 desc: "a firework infused with slots that looks unbelievably BAD until you give it time...",
 bonusSims: [
-{intervalSecs: 7200, rolls: 2.5e7, luck: 24 },
-{intervalSecs: 7200, rolls: 1, luck: 24999999}
+{intervalSecs: 7200, rolls: 2.5e8, luck: 24 },
+{intervalSecs: 7200, rolls: 10, luck: 24999999}
 ]
 },
 titanium: {
@@ -1550,9 +1589,11 @@ titanium: {
                     state.areaInventory.elements  = parsed.areaInventory.elements  || {};
                     state.areaInventory.eww       = parsed.areaInventory.eww       || {};
                     state.areaInventory.nil       = parsed.areaInventory.nil       || {};
+                    state.areaInventory.rgb       = parsed.areaInventory.rgb       || {};
                 }
                 if (typeof parsed.ewwRollCount   === 'number') state.ewwRollCount   = parsed.ewwRollCount;
                 if (typeof parsed.nilRollCount   === 'number') state.nilRollCount   = parsed.nilRollCount;
+                if (typeof parsed.rgbRollCount   === 'number') state.rgbRollCount   = parsed.rgbRollCount;
                 if (parsed.grower) Object.assign(state.grower, parsed.grower);
                 if (parsed.juni) {
                     if (!state.juni) state.juni = { x:1, y:0, lastBonusFired:Date.now() };
@@ -1616,6 +1657,21 @@ titanium: {
         function playChimeForTier(tier) {
             if (state.isMuted) return;
             triggerMP3Sound(tier);
+        }
+
+        // Plays only when an unusual tier is found, or any roll's real (compounded)
+        // rarity is 1e30 or rarer. Separate from the normal tier chime system.
+        function playInfUnusualSound() {
+            if (state.isMuted) return;
+            const audio = new Audio('inf_unusual.mp3');
+            audio.volume = 0.35;
+            audio.play().catch(() => {});
+        }
+
+        // Call after computing a roll's real (compounded) rarity (1/odds) — fires
+        // the inf_unusual chime if that rarity crosses the 1e30 threshold.
+        function checkInfUnusualRarity(realRarity) {
+            if (realRarity >= 1e30) playInfUnusualSound();
         }
 
         function triggerMP3Sound(tier) {
@@ -2627,6 +2683,7 @@ titanium: {
                 for (const u of unusualHits) {
                     addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${u.tier.displayName()} ×${u.hits}</span>`);
                     flashScreen(21);
+                    playInfUnusualSound();
                 }
 
                 saveGame();
@@ -4364,6 +4421,7 @@ titanium: {
                 renderSeriousGrid(result.svgIdx);
                 const realOdds = computeRealOdds(SERIOUS_TIERS_RAW);
                 const realRarity = 1 / (realOdds[result.id || result.name] || result.chance);
+                checkInfUnusualRarity(realRarity);
                 if (realRarity >= 1e8) flashScreen(21);
                 else if (realRarity >= 1e7) flashScreen(18);
                 else if (realRarity >= 1e6) flashScreen(15);
@@ -4527,6 +4585,7 @@ titanium: {
                 for (const u of unusualHits) {
                     addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${u.tier.displayName()} ×${u.hits}</span>`);
                     flashScreen(21);
+                    playInfUnusualSound();
                 }
                 renderInventoryList();
                 renderSlotsList();
@@ -4677,7 +4736,7 @@ titanium: {
         }
 
         function switchArea(area) {
-            ['main','rng','annoying','serious','money','elements','eww','nil'].forEach(a => {
+            ['main','rng','annoying','serious','money','elements','eww','nil','rgb'].forEach(a => {
                 const el = document.getElementById(`area-${a}`);
                 const btn = document.getElementById(`area-${a}-btn`);
                 if (!el || !btn) return;
@@ -4807,6 +4866,7 @@ titanium: {
             }
 
             resultEl.innerHTML = `<span class="font-bold ${best.color}">${best.name}</span>`;
+            checkInfUnusualRarity(1 / (best.chance || 1));
             document.getElementById('eww-roll-count').innerText = `${state.ewwRollCount.toLocaleString()} rolls`;
             renderEwwInventory();
             updateHeaderMetrics();
@@ -4830,6 +4890,131 @@ titanium: {
                 const row = document.createElement('div');
                 row.className = 'flex items-center gap-2 py-1 border-b border-gray-800/40';
                 row.innerHTML = `<div class="w-6 h-6 flex-shrink-0">${EWW_SVG[t.svgIdx] ? EWW_SVG[t.svgIdx](24) : ''}</div><span class="${t.color||'text-gray-400'} font-semibold text-xs truncate flex-1">${name}</span><span class="text-blue-400 font-mono font-bold text-xs">${count.toLocaleString()}</span>`;
+                container.appendChild(row);
+            }
+        }
+
+        // --- RGB AREA ---
+        // 6 standard tiers + 1 unusual (white). White is a "true RNG" tier — it is
+        // luck-independent and only even attempted if a strict gate is met in the
+        // SAME simulation: all 6 colors must have hit, AND red/green/blue's running
+        // areaInventory totals must each contain "255" somewhere in their digits.
+        const RGB_TIERS = [
+            { id:'red',    name:'🔴 red',    chance:1/2.55,           color:'text-red-400',    bg:'bg-red-900/20 border-red-500/30' },
+            { id:'green',  name:'🟢 green',  chance:1/25.5,           color:'text-green-400',  bg:'bg-green-900/20 border-green-500/30' },
+            { id:'blue',   name:'🔵 blue',   chance:1/255,            color:'text-blue-400',   bg:'bg-blue-900/20 border-blue-500/30' },
+            { id:'yellow', name:'🟡 yellow', chance:1/637.5,          color:'text-yellow-300', bg:'bg-yellow-900/20 border-yellow-500/30' },
+            { id:'purple', name:'🟣 purple', chance:1/16256.25,       color:'text-purple-300', bg:'bg-purple-900/20 border-purple-500/30' },
+            { id:'orange', name:'🟠 orange', chance:1/4145343.75,     color:'text-orange-300', bg:'bg-orange-900/20 border-orange-500/30' },
+        ];
+
+        // displayed separately — true RNG, not part of the weighted pool
+        const RGB_WHITE_TIER = {
+            id:'white', name:'⚪ white', chance:1/1677721600,
+            color:'text-white', bg:'bg-gradient-to-r from-gray-100/20 to-white/10 border-white/40'
+        };
+
+        function rgbWhiteUnlocked(counts) {
+            // 1. every one of the 6 base colors must have hit in THIS simulation
+            const allSixHit = RGB_TIERS.every(t => (counts[t.name] || 0) > 0);
+            if (!allSixHit) return false;
+            // 2. red/green/blue running totals in the rgb inventory must each contain "255"
+            const inv = state.areaInventory.rgb || {};
+            const hasStr255 = (n) => String(Math.floor(n || 0)).includes('255');
+            return hasStr255(inv['🔴 red']) && hasStr255(inv['🟢 green']) && hasStr255(inv['🔵 blue']);
+        }
+
+        function renderRgbTierList() {
+            const container = document.getElementById('rgb-tier-list');
+            if (!container) return;
+            container.innerHTML = '';
+            const display = [...RGB_TIERS].sort((a,b) => b.chance - a.chance);
+            for (const t of display) {
+                const row = document.createElement('div');
+                row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${t.bg}`;
+                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${t.color} text-xs">${t.name}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:2})}</div></div>`;
+                container.appendChild(row);
+            }
+            // unusual tier — shown as ??? until found
+            const found = (state.unusualTiers && state.unusualTiers.rgbWhite > 0);
+            const row = document.createElement('div');
+            row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${found ? RGB_WHITE_TIER.bg : 'bg-gray-900/40 border-gray-700/40'}`;
+            row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${found ? RGB_WHITE_TIER.color : 'text-gray-500'} text-xs">${found ? RGB_WHITE_TIER.name : '???'}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">${found ? `1 / ${(1/RGB_WHITE_TIER.chance).toLocaleString(undefined,{maximumFractionDigits:0})} (true RNG)` : 'unusual · ??? odds'}</div></div>`;
+            container.appendChild(row);
+        }
+
+        function doRgbRoll() {
+            const btnEl = document.getElementById('rgb-roll-btn');
+            const resultEl = document.getElementById('rgb-result');
+            const displayEl = document.getElementById('rgb-result-display');
+            if (isSimulating) return;
+            if ((state.unspentRolls || 0) < 1) {
+                resultEl.innerHTML = `<span class="text-sm text-red-400 font-semibold">No rolls available — wait for more to accumulate.</span>`;
+                return;
+            }
+            const rollCount = Math.floor(state.unspentRolls);
+            resultEl.innerHTML = `<span class="text-sm text-gray-400 italic">Simulating ${rollCount.toLocaleString()} rolls…</span>`;
+            if (btnEl) btnEl.disabled = true;
+            simulateAreaRolls((merged, total, highest) => {
+                const luck = getLuckBonus();
+                const { best: result, counts } = pickBestAreaTier(RGB_TIERS, total, luck);
+
+                if (!state.areaInventory.rgb) state.areaInventory.rgb = {};
+                for (const [name, c] of Object.entries(counts))
+                    state.areaInventory.rgb[name] = (state.areaInventory.rgb[name] || 0) + c;
+
+                // --- white check: gate first (cheap), then one true-RNG roll if eligible ---
+                let whiteHit = false;
+                if (rgbWhiteUnlocked(counts)) {
+                    if (Math.random() < RGB_WHITE_TIER.chance) {
+                        whiteHit = true;
+                        if (!state.unusualTiers) state.unusualTiers = {};
+                        state.unusualTiers.rgbWhite = (state.unusualTiers.rgbWhite || 0) + 1;
+                        state.areaInventory.rgb[RGB_WHITE_TIER.name] = (state.areaInventory.rgb[RGB_WHITE_TIER.name] || 0) + 1;
+                    }
+                }
+
+                state.rgbRollCount = (state.rgbRollCount || 0) + total;
+
+                const displayTier = whiteHit ? RGB_WHITE_TIER : result;
+                resultEl.innerHTML = `<span class="font-bold ${displayTier.color}">${displayTier.name}</span>`;
+                displayEl.innerHTML = `<div class="flex flex-col items-center gap-2"><div class="inline-block px-5 py-3 rounded-xl border ${displayTier.bg} ${displayTier.color} font-extrabold text-lg">${displayTier.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated</span></div>`;
+
+                if (whiteHit) {
+                    flashScreen(21);
+                    playInfUnusualSound();
+                    addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${RGB_WHITE_TIER.name} ×1</span>`);
+                } else {
+                    const rarity = 1 / result.chance;
+                    checkInfUnusualRarity(rarity);
+                    if (rarity >= 1e6) flashScreen(18);
+                    else if (rarity >= 1e4) flashScreen(15);
+                    else if (rarity >= 1000) flashScreen(12);
+                    else if (rarity >= 100) flashScreen(9);
+                }
+
+                document.getElementById('rgb-roll-count').innerText = `${state.rgbRollCount.toLocaleString()} rolls`;
+                renderRgbInventory();
+                renderRgbTierList();
+                if (btnEl) btnEl.disabled = false;
+            });
+        }
+
+        function renderRgbInventory() {
+            const inv = state.areaInventory.rgb || {};
+            const container = document.getElementById('rgb-area-inventory');
+            if (!container) return;
+            const entries = Object.entries(inv).filter(([,c]) => c > 0).sort((a,b) => {
+                const order = { '🔴 red':0, '🟢 green':1, '🔵 blue':2, '🟡 yellow':3, '🟣 purple':4, '🟠 orange':5, '⚪ white':6 };
+                return (order[a[0]] ?? 99) - (order[b[0]] ?? 99);
+            });
+            if (!entries.length) { container.innerHTML = '<div class="text-gray-600 text-xs text-center py-2">Nothing found yet</div>'; return; }
+            container.innerHTML = '';
+            for (const [name, count] of entries) {
+                const t = RGB_TIERS.find(t => t.name === name) || (name === RGB_WHITE_TIER.name ? RGB_WHITE_TIER : {});
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 py-1 border-b border-gray-800/40';
+                row.innerHTML = `<span class="${t.color||'text-gray-400'} font-semibold text-xs truncate flex-1">${name}</span><span class="text-blue-400 font-mono font-bold text-xs">${count.toLocaleString()}</span>`;
                 container.appendChild(row);
             }
         }
@@ -4914,6 +5099,7 @@ titanium: {
                     }
                 }
                 const rarity = 1/result.chance;
+                checkInfUnusualRarity(rarity);
                 if (rarity >= 1e8) flashScreen(21);
                 else if (rarity >= 1e6) flashScreen(18);
                 else if (rarity >= 1e4) flashScreen(15);
@@ -5089,10 +5275,11 @@ titanium: {
                 document.getElementById('elements-last-value').innerText = displayTier.name;
                 renderElementsGrid(quannengHit ? 12 : result.svgIdx);
 
-                if (quannengHit) { flashScreen(21); addLog(`<span class="text-yellow-300 font-bold">全能的 — THE OMNIPOTENT</span>`); }
+                if (quannengHit) { flashScreen(21); playInfUnusualSound(); addLog(`<span class="text-yellow-300 font-bold">全能的 — THE OMNIPOTENT</span>`); }
                 else {
                     const realOdds = computeRealOdds(ELEMENTS_TIERS);
                     const rarity = 1 / (realOdds[result.id] || result.chance);
+                    checkInfUnusualRarity(rarity);
                     if (rarity >= 1e8) flashScreen(21);
                     else if (rarity >= 1e6) flashScreen(18);
                     else if (rarity >= 1e4) flashScreen(15);
@@ -5230,6 +5417,10 @@ titanium: {
             if (document.getElementById('nil-roll-count'))
                 document.getElementById('nil-roll-count').innerText = `${(state.nilRollCount||0).toLocaleString()} rolls`;
             checkNilUnlock();
+            renderRgbInventory();
+            renderRgbTierList();
+            if (document.getElementById('rgb-roll-count'))
+                document.getElementById('rgb-roll-count').innerText = `${(state.rgbRollCount||0).toLocaleString()} rolls`;
         }
 
         // Force final state save before unload
