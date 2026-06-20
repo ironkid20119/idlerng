@@ -702,11 +702,16 @@
                 </button>
                 <div id="eww-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
             </div>
-            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[200px] shadow-xl justify-between">
+            <!-- Visual Grid -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
                 <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
-                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Last Roll</h3>
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Last roll visualized</span>
                 </div>
-                <div id="eww-result-display" class="flex-grow flex items-center justify-center text-gray-600 text-sm italic">nothing yet</div>
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="eww-result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+                </div>
+                <div id="eww-result-display" class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400"></div>
             </div>
         </section>
         <section class="lg:col-span-5 flex flex-col gap-4">
@@ -745,11 +750,16 @@
                 </button>
                 <div id="rgb-result" class="text-center py-4 text-gray-500 text-sm italic">No roll yet</div>
             </div>
-            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[200px] shadow-xl justify-between">
+            <!-- Visual Grid -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
                 <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
-                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Last Roll</h3>
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Last roll visualized</span>
                 </div>
-                <div id="rgb-result-display" class="flex-grow flex items-center justify-center text-gray-600 text-sm italic">nothing yet</div>
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="rgb-result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+                </div>
+                <div id="rgb-result-display" class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-center text-gray-600 text-sm italic"></div>
             </div>
         </section>
         <section class="lg:col-span-5 flex flex-col gap-4">
@@ -781,8 +791,16 @@
                 </button>
                 <div id="nil-result" class="text-center py-4 text-gray-600 text-sm italic">nothing</div>
             </div>
-            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[200px] shadow-xl">
-                <div id="nil-result-display" class="flex-grow flex items-center justify-center text-gray-700 text-sm italic">?</div>
+            <!-- Visual Grid -->
+            <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 flex-grow flex flex-col min-h-[350px] shadow-xl justify-between">
+                <div class="flex justify-between items-center border-b border-gray-800/80 pb-3 mb-4">
+                    <h3 class="font-bold text-sm text-gray-400 uppercase tracking-wider">Visual Result Grid</h3>
+                    <span class="text-xs text-gray-500 italic">Last roll visualized</span>
+                </div>
+                <div class="flex-grow flex items-center justify-center p-2">
+                    <div id="nil-result-grid" class="grid w-full max-w-[480px] aspect-square mx-auto border-t border-l border-gray-800/80 bg-gray-950/20 overflow-visible"></div>
+                </div>
+                <div id="nil-result-display" class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-500"></div>
             </div>
         </section>
         <section class="lg:col-span-5 flex flex-col gap-4">
@@ -2364,7 +2382,7 @@ titanium: {
             return k - 1;
         }
 
-        function simulateJob(rollCount, luck, luckMulti) {
+        function simulateJob(rollCount, luck, luckMulti, noCoinflip) {
             const counts = {};
             let remaining = Math.floor(rollCount);
 
@@ -2386,13 +2404,20 @@ titanium: {
                 if (hits > 0) { counts[tier] = (counts[tier] || 0) + hits; remaining -= hits; }
             }
 
-            // Pass 2: remaining rolls get distributed via coinflip across saturated tiers + tier 0.
-            // Each roll independently picks one tier at random (uniform).
+            // Pass 2: remaining rolls get distributed.
+            // Normally: each roll independently coinflips uniformly across saturated tiers + tier 0.
+            // noCoinflip mode (Ultimate ONE, EXPLOSION): no coinflip — every remaining roll goes
+            // straight to the single highest saturated tier (the rarest one the luck guarantees).
             if (remaining > 0) {
-                const pool = saturated.length > 0 ? [...saturated, 0] : [0];
-                for (let r = 0; r < remaining; r++) {
-                    const picked = pool[Math.floor(Math.random() * pool.length)];
-                    counts[picked] = (counts[picked] || 0) + 1;
+                if (noCoinflip && saturated.length > 0) {
+                    const top = saturated[0]; // tiers pushed 21→1, so index 0 is the highest tier
+                    counts[top] = (counts[top] || 0) + remaining;
+                } else {
+                    const pool = saturated.length > 0 ? [...saturated, 0] : [0];
+                    for (let r = 0; r < remaining; r++) {
+                        const picked = pool[Math.floor(Math.random() * pool.length)];
+                        counts[picked] = (counts[picked] || 0) + 1;
+                    }
                 }
             }
 
@@ -2416,7 +2441,7 @@ titanium: {
                 let remaining = job.rollCount;
                 while (remaining > 0) {
                     const bite = Math.min(remaining, SIM_CHUNK_SIZE);
-                    chunks.push({ rollCount: bite, luck: job.luck, luckMulti: job.luckMulti });
+                    chunks.push({ rollCount: bite, luck: job.luck, luckMulti: job.luckMulti, noCoinflip: !!job.noCoinflip });
                     remaining -= bite;
                 }
             }
@@ -2430,7 +2455,7 @@ titanium: {
                 try {
                     while (chunkIdx < batchEnd) {
                         const c = chunks[chunkIdx++];
-                        const counts = simulateJob(c.rollCount, c.luck, c.luckMulti);
+                        const counts = simulateJob(c.rollCount, c.luck, c.luckMulti, c.noCoinflip);
                         for (const t in counts) merged[t] = (merged[t] || 0) + counts[t];
                     }
                 } catch(e) {
@@ -2495,6 +2520,19 @@ titanium: {
                 displayName: () => (state.unusualTiers.quanneng || 0) > 0 ? '全能的' : '???',
                 color: 'text-yellow-200',
                 bg: 'bg-yellow-900/30 border-yellow-400/40',
+                check: () => 0
+            },
+            rgbWhite: {
+                id: 'rgbWhite',
+                name: '⚪ white',
+                displayName: () => (state.unusualTiers.rgbWhite || 0) > 0 ? '⚪ white' : '???',
+                color: 'text-white',
+                bg: 'bg-gradient-to-r from-gray-100/20 to-white/10 border-white/40',
+                chance: 1/1677721600,
+                // 1/1,677,721,600 — true RNG, luck-independent. Only even attempted in
+                // doRgbRoll when all 6 RGB colors hit in the same sim AND red/green/blue's
+                // running totals each contain "255" — needs per-sim counts, so the actual
+                // roll lives in doRgbRoll (same pattern as 全能的); this entry is display-only.
                 check: () => 0
             },
             miguel: {
@@ -2588,9 +2626,9 @@ titanium: {
                     jobs.push({ rollCount: Math.floor(bucket.count), luck: effectiveLuck, luckMulti: bucket.luckMulti });
                 }
             }
-            if (explosionReady)     jobs.push({ rollCount: 2500000,   luck: activeLuck + 20,    luckMulti: activeLuckMulti });
+            if (explosionReady)     jobs.push({ rollCount: 2500000,   luck: activeLuck + 20,    luckMulti: activeLuckMulti, noCoinflip: true });
             if (fireBombReady)      jobs.push({ rollCount: 250000000,  luck: activeLuck + 4,     luckMulti: activeLuckMulti });
-            if (ultimateOneActive)  jobs.push({ rollCount: 1,          luck: activeLuck + 2.5e9, luckMulti: activeLuckMulti });
+            if (ultimateOneActive)  jobs.push({ rollCount: 1,          luck: activeLuck + 2.5e9, luckMulti: activeLuckMulti, noCoinflip: true });
 
             if (jobs.reduce((s, j) => s + j.rollCount, 0) <= 0) return;
 
@@ -4066,10 +4104,6 @@ titanium: {
             if (!container) return;
             container.innerHTML = '';
             const tiers = [...NIL_TIERS];
-            // show MIGUEL as a hint if ? slot is equipped (but it's an unusual tier, shown as ???)
-            if (state.activeSlotId === 'question') {
-                tiers.push({ id:'miguel', name: (state.unusualTiers?.miguel||0) > 0 ? '"MIGUEL HAHA DID YOU THINK ID GIVE YOU A 404 JOKE OR SOMETHING IM NOT LAME"' : '???', chance: 1/696900000, color:'text-red-400', bg:'bg-red-900/20 border-red-600/30', svgIdx:1, isUnusual:true });
-            }
             for (const t of tiers) {
                 const oddsStr = t.chance >= 1 ? '1/1 (always)' : `1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:0})}`;
                 const row = document.createElement('div');
@@ -4083,6 +4117,33 @@ titanium: {
                 row.appendChild(svgWrap);
                 row.appendChild(info);
                 container.appendChild(row);
+            }
+        }
+
+        function renderNilGrid(best) {
+            const grid = document.getElementById('nil-result-grid');
+            if (!grid) return;
+            const item = getActiveItemConfig();
+            const w = item.grid;
+            grid.style.gridTemplateColumns = `repeat(${w}, minmax(0, 1fr))`;
+            grid.style.gridTemplateRows = `repeat(${w}, minmax(0, 1fr))`;
+            grid.innerHTML = '';
+            const containerPx = grid.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / w);
+            const baseSize = Math.round(cellPx * 1.1);
+            const idx = (best && best.svgIdx !== undefined) ? best.svgIdx : 0;
+            for (let i = 0; i < w * w; i++) {
+                const cell = document.createElement('div');
+                const isFeature = i === 0;
+                cell.className = 'w-full h-full flex items-center justify-center border-b border-r border-gray-800/60 overflow-visible relative';
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;`;
+                const sz = isFeature ? Math.round(baseSize * 1.6) : baseSize;
+                const opacity = isFeature ? 1 : 0.35;
+                wrap.style.opacity = opacity;
+                wrap.innerHTML = NIL_SVG[idx] ? NIL_SVG[idx](sz) : NIL_SVG[0](sz);
+                cell.appendChild(wrap);
+                grid.appendChild(cell);
             }
         }
 
@@ -4114,11 +4175,8 @@ titanium: {
             state.pendingRollBuckets = [];
 
             // display result
-            if (best.svgIdx !== undefined && NIL_SVG[best.svgIdx]) {
-                displayEl.innerHTML = `<div class="flex flex-col items-center gap-2">${NIL_SVG[best.svgIdx](48)}<div class="font-bold ${best.color} text-sm text-center">${best.name}</div></div>`;
-            } else {
-                displayEl.innerHTML = `<div class="text-center"><div class="font-bold ${best.color} text-sm">${best.name}</div></div>`;
-            }
+            displayEl.innerHTML = `<span>Last result:</span><span class="font-bold text-sm ${best.color} font-mono">${best.name} <span class="text-gray-600 font-normal">(${total.toLocaleString()} rolls)</span></span>`;
+            renderNilGrid(best);
 
             resultEl.innerHTML = `<span class="font-bold ${best.color}">${best.name}</span>`;
             document.getElementById('nil-roll-count').innerText = `${state.nilRollCount.toLocaleString()} rolls`;
@@ -4566,9 +4624,9 @@ titanium: {
                 addLog(`<span class="text-yellow-400">⏳ Fire BOOM not ready — ${hoursLeft.toFixed(1)}h remaining</span>`);
             }
 
-            if (explosionReady)     jobs.push({ rollCount: 2500000,   luck: activeLuck + 20,    luckMulti: activeLuckMulti });
+            if (explosionReady)     jobs.push({ rollCount: 2500000,   luck: activeLuck + 20,    luckMulti: activeLuckMulti, noCoinflip: true });
             if (fireBombReady)      jobs.push({ rollCount: 250000000,  luck: activeLuck + 4,     luckMulti: activeLuckMulti });
-            if (ultimateOneActive)  jobs.push({ rollCount: 1,          luck: activeLuck + 2.5e9, luckMulti: activeLuckMulti });
+            if (ultimateOneActive)  jobs.push({ rollCount: 1,          luck: activeLuck + 2.5e9, luckMulti: activeLuckMulti, noCoinflip: true });
             if (jobs.reduce((s, j) => s + j.rollCount, 0) <= 0) return false;
 
             state.unspentRolls = 0;
@@ -4849,6 +4907,33 @@ titanium: {
             }
         }
 
+        function renderEwwGrid(best) {
+            const grid = document.getElementById('eww-result-grid');
+            if (!grid) return;
+            const item = getActiveItemConfig();
+            const w = item.grid;
+            grid.style.gridTemplateColumns = `repeat(${w}, minmax(0, 1fr))`;
+            grid.style.gridTemplateRows = `repeat(${w}, minmax(0, 1fr))`;
+            grid.innerHTML = '';
+            const containerPx = grid.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / w);
+            const baseSize = Math.round(cellPx * 1.2);
+            // common background svgIdx pool (the everyday tiers: grosscrystal, twolines, e)
+            const bgPool = [0, 1, 2];
+            for (let i = 0; i < w * w; i++) {
+                const cell = document.createElement('div');
+                const isFeature = i === 0;
+                const idx = isFeature ? best.svgIdx : (Math.random() < 0.08 ? best.svgIdx : bgPool[Math.floor(Math.random() * bgPool.length)]);
+                cell.className = 'w-full h-full flex items-center justify-center border-b border-r border-gray-800/60 overflow-visible relative';
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;`;
+                const sz = isFeature ? Math.round(baseSize * 1.8) : baseSize;
+                wrap.innerHTML = (typeof idx === 'number' && EWW_SVG[idx]) ? EWW_SVG[idx](sz) : EWW_SVG[0](sz);
+                cell.appendChild(wrap);
+                grid.appendChild(cell);
+            }
+        }
+
         function doEwwRoll() {
             const btnEl = document.getElementById('eww-roll-btn');
             const resultEl = document.getElementById('eww-result');
@@ -4877,19 +4962,14 @@ titanium: {
             state.unspentRolls = 0;
             state.pendingRollBuckets = [];
 
-            // show SVG result — skeleton stays big, twolines stays wide, others use SVG
-            if (best.render === 'skeleton') {
-                displayEl.innerHTML = `<div style="font-size:min(30vw,200px);text-align:center">💀</div>`;
-            } else if (best.render === 'twolines') {
-                displayEl.innerHTML = `<div style="display:flex;gap:8px;justify-content:center;align-items:center">
-                    <div style="width:5px;height:125px;background:#a3e635;border-radius:2px"></div>
-                    <div style="width:5px;height:125px;background:#a3e635;border-radius:2px"></div>
-                </div>`;
-            } else if (best.svgIdx !== undefined && EWW_SVG[best.svgIdx]) {
-                displayEl.innerHTML = `<div class="flex flex-col items-center gap-2">${EWW_SVG[best.svgIdx](64)}<div class="font-bold ${best.color} text-sm text-center">${best.name}</div></div>`;
-            } else {
-                displayEl.innerHTML = `<div class="text-center"><div class="font-bold ${best.color} text-sm">${best.name}</div></div>`;
-            }
+            // show SVG result in caption strip — skeleton/twolines get special treatment in the grid too
+            const ewwLabel = (() => {
+                if (best.render === 'skeleton') return '💀 ' + best.name;
+                if (best.render === 'twolines') return '▌▌ ' + best.name;
+                return best.name;
+            })();
+            displayEl.innerHTML = `<span>Last result:</span><span class="font-bold text-sm ${best.color} font-mono">${ewwLabel} <span class="text-gray-500 font-normal">(${total.toLocaleString()} rolls)</span></span>`;
+            renderEwwGrid(best);
 
             resultEl.innerHTML = `<span class="font-bold ${best.color}">${best.name}</span>`;
             checkInfUnusualRarity(1 / (best.chance || 1));
@@ -4921,24 +5001,78 @@ titanium: {
         }
 
         // --- RGB AREA ---
-        // 6 standard tiers + 1 unusual (white). White is a "true RNG" tier — it is
-        // luck-independent and only even attempted if a strict gate is met in the
-        // SAME simulation: all 6 colors must have hit, AND red/green/blue's running
-        // areaInventory totals must each contain "255" somewhere in their digits.
-        const RGB_TIERS = [
-            { id:'red',    name:'🔴 red',    chance:1/2.55,           color:'text-red-400',    bg:'bg-red-900/20 border-red-500/30' },
-            { id:'green',  name:'🟢 green',  chance:1/25.5,           color:'text-green-400',  bg:'bg-green-900/20 border-green-500/30' },
-            { id:'blue',   name:'🔵 blue',   chance:1/255,            color:'text-blue-400',   bg:'bg-blue-900/20 border-blue-500/30' },
-            { id:'yellow', name:'🟡 yellow', chance:1/637.5,          color:'text-yellow-300', bg:'bg-yellow-900/20 border-yellow-500/30' },
-            { id:'purple', name:'🟣 purple', chance:1/16256.25,       color:'text-purple-300', bg:'bg-purple-900/20 border-purple-500/30' },
-            { id:'orange', name:'🟠 orange', chance:1/4145343.75,     color:'text-orange-300', bg:'bg-orange-900/20 border-orange-500/30' },
+        // 6 standard tiers + 1 unusual (white, now lives in UNUSUAL_TIERS.rgbWhite).
+        // White is "true RNG" — luck-independent and only even attempted if a strict
+        // gate is met in the SAME simulation: all 6 colors must have hit, AND
+        // red/green/blue's running areaInventory totals must each contain "255"
+        // somewhere in their digits. Real roll logic lives in doRgbRoll (same
+        // pattern as 全能的) since it needs per-sim counts that checkUnusualTiers
+        // doesn't have access to; UNUSUAL_TIERS.rgbWhite is display-only (???).
+
+        // sizeMult: how much bigger each shape renders relative to the base grid cell,
+        // per spec (red/green = baseline, blue x2, yellow x4, purple x5, orange x7.5)
+        const RGB_SVG = [
+            // 0: red — plain square
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" fill="#ef4444" stroke="#fca5a5" stroke-width="0.7"/></svg>`,
+            // 1: green — square with X
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" fill="#16a34a" stroke="#86efac" stroke-width="0.7"/><line x1="3" y1="3" x2="17" y2="17" stroke="#bbf7d0" stroke-width="1" opacity="0.8"/><line x1="17" y1="3" x2="3" y2="17" stroke="#bbf7d0" stroke-width="1" opacity="0.8"/></svg>`,
+            // 2: blue — circle (x2), gradient
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20"><defs><radialGradient id="rgbblue${s}" cx="35%" cy="30%"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="60%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e3a8a"/></radialGradient></defs><circle cx="10" cy="10" r="9" fill="url(#rgbblue${s})"/><ellipse cx="7.5" cy="7" rx="2.5" ry="1.5" fill="white" opacity="0.3" transform="rotate(-20,7.5,7)"/></svg>`,
+            // 3: yellow — star (x4) with multiple smaller stars (yellow→dark yellow) behind it
+            (s) => {
+                const star = (cx, cy, r, fill, rot) => {
+                    let pts = '';
+                    for (let i = 0; i < 10; i++) {
+                        const ang = (Math.PI / 5) * i - Math.PI / 2;
+                        const rad = i % 2 === 0 ? r : r * 0.45;
+                        pts += `${cx + rad * Math.cos(ang)},${cy + rad * Math.sin(ang)} `;
+                    }
+                    return `<polygon points="${pts.trim()}" fill="${fill}" transform="rotate(${rot} ${cx} ${cy})"/>`;
+                };
+                const small1 = star(5, 5, 3, '#a16207', 12);
+                const small2 = star(15.5, 6, 2.5, '#ca8a04', -18);
+                const small3 = star(15, 15, 2.8, '#854d0e', 25);
+                const small4 = star(4.5, 15, 2.3, '#b45309', -10);
+                const main = star(10, 10, 8.5, '#facc15', 0);
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20" overflow="visible">${small1}${small2}${small3}${small4}${main}<polygon points="${(()=>{let p='';for(let i=0;i<10;i++){const a=(Math.PI/5)*i-Math.PI/2;const r=i%2===0?5:2.3;p+=`${10+r*Math.cos(a)},${10+r*Math.sin(a)} `}return p.trim();})()}" fill="#fef9c3" opacity="0.85"/></svg>`;
+            },
+            // 4: purple — crystal (x5) with glow behind it
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20" overflow="visible"><defs><radialGradient id="rgbpglow${s}" cx="50%" cy="50%"><stop offset="0%" stop-color="#d8b4fe" stop-opacity="0.9"/><stop offset="60%" stop-color="#9333ea" stop-opacity="0.4"/><stop offset="100%" stop-color="#9333ea" stop-opacity="0"/></radialGradient><linearGradient id="rgbpx${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="50%" stop-color="#a855f7"/><stop offset="100%" stop-color="#581c87"/></linearGradient></defs><circle cx="10" cy="10" r="11" fill="url(#rgbpglow${s})"/><polygon points="10,1 14.5,7 12.5,19 7.5,19 5.5,7" fill="url(#rgbpx${s})" stroke="#e9d5ff" stroke-width="0.5"/><polygon points="10,1 12.5,7 10,10 7.5,7" fill="white" opacity="0.35"/><line x1="10" y1="1" x2="10" y2="19" stroke="#f3e8ff" stroke-width="0.3" opacity="0.5"/></svg>`,
+            // 5: orange — hexagon (x7.5) with aura + glow behind it
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20" overflow="visible"><defs><radialGradient id="rgboaura${s}" cx="50%" cy="50%"><stop offset="0%" stop-color="#fed7aa" stop-opacity="0.9"/><stop offset="45%" stop-color="#f97316" stop-opacity="0.45"/><stop offset="100%" stop-color="#7c2d12" stop-opacity="0"/></radialGradient><linearGradient id="rgbohex${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fed7aa"/><stop offset="50%" stop-color="#f97316"/><stop offset="100%" stop-color="#9a3412"/></linearGradient></defs><circle cx="10" cy="10" r="13" fill="url(#rgboaura${s})"/><polygon points="10,1 18,5.5 18,14.5 10,19 2,14.5 2,5.5" fill="url(#rgbohex${s})" stroke="#fed7aa" stroke-width="0.5"/><polygon points="10,4 15,6.7 15,12.3 10,15 5,12.3 5,6.7" fill="#fff7ed" opacity="0.2"/><circle cx="10" cy="10" r="14.5" fill="none" stroke="#fdba74" stroke-width="0.4" opacity="0.5"/></svg>`,
+            // 6: white — true RNG unusual, a mashup of 10^18 (spiral galaxy) and 10^21 (sacred geometry)
+            (s) => {
+                const M = 10;
+                let spiral = '';
+                for (let arm = 0; arm < 3; arm++) {
+                    const base = (2 * Math.PI / 3) * arm;
+                    for (let t = 0; t < 16; t++) {
+                        const frac = t / 15; const ang = base + frac * Math.PI * 1.6; const dist = 1 + 8 * frac;
+                        spiral += `<circle cx="${M + dist * Math.cos(ang)}" cy="${M + dist * Math.sin(ang)}" r="${0.8 - frac * 0.4}" fill="${t % 2 === 0 ? '#ffffff' : '#e2e8f0'}" opacity="${0.95 - frac * 0.4}"/>`;
+                    }
+                }
+                let rays = '';
+                for (let i = 0; i < 24; i++) {
+                    const a = (2 * Math.PI / 24) * i;
+                    rays += `<line x1="${M}" y1="${M}" x2="${M + 9.5 * Math.cos(a)}" y2="${M + 9.5 * Math.sin(a)}" stroke="${i % 3 === 0 ? '#ffffff' : '#cbd5e1'}" stroke-width="${i % 6 === 0 ? 0.7 : 0.3}" opacity="${i % 3 === 0 ? 0.8 : 0.3}"/>`;
+                }
+                let rings = '';
+                [9, 7.2, 5.4, 3.6].forEach((r, i) => { rings += `<circle cx="${M}" cy="${M}" r="${r}" fill="none" stroke="#f8fafc" stroke-width="${0.6 - i * 0.08}" opacity="${0.4 + i * 0.08}"/>`; });
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20" overflow="visible"><defs><radialGradient id="rgbwhite${s}"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/></radialGradient></defs><circle cx="${M}" cy="${M}" r="9.7" fill="url(#rgbwhite${s})"/>${rays}${rings}${spiral}<circle cx="${M}" cy="${M}" r="1.6" fill="white"/></svg>`;
+            },
         ];
 
-        // displayed separately — true RNG, not part of the weighted pool
-        const RGB_WHITE_TIER = {
-            id:'white', name:'⚪ white', chance:1/1677721600,
-            color:'text-white', bg:'bg-gradient-to-r from-gray-100/20 to-white/10 border-white/40'
-        };
+        const RGB_TIERS = [
+            { id:'red',    name:'🔴 red',    chance:1/2.55,           color:'text-red-400',    bg:'bg-red-900/20 border-red-500/30',    svgIdx:0, sizeMult:1 },
+            { id:'green',  name:'🟢 green',  chance:1/25.5,           color:'text-green-400',  bg:'bg-green-900/20 border-green-500/30', svgIdx:1, sizeMult:1 },
+            { id:'blue',   name:'🔵 blue',   chance:1/255,            color:'text-blue-400',   bg:'bg-blue-900/20 border-blue-500/30',   svgIdx:2, sizeMult:2 },
+            { id:'yellow', name:'🟡 yellow', chance:1/637.5,          color:'text-yellow-300', bg:'bg-yellow-900/20 border-yellow-500/30', svgIdx:3, sizeMult:4 },
+            { id:'purple', name:'🟣 purple', chance:1/16256.25,       color:'text-purple-300', bg:'bg-purple-900/20 border-purple-500/30', svgIdx:4, sizeMult:5 },
+            { id:'orange', name:'🟠 orange', chance:1/4145343.75,     color:'text-orange-300', bg:'bg-orange-900/20 border-orange-500/30', svgIdx:5, sizeMult:7.5 },
+        ];
+
+        // White's static shape/visual info — actual hit tracking lives in UNUSUAL_TIERS.rgbWhite
+        const RGB_WHITE_VISUAL = { svgIdx:6, sizeMult:9, chance:1/1677721600 };
 
         function rgbWhiteUnlocked(counts) {
             // 1. every one of the 6 base colors must have hit in THIS simulation
@@ -4958,15 +5092,57 @@ titanium: {
             for (const t of display) {
                 const row = document.createElement('div');
                 row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${t.bg}`;
-                row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${t.color} text-xs">${t.name}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:2})}</div></div>`;
+                const svgWrap = document.createElement('div');
+                svgWrap.className = 'w-8 h-8 flex-shrink-0';
+                svgWrap.innerHTML = RGB_SVG[t.svgIdx](32);
+                const info = document.createElement('div');
+                info.className = 'flex-1 min-w-0';
+                info.innerHTML = `<div class="font-bold ${t.color} text-xs">${t.name}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">1 / ${(1/t.chance).toLocaleString(undefined,{maximumFractionDigits:2})}</div>`;
+                row.appendChild(svgWrap);
+                row.appendChild(info);
                 container.appendChild(row);
             }
-            // unusual tier — shown as ??? until found
+            // unusual tier — shown as ??? until found, sourced from UNUSUAL_TIERS.rgbWhite
+            const ut = UNUSUAL_TIERS.rgbWhite;
             const found = (state.unusualTiers && state.unusualTiers.rgbWhite > 0);
             const row = document.createElement('div');
-            row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${found ? RGB_WHITE_TIER.bg : 'bg-gray-900/40 border-gray-700/40'}`;
-            row.innerHTML = `<div class="flex-1 min-w-0"><div class="font-bold ${found ? RGB_WHITE_TIER.color : 'text-gray-500'} text-xs">${found ? RGB_WHITE_TIER.name : '???'}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">${found ? `1 / ${(1/RGB_WHITE_TIER.chance).toLocaleString(undefined,{maximumFractionDigits:0})} (true RNG)` : 'unusual · ??? odds'}</div></div>`;
+            row.className = `flex items-center gap-3 rounded-lg px-3 py-2 border ${found ? ut.bg : 'bg-gray-900/40 border-gray-700/40'}`;
+            const svgWrap = document.createElement('div');
+            svgWrap.className = 'w-8 h-8 flex-shrink-0';
+            svgWrap.innerHTML = found ? RGB_SVG[RGB_WHITE_VISUAL.svgIdx](32) : '';
+            const info = document.createElement('div');
+            info.className = 'flex-1 min-w-0';
+            info.innerHTML = `<div class="font-bold ${found ? ut.color : 'text-gray-500'} text-xs">${ut.displayName()}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">${found ? `1 / ${(1/ut.chance).toLocaleString(undefined,{maximumFractionDigits:0})} (true RNG)` : 'unusual · ??? odds'}</div>`;
+            row.appendChild(svgWrap);
+            row.appendChild(info);
             container.appendChild(row);
+        }
+
+        function renderRgbGrid(svgIdx, sizeMult) {
+            const grid = document.getElementById('rgb-result-grid');
+            if (!grid) return;
+            const item = getActiveItemConfig();
+            const w = item.grid;
+            grid.style.gridTemplateColumns = `repeat(${w}, minmax(0, 1fr))`;
+            grid.style.gridTemplateRows = `repeat(${w}, minmax(0, 1fr))`;
+            grid.innerHTML = '';
+            const containerPx = grid.parentElement.offsetWidth || 320;
+            const cellPx = Math.floor(containerPx / w);
+            const baseSize = Math.round(cellPx * 0.85);
+            const bgTierIdxs = [0, 1, 2]; // common colors fill the background
+            for (let i = 0; i < w * w; i++) {
+                const cell = document.createElement('div');
+                const isFeature = i === 0;
+                const t = isFeature ? svgIdx : (Math.random() < 0.06 ? svgIdx : bgTierIdxs[Math.floor(Math.random() * bgTierIdxs.length)]);
+                cell.className = 'w-full h-full flex items-center justify-center border-b border-r border-gray-800/60 overflow-visible relative';
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;`;
+                const mult = t === svgIdx ? sizeMult : 1;
+                const sz = Math.round(baseSize * Math.min(mult, 2.2)); // clamp on-grid render so huge tiers don't break layout
+                wrap.innerHTML = RGB_SVG[t] ? RGB_SVG[t](sz) : RGB_SVG[0](sz);
+                cell.appendChild(wrap);
+                grid.appendChild(cell);
+            }
         }
 
         function doRgbRoll() {
@@ -4992,24 +5168,30 @@ titanium: {
                 // --- white check: gate first (cheap), then one true-RNG roll if eligible ---
                 let whiteHit = false;
                 if (rgbWhiteUnlocked(counts)) {
-                    if (Math.random() < RGB_WHITE_TIER.chance) {
+                    if (Math.random() < RGB_WHITE_VISUAL.chance) {
                         whiteHit = true;
                         if (!state.unusualTiers) state.unusualTiers = {};
                         state.unusualTiers.rgbWhite = (state.unusualTiers.rgbWhite || 0) + 1;
-                        state.areaInventory.rgb[RGB_WHITE_TIER.name] = (state.areaInventory.rgb[RGB_WHITE_TIER.name] || 0) + 1;
+                        state.areaInventory.rgb[UNUSUAL_TIERS.rgbWhite.name] = (state.areaInventory.rgb[UNUSUAL_TIERS.rgbWhite.name] || 0) + 1;
                     }
                 }
 
                 state.rgbRollCount = (state.rgbRollCount || 0) + total;
 
-                const displayTier = whiteHit ? RGB_WHITE_TIER : result;
+                const ut = UNUSUAL_TIERS.rgbWhite;
+                const displayTier = whiteHit
+                    ? { name: ut.name, color: ut.color, bg: ut.bg, svgIdx: RGB_WHITE_VISUAL.svgIdx }
+                    : result;
                 resultEl.innerHTML = `<span class="font-bold ${displayTier.color}">${displayTier.name}</span>`;
-                displayEl.innerHTML = `<div class="flex flex-col items-center gap-2"><div class="inline-block px-5 py-3 rounded-xl border ${displayTier.bg} ${displayTier.color} font-extrabold text-lg">${displayTier.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated</span></div>`;
+                displayEl.innerHTML = `<span>Last result:</span><span class="font-bold text-sm ${displayTier.color} font-mono">${displayTier.name} <span class="text-gray-500 font-normal">(${total.toLocaleString()} rolls)</span></span>`;
+                displayEl.className = 'mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400';
+
+                renderRgbGrid(displayTier.svgIdx, whiteHit ? RGB_WHITE_VISUAL.sizeMult : result.sizeMult);
 
                 if (whiteHit) {
                     flashScreen(21);
                     playInfUnusualSound();
-                    addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${RGB_WHITE_TIER.name} ×1</span>`);
+                    addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${ut.name} ×1</span>`);
                 } else {
                     const rarity = 1 / result.chance;
                     checkInfUnusualRarity(rarity);
@@ -5031,16 +5213,30 @@ titanium: {
             const container = document.getElementById('rgb-area-inventory');
             if (!container) return;
             const entries = Object.entries(inv).filter(([,c]) => c > 0).sort((a,b) => {
-                const order = { '🔴 red':0, '🟢 green':1, '🔵 blue':2, '🟡 yellow':3, '🟣 purple':4, '🟠 orange':5, '⚪ white':6 };
+                const order = { '🔴 red':0, '🟢 green':1, '🔵 blue':2, '🟡 yellow':3, '🟣 purple':4, '🟠 orange':5, [UNUSUAL_TIERS.rgbWhite.name]:6 };
                 return (order[a[0]] ?? 99) - (order[b[0]] ?? 99);
             });
             if (!entries.length) { container.innerHTML = '<div class="text-gray-600 text-xs text-center py-2">Nothing found yet</div>'; return; }
             container.innerHTML = '';
             for (const [name, count] of entries) {
-                const t = RGB_TIERS.find(t => t.name === name) || (name === RGB_WHITE_TIER.name ? RGB_WHITE_TIER : {});
+                const t = RGB_TIERS.find(t => t.name === name);
+                const isWhite = name === UNUSUAL_TIERS.rgbWhite.name;
+                const svgIdx = t ? t.svgIdx : (isWhite ? RGB_WHITE_VISUAL.svgIdx : null);
+                const color = t ? t.color : (isWhite ? UNUSUAL_TIERS.rgbWhite.color : 'text-gray-400');
                 const row = document.createElement('div');
                 row.className = 'flex items-center gap-2 py-1 border-b border-gray-800/40';
-                row.innerHTML = `<span class="${t.color||'text-gray-400'} font-semibold text-xs truncate flex-1">${name}</span><span class="text-blue-400 font-mono font-bold text-xs">${count.toLocaleString()}</span>`;
+                const svgWrap = document.createElement('div');
+                svgWrap.className = 'w-5 h-5 flex-shrink-0';
+                svgWrap.innerHTML = svgIdx !== null && RGB_SVG[svgIdx] ? RGB_SVG[svgIdx](20) : '';
+                const label = document.createElement('span');
+                label.className = `${color} font-semibold text-xs truncate flex-1`;
+                label.innerText = name;
+                const countEl = document.createElement('span');
+                countEl.className = 'text-blue-400 font-mono font-bold text-xs';
+                countEl.innerText = count.toLocaleString();
+                row.appendChild(svgWrap);
+                row.appendChild(label);
+                row.appendChild(countEl);
                 container.appendChild(row);
             }
         }
