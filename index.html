@@ -1364,8 +1364,8 @@ speed: -0.95,
 req: {9 : 30, 8 : 70, explosion : 3},
 desc: "a firework infused with slots that looks unbelievably BAD until you give it time...",
 bonusSims: [
-{intervalSecs: 7200, rolls: 2.5e8, luck: 24 },
-{intervalSecs: 7200, rolls: 10, luck: 24999999}
+{intervalSecs: 7200, rolls: 2.5e7, luck: 24 },
+{intervalSecs: 7200, rolls: 1, luck: 24999999}
 ]
 },
 titanium: {
@@ -4548,8 +4548,28 @@ titanium: {
                     jobs.push({ rollCount: Math.floor(bucket.count), luck: effectiveLuck, luckMulti: bucket.luckMulti });
                 }
             }
-            const totalRollCount = jobs.reduce((s, j) => s + j.rollCount, 0);
-            if (totalRollCount <= 0) return false;
+            const explosionActive = state.consumables.explosion.active > 0;
+            const ultimateOneActive = state.consumables.ultimateOne.active > 0;
+            const fireBombActive = state.consumables.fireBomb.active > 0;
+
+            const now = Date.now();
+            const DAY_MS = 86400000;
+            const explosionReady = explosionActive && state.explosionUsedAt && (now - state.explosionUsedAt) >= DAY_MS;
+            const fireBombReady  = fireBombActive  && state.fireBombUsedAt  && (now - state.fireBombUsedAt)  >= DAY_MS * 2.5;
+
+            if (explosionActive && !explosionReady) {
+                const hoursLeft = Math.max(0, (DAY_MS - (now - (state.explosionUsedAt||now))) / 3600000);
+                addLog(`<span class="text-yellow-400">⏳ Slots EXPLOSION not ready — ${hoursLeft.toFixed(1)}h remaining</span>`);
+            }
+            if (fireBombActive && !fireBombReady) {
+                const hoursLeft = Math.max(0, (DAY_MS * 2.5 - (now - (state.fireBombUsedAt||now))) / 3600000);
+                addLog(`<span class="text-yellow-400">⏳ Fire BOOM not ready — ${hoursLeft.toFixed(1)}h remaining</span>`);
+            }
+
+            if (explosionReady)     jobs.push({ rollCount: 2500000,   luck: activeLuck + 20,    luckMulti: activeLuckMulti });
+            if (fireBombReady)      jobs.push({ rollCount: 250000000,  luck: activeLuck + 4,     luckMulti: activeLuckMulti });
+            if (ultimateOneActive)  jobs.push({ rollCount: 1,          luck: activeLuck + 2.5e9, luckMulti: activeLuckMulti });
+            if (jobs.reduce((s, j) => s + j.rollCount, 0) <= 0) return false;
 
             state.unspentRolls = 0;
             state.pendingRollBuckets = [];
@@ -4557,9 +4577,10 @@ titanium: {
             state.consumables.powder.active = 0;
             state.consumables.grabber.active = 0;
             state.consumables.grandfather.active = 0;
-            state.consumables.explosion.active = 0;
+            if (explosionReady)    { state.consumables.explosion.active = 0; state.explosionUsedAt = null; }
+            if (fireBombReady)     { state.consumables.fireBomb.active  = 0; state.fireBombUsedAt  = null; }
             state.consumables.ultimateOne.active = 0;
-            state.consumables.fireBomb.active = 0;
+            const everythingHandActive = state.consumables.everythingHand.active > 0;
             state.consumables.everythingHand.active = 0;
             state.consumables.bunBottom.active = 0;
             state.consumables.cheese.active = 0;
@@ -4579,6 +4600,11 @@ titanium: {
                 for (const tier in merged)
                     state.discoveredTiers[tier] = (state.discoveredTiers[tier] || 0) + merged[tier];
                 state.totalSimulated += total;
+
+                if (everythingHandActive) {
+                    applyEverythingHand(total);
+                }
+
                 const unusualHits = checkUnusualTiers(total, afkSeconds);
                 playChimeForTier(highest);
                 flashScreen(highest);
