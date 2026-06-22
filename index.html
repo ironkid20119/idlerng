@@ -237,9 +237,11 @@
                 <button onclick="switchTab('consumables')" id="tab-consumables-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
                     🧪 Buffs
                 </button>
-
                 <button onclick="switchTab('games')" id="tab-games-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
                     🎮 Games
+                </button>
+                <button onclick="switchTab('extras')" id="tab-extras-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
+                    ⚙️ More
                 </button>
             </div>
 
@@ -382,6 +384,59 @@
                     </div>
                     <div class="text-[10px] text-gray-600 text-center font-mono">+1 coin/min passive · slots: +5,+3,+1,0,-3,0,+1,+3,+5</div>
                 </div>
+            </div>
+
+            <!-- Tab: Extras (time, export/import, log) -->
+            <div id="tab-extras" class="tab-content hidden bg-panelBg rounded-2xl border border-gray-800 p-4 flex flex-col gap-4 shadow-xl">
+
+                <!-- Time / Day Info -->
+                <div class="bg-gray-900/60 rounded-xl border border-gray-800 p-3 flex flex-col gap-1.5">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">⏰ Time</h4>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-500">Time of day</span>
+                        <span class="font-bold text-gray-200 flex items-center gap-1"><span id="extras-time-display">—</span> <span id="extras-tod-icon"></span></span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-500">Roll speed</span>
+                        <span id="extras-roll-rate" class="font-mono font-bold text-green-400">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-500">Luck bonus</span>
+                        <span id="extras-luck-bonus" class="font-mono font-bold text-yellow-400">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-500">Total simulated</span>
+                        <span id="extras-total-sim" class="font-mono font-bold text-blue-400">—</span>
+                    </div>
+                </div>
+
+                <!-- Export -->
+                <div class="bg-gray-900/60 rounded-xl border border-gray-800 p-3 flex flex-col gap-2">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">📤 Export Save</h4>
+                    <button onclick="doExportSave()" class="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all active:scale-95">Generate Save String</button>
+                    <div id="export-string-box" class="hidden flex-col gap-1.5">
+                        <textarea id="export-string-text" rows="3" readonly class="w-full bg-gray-950 border border-gray-700 rounded-lg text-[10px] font-mono text-gray-300 p-2 resize-none focus:outline-none"></textarea>
+                        <button onclick="doCopySave()" class="w-full py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold transition-all active:scale-95">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Import -->
+                <div class="bg-gray-900/60 rounded-xl border border-gray-800 p-3 flex flex-col gap-2">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">📥 Import Save</h4>
+                    <textarea id="import-string-text" rows="3" placeholder="Paste save string here…" class="w-full bg-gray-950 border border-gray-700 rounded-lg text-[10px] font-mono text-gray-300 p-2 resize-none focus:outline-none focus:border-blue-600"></textarea>
+                    <button onclick="doImportSave()" class="w-full py-2 rounded-lg bg-green-700 hover:bg-green-600 text-white text-xs font-bold transition-all active:scale-95">Import</button>
+                    <div id="import-status" class="text-xs text-center text-gray-500 min-h-[16px]"></div>
+                </div>
+
+                <!-- Activity Log -->
+                <div class="bg-gray-900/60 rounded-xl border border-gray-800 p-3 flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">📋 Activity Log</h4>
+                        <button onclick="document.getElementById('tamper-logs').innerHTML=''" class="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">clear</button>
+                    </div>
+                    <div id="tamper-logs" class="max-h-52 overflow-y-auto custom-scroll flex flex-col gap-0.5 text-[10px] font-mono text-gray-400 pr-1"></div>
+                </div>
+
             </div>
 
         </section>
@@ -1411,6 +1466,43 @@ titanium: {
         
         // Every 20 minutes — 125 rolls x5,555 luck
         { intervalSecs: 1200, rolls: 125, luck: 5554.0 },
+    ]
+},
+colorprism: {
+    name: "ColorPrism Slots",
+    grid: 11,
+    luck: 8.0,         // +800%
+    speed: 7.25,       // +625%
+    req: {
+        // main-tier requirements (none)
+        // area inventory requirements
+        'area:annoying:🟥 Evil Square':             75,
+        'area:rgb:🔴 red':                          100000000,
+        'area:serious:1 BILION CIRCLES AHHHH':      3,
+        'area:serious:clock':                       5000000,
+        'area:rgb:🔵 blue':                         25000000,
+        'area:elements:earth':                      50000,
+        'area:eww:BLUE PEPPERONI YUMMY':            10,
+        'area:rgb:🟢 green':                        1000000,
+        'area:eww:2 literal lines':                 10000000,
+        'area:annoying:🏆 "totally real 10^21"':    1,
+        'area:money:gold bar':                      1750,
+        'area:rgb:🟡 yellow':                       750000,
+        'area:elements:plasma':                     50000,
+        'area:rgb:🟣 purple':                       100000,
+        'area:annoying:🥚 AMAZING EGG':             5,
+        'area:rgb:🟠 orange':                       200000,
+    },
+    desc: "255,255,255",
+    bonusSims: [
+        // Every 1 second — 1 roll x25.5 luck
+        { intervalSecs: 1,    rolls: 1,        luck: 24.5 },
+
+        // Every 255 seconds — 255 rolls x255 luck
+        { intervalSecs: 255,  rolls: 255,      luck: 254.0 },
+
+        // Every 255 minutes — 25,555,555 rolls x25.5 luck
+        { intervalSecs: 15300, rolls: 25555555, luck: 24.5 },
     ]
 }
         };
@@ -2780,8 +2872,13 @@ titanium: {
             if (!costConfig) return true;
             for (const key in costConfig) {
                 const countNeeded = costConfig[key];
-                // consumable cost (non-numeric key like "explosion")
-                if (isNaN(key)) {
+                if (key.startsWith('area:')) {
+                    // area inventory item: "area:AREAKEY:ITEMNAME"
+                    const [, areaKey, ...nameParts] = key.split(':');
+                    const itemName = nameParts.join(':');
+                    const owned = (state.areaInventory[areaKey] && state.areaInventory[areaKey][itemName]) || 0;
+                    if (owned < countNeeded) return false;
+                } else if (isNaN(key)) {
                     const owned = state.consumables[key] ? state.consumables[key].owned : 0;
                     if (owned < countNeeded) return false;
                 } else {
@@ -2795,7 +2892,11 @@ titanium: {
         function deductCost(costConfig) {
             if (!costConfig) return;
             for (const key in costConfig) {
-                if (isNaN(key)) {
+                if (key.startsWith('area:')) {
+                    const [, areaKey, ...nameParts] = key.split(':');
+                    const itemName = nameParts.join(':');
+                    if (state.areaInventory[areaKey]) state.areaInventory[areaKey][itemName] = Math.max(0, (state.areaInventory[areaKey][itemName] || 0) - costConfig[key]);
+                } else if (isNaN(key)) {
                     if (state.consumables[key]) state.consumables[key].owned -= costConfig[key];
                 } else {
                     state.discoveredTiers[key] -= costConfig[key];
@@ -3008,7 +3109,7 @@ titanium: {
             },
             endgame: {
                 label: 'End Game — Mechanic, Fantasy, Colossal, Illusory, Devil, Burnt, Juni, Grower, Firestarter',
-                keys: ['mechanic','fantasy','colossal','illusory','devil', 'Bootleg_Bobm', 'burnt','juni','grower', 'titanium'],
+                keys: ['mechanic','fantasy','colossal','illusory','devil', 'Bootleg_Bobm', 'burnt','juni','grower', 'titanium', 'colorprism'],
             },
             postgame: {
                 label: 'Post Game / Not Worth It — Ultimate, BLS, test !!, Burger, ?',
@@ -3130,7 +3231,12 @@ titanium: {
                     for (const reqTier in item.req) {
                         const requiredCount = item.req[reqTier];
                         let currentCount, reqLabel;
-                        if (isNaN(reqTier)) {
+                        if (reqTier.startsWith('area:')) {
+                            const [, areaKey, ...nameParts] = reqTier.split(':');
+                            const itemName = nameParts.join(':');
+                            currentCount = (state.areaInventory[areaKey] && state.areaInventory[areaKey][itemName]) || 0;
+                            reqLabel = `${itemName}:`;
+                        } else if (isNaN(reqTier)) {
                             // consumable requirement (e.g. grabber, powder, ultimateOne)
                             currentCount = state.consumables[reqTier] ? state.consumables[reqTier].owned : 0;
                             const cName = CONSUMABLES_CONFIG[reqTier] ? CONSUMABLES_CONFIG[reqTier].name : reqTier;
@@ -3350,18 +3456,44 @@ titanium: {
         }
 
 
-        // --- TAB NAVIGATION MANAGER ---
         function switchTab(tabId) {
             document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
             document.getElementById("tab-inventory-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
             document.getElementById("tab-slots-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
             document.getElementById("tab-consumables-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
-
             document.getElementById("tab-games-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
+            document.getElementById("tab-extras-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             const activeBtn = document.getElementById(`tab-${tabId}-btn`);
             activeBtn.className = "py-2 px-1 text-xs font-bold rounded-lg transition-all bg-gray-800 text-white shadow-sm";
             if (tabId === 'games') { initGamesIfNeeded(); }
+            if (tabId === 'extras') { updateExtrasTab(); }
+        }
+
+        function updateExtrasTab() {
+            const isDay = state.isDay !== false;
+            const timeEl = document.getElementById('extras-time-display');
+            const iconEl = document.getElementById('extras-tod-icon');
+            if (timeEl) timeEl.innerText = isDay ? 'Daytime' : 'Nighttime';
+            if (iconEl) iconEl.innerText = isDay ? '☀️' : '🌙';
+            const rateEl = document.getElementById('extras-roll-rate');
+            if (rateEl) rateEl.innerText = document.getElementById('roll-rate-display')?.innerText || '—';
+            const luckEl = document.getElementById('extras-luck-bonus');
+            if (luckEl) luckEl.innerText = document.getElementById('luck-bonus-stat')?.innerText || '—';
+            const simEl = document.getElementById('extras-total-sim');
+            if (simEl) simEl.innerText = (state.totalSimulated || 0).toLocaleString();
+        }
+
+        function doExportSave() {
+            exportSaveString();
+        }
+
+        function doCopySave() {
+            copyExportString();
+        }
+
+        function doImportSave() {
+            importSaveString();
         }
 
 
@@ -3419,8 +3551,11 @@ titanium: {
                 const key = `${state.activeSlotId}_${i}`;
                 const lastFired = state.bonusSimLastFired[key] || 0;
                 const elapsed = (now - lastFired) / 1000;
-                if (elapsed >= sim.intervalSecs) {
-                    state.bonusSimLastFired[key] = now;
+                // How many full intervals have passed — stack all missed fires
+                const fires = Math.floor(elapsed / sim.intervalSecs);
+                if (fires > 0) {
+                    // Advance timer by exactly the intervals fired, preserving partial remainder
+                    state.bonusSimLastFired[key] = lastFired + fires * sim.intervalSecs * 1000;
                     const luckMulti = item.luckMulti !== undefined ? item.luckMulti : 1.0;
                     if (!state.pendingRollBuckets) state.pendingRollBuckets = [];
 
@@ -3428,26 +3563,28 @@ titanium: {
                     let luck  = sim.luck;
                     if (sim.dynamic === 'juni') {
                         if (!state.juni) state.juni = { x:1, y:0, lastBonusFired:Date.now() };
-                        // tick x and y based on time since last bonus fire
                         const secsSince = (now - (state.juni.lastBonusFired || Date.now())) / 1000;
                         const xTicks = Math.floor(secsSince / 5);
                         const yTicks = Math.floor(secsSince / 3);
                         state.juni.x = Math.min(250, (state.juni.x || 1) + xTicks * 10);
                         state.juni.y = Math.min(23,  (state.juni.y || 0)  + yTicks * 5);
                         rolls = Math.max(500, Math.floor(125000 / state.juni.x));
-                        luck  = Math.max(1, 25 - state.juni.y) - 1; // additive, floor x2 luck
+                        luck  = Math.max(1, 25 - state.juni.y) - 1;
                         state.juni.lastBonusFired = now;
-                        // reset after firing
                         state.juni.x = 1;
                         state.juni.y = 0;
+                        // juni doesn't stack (it resets each fire), so cap at 1
+                        fires > 1 && (rolls = rolls); // keep as-is, single fire result
                     }
 
+                    const totalRolls = rolls * fires;
                     const bucketKey = `${state.activeSlotId}_bonus_${i}`;
                     const existing = state.pendingRollBuckets.find(b => b.slotId === bucketKey);
-                    if (existing) { existing.count += rolls; }
-                    else { state.pendingRollBuckets.push({ slotId: bucketKey, luck, luckMulti, count: rolls }); }
-                    state.unspentRolls += rolls;
-                    addLog(`<span class="text-blue-300 font-semibold">${item.name} bonus: +${rolls.toLocaleString()} rolls (x${(1+luck).toFixed(2)} luck)</span>`);
+                    if (existing) { existing.count += totalRolls; }
+                    else { state.pendingRollBuckets.push({ slotId: bucketKey, luck, luckMulti, count: totalRolls }); }
+                    state.unspentRolls += totalRolls;
+                    const stackNote = fires > 1 ? ` <span class="text-yellow-400">(×${fires} stacked)</span>` : '';
+                    addLog(`<span class="text-blue-300 font-semibold">${item.name} bonus: +${totalRolls.toLocaleString()} rolls (x${(1+luck).toFixed(2)} luck)${stackNote}</span>`);
                 }
             }
         }
@@ -5075,6 +5212,8 @@ titanium: {
         const RGB_WHITE_VISUAL = { svgIdx:6, sizeMult:9, chance:1/1677721600 };
 
         function rgbWhiteUnlocked(counts) {
+            // 0. ColorPrism Slots must be equipped
+            if (state.activeSlotId !== 'colorprism') return false;
             // 1. every one of the 6 base colors must have hit in THIS simulation
             const allSixHit = RGB_TIERS.every(t => (counts[t.name] || 0) > 0);
             if (!allSixHit) return false;
