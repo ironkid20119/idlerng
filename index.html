@@ -1502,6 +1502,51 @@ colorprism: {
         // Every 255 minutes — 25,555,555 rolls x25.5 luck
         { intervalSecs: 15300, rolls: 25555555, luck: 24.5 },
     ]
+},
+superGamble: {
+    name: "Super Gamble Slots",
+    grid: 20,
+    luck: 7.50,             // +750%
+    superGambleDynamic: true, // speed = random(-1000%, +2000%) per frame
+    req: {
+        11: 50,             // 50 Divine (10^11)
+        12: 3,              // 3 Infernal (10^12)
+        'area:serious:SUPER GAMBLE CRYSTAL': 1,
+    },
+    desc: "pure chaos. luck is massive but speed is completely unhinged. could be -1000% or +2000%. you decide if that's worth it.",
+    bonusSims: [
+        { intervalSecs: 900, rolls: 2000,  luck: 4999.0 }, // every 15min: 2k rolls x5000 luck
+        { intervalSecs: 900, rolls: 5000,  luck: 1999.0 }, // every 15min: 5k rolls x2000 luck
+    ]
+},
+hyperfast: {
+    name: "Hyperfast Slots",
+    grid: 13,
+    luck: 1.75,         // +175%
+    speed: 100.0,       // +10000%
+    req: {
+        13: 1,          // 1 Abyssal (10^13)
+        'area:annoying:🔺 ANNOYING STUPID 3D TRIANGLE': 1,
+        'area:eww:BAG WITH WATER INSIDE BUT ITS INSANELY REALISTIC': 5,
+    },
+    desc: "you want speed? FINE. here's speed. luck is basically gone though. rolls so fast it hurts.",
+    bonusSims: [
+        { intervalSecs: 3600, rolls: 1000000000, luck: -0.40 }, // every hour: 1B rolls x0.6 luck
+    ]
+},
+loser: {
+    name: "Loser Slots",
+    grid: 18,
+    luck: 0.69,         // +69%
+    speed: 4.20,        // +420%
+    req: {
+        'area:annoying:🟫 Loser Square': 100000000000, // 100 billion loser squares
+        'area:annoying:🟥 Evil Square':  50000,        // 50k evil squares
+    },
+    desc: "why would anyone use this lol??? (the grind for this is genuinely insulting)",
+    bonusSims: [
+        { intervalSecs: 3600, rolls: 69420, luck: 69419.0 }, // every hour: 69,420 rolls x69,420 luck
+    ]
 }
         };
 
@@ -1655,6 +1700,8 @@ colorprism: {
 
         // gamble speed fluctuating variable (randomized smoothly on game loop frames)
         let gambleFluctuation = 0.0;
+        // super gamble slots: wild speed range -1000% to +2000% per frame
+        let superGambleFluctuation = 0.0;
 
         // --- LOCAL STORAGE MANAGER ---
         const SAVE_KEY = "10n_idleRNG_save_egg";
@@ -1901,6 +1948,8 @@ colorprism: {
             let baseSpeed = 0.0;
             if (item.isGrower) {
                 baseSpeed = 0.50 * (1 + (state.grower.b || 0));
+            } else if (item.superGambleDynamic) {
+                baseSpeed = superGambleFluctuation;
             } else if (item.speedDynamic) {
                 baseSpeed = gambleFluctuation;
             } else if (item.speedSpecial) {
@@ -1921,7 +1970,9 @@ colorprism: {
             const baseGrid = item.isGrower ? (2 + (state.grower.gridBonus || 0)) : item.grid;
             const finalGridWidth = baseGrid + grabberBonus;
             const gridAmount = finalGridWidth * finalGridWidth;
-            let calculatedRate = (1.0 + speedMod) * gridAmount;
+            // Formula: timePerRoll = 1 / (1 + speedBonus), rollsPerSec = gridCells / timePerRoll
+            const timePerRoll = 1.0 / Math.max(0.0001, 1.0 + speedMod);
+            let calculatedRate = gridAmount / timePerRoll;
             let glovesBoostMultiplier = 1.0 + (0.35 * state.consumables.gloves.active);
             let grandfatherBoostMultiplier = 1.0 + (0.2 * state.consumables.grandfather.active);
             return Math.max(0.1, calculatedRate * glovesBoostMultiplier * grandfatherBoostMultiplier);
@@ -3110,8 +3161,8 @@ colorprism: {
                 keys: ['mechanic','fantasy','colossal','illusory','devil', 'Bootleg_Bobm', 'burnt','juni','grower', 'titanium', 'colorprism'],
             },
             postgame: {
-                label: 'Post Game / Not Worth It — Ultimate, BLS, test !!, Burger, ?',
-                keys: ['ultimateSL','bls','camerontest','burger','question', 'stattest',],
+                label: 'Post Game / Not Worth It — Ultimate, BLS, test !!, Burger, ?, Super Gamble, Hyperfast, Loser',
+                keys: ['ultimateSL','bls','camerontest','burger','question', 'stattest', 'superGamble', 'hyperfast', 'loser'],
             },
         };
 
@@ -3208,7 +3259,7 @@ colorprism: {
                 const finalLuckVal = item.luckMulti !== undefined ? `${baseLuckStr} (${luckMultiStr})` : baseLuckStr;
                 const luckVal = item.luckSpecial ? "Special" : finalLuckVal;
 
-                const speedVal = item.speedDynamic ? "Fluctuating Frame Rates" : (item.speedSpecial ? "Adaptive Time" : (item.speed >= 0 ? `+${item.speed * 100}%` : `${item.speed * 100}%`));
+                const speedVal = item.superGambleDynamic ? "CHAOTIC (-1000% ~ +2000%)" : item.speedDynamic ? "Fluctuating Frame Rates" : (item.speedSpecial ? "Adaptive Time" : (item.speed >= 0 ? `+${item.speed * 100}%` : `${item.speed * 100}%`));
 
                 mods.innerHTML = `
                     <span class="px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">LUCK: ${luckVal}</span>
@@ -5655,8 +5706,11 @@ colorprism: {
             // fluctuation bounds matching user definition: min -1.00 (-100%), max 1.75 (+175%)
             gambleFluctuation = Math.random() * (1.75 - (-1.00)) + (-1.00);
             
+            // super gamble: wild range -1000% to +2000% per frame
+            superGambleFluctuation = Math.random() * (20.00 - (-10.00)) + (-10.00);
+
             // only trigger active refresh on visual headers if slot equipped matches gamble slots
-            if (state.activeSlotId === 'gamble') {
+            if (state.activeSlotId === 'gamble' || state.activeSlotId === 'superGamble') {
                 updateHeaderMetrics();
             }
             requestAnimationFrame(processGambleFluctuations);
