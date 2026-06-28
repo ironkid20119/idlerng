@@ -53,6 +53,10 @@
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
+        @keyframes spawnFadeIn {
+            0% { opacity: 0; transform: translateY(-100%); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
         .grid-cell-animate {
             animation: pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -241,6 +245,9 @@
                 </button>
                 <button onclick="switchTab('extras')" id="tab-extras-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
                     ⚙️ More
+                </button>
+                <button onclick="switchTab('rolllog')" id="tab-rolllog-btn" class="py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
+                    📋 Log
                 </button>
             </div>
 
@@ -447,9 +454,16 @@
         </section>
 
     </main>
+            <div id="tab-rolllog" class="tab-content hidden bg-panelBg rounded-2xl border border-gray-800 p-4 flex flex-col gap-3 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">📋 Roll Log — 10^n</h3>
+                    <button onclick="clearRollLog('main')" class="text-[10px] text-gray-600 hover:text-red-400 transition-colors">clear</button>
+                </div>
+                <div id="rolllog-main" class="max-h-80 overflow-y-auto custom-scroll flex flex-col-reverse gap-0.5 text-[10px] font-mono text-gray-400 pr-1">
+                    <div class="text-gray-600 italic text-center py-2">No rolls yet</div>
+                </div>
+            </div>
     </div><!-- end area-main -->
-
-    <!-- RNG AREA -->
     <div id="area-rng" class="hidden flex-grow max-w-6xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         <!-- Left: Roll core + grid -->
@@ -572,6 +586,13 @@
                     <span class="text-xs text-gray-500 font-mono" id="annoying-roll-count">0 rolls</span>
                 </div>
                 <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="annoying-area-inventory"></div>
+                <div class="mt-2 pt-2 border-t border-gray-800/60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Roll Log</span>
+                        <button onclick="clearRollLog('annoying')" class="text-[9px] text-gray-600 hover:text-red-400">clear</button>
+                    </div>
+                    <div id="rolllog-annoying" class="max-h-32 overflow-y-auto custom-scroll flex flex-col-reverse gap-0.5 text-[10px] font-mono text-gray-500 pr-1"><div class="text-gray-700 italic text-center py-1">No rolls yet</div></div>
+                </div>
             </div>
             <!-- 10^n Mirror -->
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
@@ -629,6 +650,13 @@
                     <span class="text-xs text-gray-500 font-mono" id="serious-roll-count">0 rolls</span>
                 </div>
                 <div class="space-y-1 max-h-48 overflow-y-auto custom-scroll pr-1" id="serious-area-inventory"></div>
+                <div class="mt-2 pt-2 border-t border-gray-800/60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Roll Log</span>
+                        <button onclick="clearRollLog('serious')" class="text-[9px] text-gray-600 hover:text-red-400">clear</button>
+                    </div>
+                    <div id="rolllog-serious" class="max-h-32 overflow-y-auto custom-scroll flex flex-col-reverse gap-0.5 text-[10px] font-mono text-gray-500 pr-1"><div class="text-gray-700 italic text-center py-1">No rolls yet</div></div>
+                </div>
             </div>
             <!-- 10^n Mirror -->
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
@@ -680,6 +708,13 @@
                 <span class="text-xs text-gray-500 font-mono" id="elements-roll-count">0 rolls</span>
             </div>
             <div class="space-y-1" id="elements-area-inventory"></div>
+                <div class="mt-2 pt-2 border-t border-gray-800/60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Roll Log</span>
+                        <button onclick="clearRollLog('elements')" class="text-[9px] text-gray-600 hover:text-red-400">clear</button>
+                    </div>
+                    <div id="rolllog-elements" class="max-h-32 overflow-y-auto custom-scroll flex flex-col-reverse gap-0.5 text-[10px] font-mono text-gray-500 pr-1"><div class="text-gray-700 italic text-center py-1">No rolls yet</div></div>
+                </div>
         </div>
         <!-- 10^n Mirror -->
         <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
@@ -736,6 +771,13 @@
                     <span class="text-xs text-gray-500 font-mono" id="money-roll-count">0 rolls</span>
                 </div>
                 <div class="space-y-1 max-h-64 overflow-y-auto custom-scroll pr-1" id="money-area-inventory"></div>
+                <div class="mt-2 pt-2 border-t border-gray-800/60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Roll Log</span>
+                        <button onclick="clearRollLog('money')" class="text-[9px] text-gray-600 hover:text-red-400">clear</button>
+                    </div>
+                    <div id="rolllog-money" class="max-h-32 overflow-y-auto custom-scroll flex flex-col-reverse gap-0.5 text-[10px] font-mono text-gray-500 pr-1"><div class="text-gray-700 italic text-center py-1">No rolls yet</div></div>
+                </div>
             </div>
             <!-- 10^n Mirror -->
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
@@ -785,6 +827,13 @@
                     <span class="text-xs text-gray-500 font-mono" id="eww-roll-count">0 rolls</span>
                 </div>
                 <div class="space-y-1 max-h-64 overflow-y-auto custom-scroll pr-1" id="eww-area-inventory"></div>
+                <div class="mt-2 pt-2 border-t border-gray-800/60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Roll Log</span>
+                        <button onclick="clearRollLog('eww')" class="text-[9px] text-gray-600 hover:text-red-400">clear</button>
+                    </div>
+                    <div id="rolllog-eww" class="max-h-32 overflow-y-auto custom-scroll flex flex-col-reverse gap-0.5 text-[10px] font-mono text-gray-500 pr-1"><div class="text-gray-700 italic text-center py-1">No rolls yet</div></div>
+                </div>
             </div>
             <div class="bg-panelBg rounded-2xl border border-gray-800 p-5 shadow-xl flex flex-col gap-3">
                 <div class="flex justify-between items-center">
@@ -833,6 +882,13 @@
                     <span class="text-xs text-gray-500 font-mono" id="rgb-roll-count">0 rolls</span>
                 </div>
                 <div class="space-y-1 max-h-64 overflow-y-auto custom-scroll pr-1" id="rgb-area-inventory"></div>
+                <div class="mt-2 pt-2 border-t border-gray-800/60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Roll Log</span>
+                        <button onclick="clearRollLog('rgb')" class="text-[9px] text-gray-600 hover:text-red-400">clear</button>
+                    </div>
+                    <div id="rolllog-rgb" class="max-h-32 overflow-y-auto custom-scroll flex flex-col-reverse gap-0.5 text-[10px] font-mono text-gray-500 pr-1"><div class="text-gray-700 italic text-center py-1">No rolls yet</div></div>
+                </div>
             </div>
         </section>
     </div>
@@ -1258,7 +1314,7 @@
             { name: 'decent',        threshold: 1000,        color: 'text-green-400' },
             { name: 'rare',          threshold: 10000,       color: 'text-blue-400' },
             { name: 'epic',          threshold: 30000,       color: 'text-indigo-400' },
-            { name: 'unusual',       threshold: 89000,       color: 'text-cyan-400' },
+            { name: 'peculiar',       threshold: 89000,       color: 'text-cyan-400' },
             { name: 'legendary',     threshold: 500000,      color: 'text-purple-400' },
             { name: 'insane',        threshold: 1000000,     color: 'text-pink-400' },
             { name: 'mythical',      threshold: 7500000,     color: 'text-fuchsia-400' },
@@ -1313,6 +1369,7 @@
             scrambledEggs:      { name: "scrambled eggs", desc: "Click the AMAZING EGG SVG at 1/100 to make it explode", secret: true },
             youAreStupid:       { name: "You Are Stupid!!!", desc: "Use all burger ingredient items in one simulation", secret: true },
             mr4:                { name: "mr. 4", desc: "At 4:44 AM, click 'by Cameron and juni' 4 times with '4444' in your roll count", secret: true },
+            collectMyRatings:   { name: "collect my ratings", desc: "Find the unusual rating in the Ratings area", secret: true },
         };
 
         function grantAchievement(id) {
@@ -1335,6 +1392,116 @@
         const MIDGAME_SLOTS   = ['mechanic','fantasy','colossal','illusory'];
         const ENDGAME_SLOTS   = ['mechanic','fantasy','colossal','illusory','devil','Bootleg_Bobm','burnt','juni','grower','titanium','colorprism','knife','hammer'];
         const POSTGAME_SLOTS  = ['ultimateSL','bls','burger','question','superGamble','hyperfast','loser'];
+
+        // Spawn messages: appear at top, stay until clicked, gradient matches tier color
+        const SPAWN_MESSAGES = {
+            // 10n main tiers (by tier index)
+            6:  { text: "thats pretty decent",               gradient: 'from-green-400 to-teal-400',    bg: 'from-green-950 to-teal-950'    },
+            7:  { text: "thats pretty decent",               gradient: 'from-green-400 to-teal-400',    bg: 'from-green-950 to-teal-950'    },
+            8:  { text: "thats pretty decent",               gradient: 'from-green-400 to-teal-400',    bg: 'from-green-950 to-teal-950'    },
+            9:  { text: "9 to 12 zeroes is giant",           gradient: 'from-blue-400 to-indigo-400',   bg: 'from-blue-950 to-indigo-950'   },
+            10: { text: "9 to 12 zeroes is giant",           gradient: 'from-blue-400 to-indigo-400',   bg: 'from-blue-950 to-indigo-950'   },
+            11: { text: "9 to 12 zeroes is giant",           gradient: 'from-blue-400 to-indigo-400',   bg: 'from-blue-950 to-indigo-950'   },
+            12: { text: "the big leagues",                   gradient: 'from-purple-400 to-pink-400',   bg: 'from-purple-950 to-pink-950'   },
+            13: { text: "the big leagues",                   gradient: 'from-purple-400 to-pink-400',   bg: 'from-purple-950 to-pink-950'   },
+            14: { text: "the big leagues",                   gradient: 'from-purple-400 to-pink-400',   bg: 'from-purple-950 to-pink-950'   },
+            15: { text: "god damn thats rare",               gradient: 'from-yellow-400 to-orange-400', bg: 'from-yellow-950 to-orange-950' },
+            16: { text: "god damn thats rare",               gradient: 'from-yellow-400 to-orange-400', bg: 'from-yellow-950 to-orange-950' },
+            17: { text: "god damn thats rare",               gradient: 'from-yellow-400 to-orange-400', bg: 'from-yellow-950 to-orange-950' },
+            18: { text: "ok you win",                        gradient: 'from-red-400 to-rose-300',      bg: 'from-red-950 to-rose-950'      },
+            19: { text: "ok you win",                        gradient: 'from-red-400 to-rose-300',      bg: 'from-red-950 to-rose-950'      },
+            20: { text: "ok you win",                        gradient: 'from-red-400 to-rose-300',      bg: 'from-red-950 to-rose-950'      },
+            21: { text: "cheater",                           gradient: 'from-white to-gray-300',        bg: 'from-gray-900 to-gray-800'     },
+        };
+
+        // Named tier spawn messages (area tiers, unusual tiers, etc.)
+        const NAMED_SPAWN_MESSAGES = {
+            // Annoying area
+            '🔺 ANNOYING STUPID 3D TRIANGLE':           { text: 'NOO!! TRIANGLE IS STUPID AND ANNOYING?? WHY 3D!!!',      gradient: 'from-blue-300 to-indigo-300',   bg: 'from-blue-950 to-indigo-950'    },
+            '🥚 AMAZING EGG':                           { text: '🥚',                                                      gradient: 'from-yellow-300 to-amber-300',  bg: 'from-yellow-950 to-amber-950'   },
+            '🟫 Loser Square':                          { text: 'stinky',                                                  gradient: 'from-stone-400 to-amber-700',   bg: 'from-stone-950 to-amber-950'    },
+            '🟥 Evil Square':                           { text: 'ahh evil',                                                gradient: 'from-red-400 to-rose-400',      bg: 'from-red-950 to-rose-950'       },
+            // Serious area
+            'i got lazy so now we doing giant steps':   { text: 'yeah',                                                    gradient: 'from-gray-400 to-slate-400',    bg: 'from-gray-900 to-slate-950'     },
+            'DOOR':                                     { text: 'A GIANT DOOR APPEARS IN FRONT OF YOU.. ENTER? (you cant lmao its just a svg)', gradient: 'from-orange-300 to-amber-400', bg: 'from-orange-950 to-amber-950' },
+            'serious:air':                              { text: 'what the fuck is this logic',                             gradient: 'from-sky-300 to-cyan-300',      bg: 'from-sky-950 to-cyan-950'       },
+            'h':                                        { text: 'h',                                                       gradient: 'from-gray-300 to-gray-400',     bg: 'from-gray-900 to-gray-950'      },
+            '1 BILION CIRCLES AHHHH':                   { text: 'OH DEAR GOD ITS ALL CIRCLE',                              gradient: 'from-fuchsia-400 to-purple-400',bg: 'from-fuchsia-950 to-purple-950' },
+            'SUPER GAMBLE CRYSTAL':                     { text: 'get your super gamble slots NOW',                         gradient: 'from-cyan-300 to-blue-300',     bg: 'from-cyan-950 to-blue-950'      },
+            // Elements area
+            '火神':                                      { text: 'a blaze lights the entire area on fire..',                gradient: 'from-red-400 to-orange-400',    bg: 'from-red-950 to-orange-950'     },
+            '空气之神':                                   { text: 'sudden bursts of winds obliterate all nearby objects!!',  gradient: 'from-sky-300 to-teal-300',     bg: 'from-sky-950 to-teal-950'       },
+            '水之神':                                     { text: 'everything around you and the area liquifies as the area around you gets submerged..', gradient: 'from-blue-400 to-cyan-400', bg: 'from-blue-950 to-cyan-950' },
+            '地球之神':                                   { text: 'the ground around you gets obliterated as an ancient planet erupts from the ground...', gradient: 'from-amber-400 to-stone-400', bg: 'from-amber-950 to-stone-950' },
+            // Eww area
+            'BLUE PEPPERONI YUMMY':                     { text: 'am i drunk peppeoroni is red not blue',                  gradient: 'from-blue-400 to-indigo-400',   bg: 'from-blue-950 to-indigo-950'    },
+            'BAG WITH WATER INSIDE (insanely realistic)':{ text: 'refreshign watuer !!!',                                  gradient: 'from-sky-300 to-blue-300',     bg: 'from-sky-950 to-blue-950'       },
+            'MOST DISGUSTING TIER EVER':                { text: '"*vomit*"',                                               gradient: 'from-green-400 to-lime-400',    bg: 'from-green-950 to-lime-950'     },
+            'i lied this is disgusting':                { text: 'd.:)dbdh.cvfs',                                           gradient: 'from-pink-400 to-fuchsia-400',  bg: 'from-pink-950 to-fuchsia-950'  },
+            'G bottle with fruit punch juice':          { text: 'HOW BOUT SOME G BOTTLE DRINK?!',                         gradient: 'from-purple-300 to-pink-300',   bg: 'from-purple-950 to-pink-950'    },
+            // Unusual tiers
+            '???':                                      { text: '"??????????????????????????????????????????"',            gradient: 'from-gray-300 to-white',       bg: 'from-gray-900 to-gray-950'      },
+            '⚪ white':                                  { text: 'a sudden burst of PURE WHITE takes over the area as an entity above knowledgable dimensions appears!', gradient: 'from-white to-gray-200', bg: 'from-gray-800 to-gray-900' },
+            '"MIGUEL HAHA DID YOU THINK ID GIVE YOU A 404 JOKE OR SOMETHING IM NOT LAME"': { text: 'lucky bitch idk what to say', gradient: 'from-orange-300 to-red-300', bg: 'from-orange-950 to-red-950' },
+            'procastinatiob master !!!':                { text: 'hi i delayed the update lmao im sorry',                  gradient: 'from-purple-300 to-violet-300', bg: 'from-purple-950 to-violet-950'  },
+            '全能的':                                    { text: 'oh no you summoned the omnipotent china symbol we are doomed', gradient: 'from-yellow-300 to-red-300', bg: 'from-yellow-950 to-red-950' },
+            // Ratings unusual
+            '⭐ RATED: unusual':                        { text: '"gained ratings: 19/19 YOURE WIN"',                       gradient: 'from-cyan-300 to-teal-300',     bg: 'from-cyan-950 to-teal-950'      },
+        };
+
+        function showSpawnMessage(key) {
+            const msg = typeof key === 'number' ? SPAWN_MESSAGES[key] : NAMED_SPAWN_MESSAGES[key];
+            if (!msg) return false;
+            document.querySelectorAll('.spawn-msg').forEach(el => el.remove());
+            const el = document.createElement('div');
+            el.className = `spawn-msg fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center cursor-pointer select-none`;
+            el.style.cssText = 'min-height:52px;animation:spawnFadeIn 0.3s ease;';
+            el.innerHTML = `<div class="w-full bg-gradient-to-r ${msg.bg} border-b border-white/10 px-6 py-3 flex items-center justify-center gap-3">
+                <span class="font-extrabold text-sm bg-gradient-to-r ${msg.gradient} bg-clip-text text-transparent tracking-wide text-center">${msg.text}</span>
+                <span class="text-white/30 text-xs ml-2">[click to dismiss]</span>
+            </div>`;
+            el.onclick = () => el.remove();
+            document.body.prepend(el);
+            return true;
+        }
+
+        // Roll log system — per-area, stored in memory (not saved)
+        const ROLL_LOGS = { main: [], annoying: [], serious: [], eww: [], rgb: [], money: [], elements: [], nil: [], rng: [], ratings: [] };
+        const ROLL_LOG_MAX = 200;
+
+        function addRollLog(area, counts, colorFn) {
+            // counts: { tierName: count } or { tierIndex: count } for main
+            const log = ROLL_LOGS[area];
+            if (!log) return;
+            const entries = Object.entries(counts).filter(([,c]) => c > 0).sort((a,b) => Number(b[0]) - Number(a[0]));
+            if (!entries.length) return;
+            const parts = entries.map(([name, c]) => {
+                const countStr = c >= 1000 ? c.toLocaleString() : String(c);
+                const label = area === 'main' ? `10^${name}` : name;
+                const color = colorFn ? colorFn(name) : '';
+                return `<span class="${color}">+${countStr} ${label}</span>`;
+            });
+            const entry = parts.join(' <span class="text-gray-700">·</span> ');
+            log.unshift(entry);
+            if (log.length > ROLL_LOG_MAX) log.length = ROLL_LOG_MAX;
+            renderRollLog(area);
+        }
+
+        function renderRollLog(area) {
+            const el = document.getElementById(`rolllog-${area}`);
+            if (!el) return;
+            const log = ROLL_LOGS[area];
+            if (!log || !log.length) {
+                el.innerHTML = '<div class="text-gray-700 italic text-center py-1">No rolls yet</div>';
+                return;
+            }
+            el.innerHTML = log.map(e => `<div class="leading-tight py-0.5 border-b border-gray-800/30">${e}</div>`).join('');
+        }
+
+        function clearRollLog(area) {
+            if (ROLL_LOGS[area]) ROLL_LOGS[area] = [];
+            renderRollLog(area);
+        }
 
         function renderAchievements() {
             const container = document.getElementById('achievements-list');
@@ -1924,7 +2091,7 @@ hammer: {
             slabOfCheese: {
                 id: 'slabOfCheese',
                 name: "🧀 1 Slab of Cheese",
-                cost: { consumable_cheese: 1000000 },
+                cost: { cheese: 1000000 },
                 desc: "instantly consumed. permanently reduces all burger recipe costs by ^0.9 (one time only). each use also permanently adds +0.01x to your global luck multiplier. requires 1,000,000 CHEESE consumables.",
                 cap: 50,
                 color: "from-yellow-300 to-yellow-500",
@@ -3106,6 +3273,9 @@ hammer: {
                     state.discoveredTiers[tier] = (state.discoveredTiers[tier] || 0) + merged[tier];
                 state.totalSimulated += totalRollCount;
 
+                // Roll log for main area
+                addRollLog('main', merged, (t) => TIER_META[t]?.color?.includes('yellow') ? 'text-yellow-400' : TIER_META[t]?.color?.includes('purple') ? 'text-purple-400' : TIER_META[t]?.color?.includes('blue') ? 'text-blue-400' : 'text-gray-400');
+
                 // Achievement: first time simulating
                 grantAchievement('firstTime');
 
@@ -3131,6 +3301,7 @@ hammer: {
 
                 playChimeForTier(highestInBatch);
                 flashScreen(highestInBatch);
+                if (highestInBatch >= 6) showSpawnMessage(highestInBatch);
 
                 let topRolls = [];
                 for (let tier = 21; tier >= 0; tier--) {
@@ -3158,6 +3329,7 @@ hammer: {
                     addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${u.tier.displayName()} ×${u.hits}</span>`);
                     flashScreen(21);
                     playInfUnusualSound();
+                    showSpawnMessage(u.tier.displayName());
                     // Achievements for unusual tiers
                     if (u.tier.id === 'question') grantAchievement('highConfusion');
                     if (u.tier.id === 'procrastination') grantAchievement('sorryThisUpdate');
@@ -3829,16 +4001,16 @@ hammer: {
 
         function switchTab(tabId) {
             document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
-            document.getElementById("tab-inventory-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
-            document.getElementById("tab-slots-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
-            document.getElementById("tab-consumables-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
-            document.getElementById("tab-games-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
-            document.getElementById("tab-extras-btn").className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
+            ["inventory","slots","consumables","games","extras","rolllog"].forEach(t => {
+                const btn = document.getElementById(`tab-${t}-btn`);
+                if (btn) btn.className = "py-2 px-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white";
+            });
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             const activeBtn = document.getElementById(`tab-${tabId}-btn`);
-            activeBtn.className = "py-2 px-1 text-xs font-bold rounded-lg transition-all bg-gray-800 text-white shadow-sm";
+            if (activeBtn) activeBtn.className = "py-2 px-1 text-xs font-bold rounded-lg transition-all bg-gray-800 text-white shadow-sm";
             if (tabId === 'games') { initGamesIfNeeded(); }
             if (tabId === 'extras') { updateExtrasTab(); }
+            if (tabId === 'rolllog') { renderRollLog('main'); }
         }
 
         function updateExtrasTab() {
@@ -4224,7 +4396,7 @@ hammer: {
 
         function applyEverythingHand(totalRollCount) {
             const ehLuck = getLuckBonus();
-            const ehMult = 1 / 50000; // x50k rarer (was 250k)
+            const ehMult = 1 / 200; // x200 luck (buffed from x50k)
             const ehTable = [
                 ...ANNOYING_TIERS.filter(t => t.chance < 1).map(t => ({...t, _area:'annoying'})),
                 ...SERIOUS_TIERS_RAW.filter(t => t.chance < 1).map(t => ({...t, _area:'serious', id: t.id || t.name})),
@@ -4989,7 +5161,9 @@ hammer: {
                 for (const [name, c] of Object.entries(counts))
                     state.areaInventory.serious[name] = (state.areaInventory.serious[name] || 0) + c;
                 checkAreaCompletionAchievements();
+                addRollLog('serious', counts, (n) => n === 'SUPER GAMBLE CRYSTAL' ? 'text-cyan-300' : n === '1 BILION CIRCLES AHHHH' ? 'text-fuchsia-300' : n === 'air' ? 'text-sky-300' : n === 'h' ? 'text-gray-300' : 'text-gray-400');
                 document.getElementById('serious-last-value').innerText = result.name;
+                showSpawnMessage('serious:' + result.name) || showSpawnMessage(result.name);
                 renderSeriousGrid(result.svgIdx);
                 const realOdds = computeRealOdds(SERIOUS_TIERS_RAW);
                 const realRarity = 1 / (realOdds[result.id || result.name] || result.chance);
@@ -5340,8 +5514,10 @@ hammer: {
                 for (const [name, c] of Object.entries(counts))
                     state.areaInventory.annoying[name] = (state.areaInventory.annoying[name] || 0) + c;
                 checkAreaCompletionAchievements();
+                addRollLog('annoying', counts, (n) => n.includes('Evil') ? 'text-red-400' : n.includes('EGG') ? 'text-yellow-300' : n.includes('TRIANGLE') ? 'text-blue-300' : n.includes('totally real') ? 'text-purple-300' : 'text-gray-400');
                 const tierIndex = ANNOYING_TIERS.findIndex(t => t.name === result.name);
                 const svgIndex = ANNOYING_TIERS.length - 1 - tierIndex;
+                showSpawnMessage(result.name);
                 resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls simulated — best 10^n: 10^${highest}</span></div>`;
                 document.getElementById('annoying-last-value').innerText = result.name;
                 renderAnnoyingGrid(svgIndex);
@@ -5355,15 +5531,19 @@ hammer: {
             ['main','rng','annoying','serious','money','elements','eww','nil','rgb','ratings'].forEach(a => {
                 const el = document.getElementById(`area-${a}`);
                 const btn = document.getElementById(`area-${a}-btn`);
-                if (!el || !btn) return;
+                if (!el) return;
                 if (a === area) {
                     el.classList.remove('hidden');
-                    btn.classList.add('bg-blue-600','text-white');
-                    btn.classList.remove('text-gray-400','hover:text-white','hover:bg-gray-800');
+                    if (btn) {
+                        btn.classList.add('bg-blue-600','text-white');
+                        btn.classList.remove('text-gray-400','hover:text-white','hover:bg-gray-800');
+                    }
                 } else {
                     el.classList.add('hidden');
-                    btn.classList.remove('bg-blue-600','text-white');
-                    btn.classList.add('text-gray-400','hover:text-white','hover:bg-gray-800');
+                    if (btn) {
+                        btn.classList.remove('bg-blue-600','text-white');
+                        btn.classList.add('text-gray-400','hover:text-white','hover:bg-gray-800');
+                    }
                 }
             });
             if (area === 'ratings') { renderRatingsTierList(); renderRatingsInventory(); }
@@ -5491,8 +5671,7 @@ hammer: {
             if (!state.areaInventory.eww) state.areaInventory.eww = {};
             for (const [name, c] of Object.entries(counts))
                 state.areaInventory.eww[name] = (state.areaInventory.eww[name] || 0) + c;
-
-            state.ewwRollCount = (state.ewwRollCount || 0) + total;
+            addRollLog('eww', counts, (n) => n.includes('PEPPERONI') ? 'text-blue-400' : n.includes('DISGUSTING') ? 'text-green-400' : n.includes('lied') ? 'text-pink-400' : n.includes('G bottle') ? 'text-purple-400' : n.includes('BAG') ? 'text-sky-400' : 'text-gray-400');
             state.unspentRolls = 0;
             state.pendingRollBuckets = [];
 
@@ -5506,6 +5685,7 @@ hammer: {
             renderEwwGrid(best);
 
             resultEl.innerHTML = `<span class="font-bold ${best.color}">${best.name}</span>`;
+            showSpawnMessage(best.name);
             checkInfUnusualRarity(1 / (best.chance || 1));
             document.getElementById('eww-roll-count').innerText = `${state.ewwRollCount.toLocaleString()} rolls`;
             renderEwwInventory();
@@ -5701,8 +5881,7 @@ hammer: {
                 if (!state.areaInventory.rgb) state.areaInventory.rgb = {};
                 for (const [name, c] of Object.entries(counts))
                     state.areaInventory.rgb[name] = (state.areaInventory.rgb[name] || 0) + c;
-
-                // --- white check: gate first (cheap), then one true-RNG roll if eligible ---
+                addRollLog('rgb', counts, (n) => n.includes('red') ? 'text-red-400' : n.includes('green') ? 'text-green-400' : n.includes('blue') ? 'text-blue-400' : n.includes('yellow') ? 'text-yellow-400' : n.includes('purple') ? 'text-purple-400' : n.includes('orange') ? 'text-orange-400' : n.includes('white') ? 'text-white' : 'text-gray-400');
                 let whiteHit = false;
                 if (rgbWhiteUnlocked(counts)) {
                     if (Math.random() < RGB_WHITE_VISUAL.chance) {
@@ -5730,7 +5909,9 @@ hammer: {
                     flashScreen(21);
                     playInfUnusualSound();
                     addLog(`<span class="text-purple-300 font-bold">⚠ UNUSUAL TIER: ${ut.name} ×1</span>`);
+                    showSpawnMessage('⚪ white');
                 } else {
+                    showSpawnMessage(result.name);
                     const rarity = 1 / result.chance;
                     checkInfUnusualRarity(rarity);
                     if (rarity >= 1e6) flashScreen(18);
@@ -5841,6 +6022,7 @@ hammer: {
                 for (const [name, c] of Object.entries(counts))
                     state.areaInventory.money[name] = (state.areaInventory.money[name] || 0) + c;
                 checkAreaCompletionAchievements();
+                addRollLog('money', counts, (n) => n === 'gold bar' ? 'text-yellow-400' : n === 'dollar' ? 'text-green-400' : 'text-orange-300');
                 resultEl.innerHTML = `<div class="flex flex-col items-center gap-1"><div class="inline-block px-5 py-3 rounded-xl border ${result.bg} ${result.color} font-extrabold text-lg">${result.name}</div><span class="text-xs text-gray-500">${total.toLocaleString()} rolls — best 10^n: 10^${highest}</span></div>`;
                 const item = getActiveItemConfig();
                 const grid = document.getElementById('money-result-grid');
@@ -5949,7 +6131,7 @@ hammer: {
             { id:'r_decent',       name:'decent',       chance:1/1000,        color:'text-green-400',  bg:'bg-green-900/20 border-green-700/30', svgIdx:2  },
             { id:'r_rare',         name:'rare',         chance:1/10000,       color:'text-blue-400',   bg:'bg-blue-900/20 border-blue-700/30',   svgIdx:3  },
             { id:'r_epic',         name:'epic',         chance:1/30000,       color:'text-indigo-400', bg:'bg-indigo-900/20 border-indigo-700/30',svgIdx:4 },
-            { id:'r_unusual_t',    name:'unusual',      chance:1/89000,       color:'text-cyan-400',   bg:'bg-cyan-900/20 border-cyan-700/30',   svgIdx:5  },
+            { id:'r_peculiar',     name:'peculiar',     chance:1/89000,       color:'text-cyan-400',   bg:'bg-cyan-900/20 border-cyan-700/30',   svgIdx:5  },
             { id:'r_legendary',    name:'legendary',    chance:1/500000,      color:'text-purple-400', bg:'bg-purple-900/20 border-purple-700/30',svgIdx:6 },
             { id:'r_insane',       name:'insane',       chance:1/1000000,     color:'text-pink-400',   bg:'bg-pink-900/20 border-pink-700/30',   svgIdx:7  },
             { id:'r_mythical',     name:'mythical',     chance:1/7500000,     color:'text-fuchsia-400',bg:'bg-fuchsia-900/20 border-fuchsia-700/30',svgIdx:8},
@@ -5978,6 +6160,7 @@ hammer: {
             color: 'text-cyan-200',
             bg: 'bg-cyan-900/30 border-cyan-400/40',
             svgIdx: 19,
+            chance: 1/50000000000, // 1/50B true RNG
         };
 
         // RATINGS_SVG: squares with unique inner designs, one per tier
@@ -6069,16 +6252,17 @@ hammer: {
             for (const [name, c] of Object.entries(counts))
                 state.areaInventory.ratings[name] = (state.areaInventory.ratings[name] || 0) + c;
 
-            // Check unusual unlock
+            // Check unusual unlock — true RNG 1/50B, luck-independent
             let unusualHit = false;
             if (ratingsUnusualUnlocked()) {
-                const unusualChance = 1/89000; // same as unusual rating
-                if (Math.random() < unusualChance * (1 + luck)) {
+                if (Math.random() < UNUSUAL_RATINGS_TIER.chance) {
                     unusualHit = true;
                     state.areaInventory.ratings[UNUSUAL_RATINGS_TIER.name] = (state.areaInventory.ratings[UNUSUAL_RATINGS_TIER.name] || 0) + 1;
                     if (!state.unusualTiers) state.unusualTiers = {};
                     state.unusualTiers.ratingsUnusual = (state.unusualTiers.ratingsUnusual || 0) + 1;
                     addLog(`<span class="text-cyan-300 font-bold">⭐ UNUSUAL: ${UNUSUAL_RATINGS_TIER.name}!</span>`);
+                    grantAchievement('collectMyRatings');
+                    showSpawnMessage(UNUSUAL_RATINGS_TIER.name);
                 }
             }
 
@@ -6150,7 +6334,7 @@ hammer: {
             svgWrap.innerHTML = RATINGS_SVG[19](32);
             const info = document.createElement('div');
             info.className = 'flex-1 min-w-0';
-            info.innerHTML = `<div class="font-bold ${unusualUnlocked ? ut.color : 'text-gray-600'} text-xs">${unusualUnlocked ? ut.name : '???'}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">${unusualUnlocked ? '1 / 89,000 · requires all tiers <span class="text-cyan-400 font-bold">[unusual]</span>' : 'collect all rating tiers to unlock'}</div>`;
+            info.innerHTML = `<div class="font-bold ${unusualUnlocked ? ut.color : 'text-gray-600'} text-xs">${unusualUnlocked ? ut.name : '???'}</div><div class="font-mono text-[10px] text-gray-500 mt-0.5">${unusualUnlocked ? '1 / 50,000,000,000 · true RNG · requires all tiers <span class="text-cyan-400 font-bold">[unusual]</span>' : 'collect all rating tiers to unlock'}</div>`;
             row.appendChild(svgWrap);
             row.appendChild(info);
             container.appendChild(row);
@@ -6228,6 +6412,7 @@ hammer: {
                 for (const [name, c] of Object.entries(elCounts))
                     state.areaInventory.elements[name] = (state.areaInventory.elements[name] || 0) + c;
                 checkAreaCompletionAchievements();
+                addRollLog('elements', elCounts, (n) => n.includes('神') ? 'text-yellow-300' : n === 'plasma' || n === 'explosion' ? 'text-red-400' : n === 'gust' || n === 'wind' ? 'text-sky-400' : n === 'ocean' || n === 'pond' ? 'text-blue-400' : n === 'earth' || n === 'mountain' ? 'text-amber-400' : 'text-gray-400');
                 const gods = ['huoshen','kongqiushen','shuishen','diqiushen'];
                 // simulate each god chain independently
                 const allGodsHit = ['huoshen','kongqishen','shuishen','diqiushen'].every(godId => {
@@ -6254,8 +6439,9 @@ hammer: {
                 document.getElementById('elements-last-value').innerText = displayTier.name;
                 renderElementsGrid(quannengHit ? 12 : result.svgIdx);
 
-                if (quannengHit) { flashScreen(21); playInfUnusualSound(); addLog(`<span class="text-yellow-300 font-bold">全能的 — THE OMNIPOTENT</span>`); }
+                if (quannengHit) { flashScreen(21); playInfUnusualSound(); addLog(`<span class="text-yellow-300 font-bold">全能的 — THE OMNIPOTENT</span>`); grantAchievement('godOfAll'); showSpawnMessage('全能的'); }
                 else {
+                    showSpawnMessage(result.name);
                     const realOdds = computeRealOdds(ELEMENTS_TIERS);
                     const rarity = 1 / (realOdds[result.id] || result.chance);
                     checkInfUnusualRarity(rarity);
