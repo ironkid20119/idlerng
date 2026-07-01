@@ -6149,14 +6149,26 @@ hammer: {
         // url(#gradientId) when the symbol comes from a separately-fetched document.
         // Fetching the file and inlining its <symbol> defs into THIS document fixes it,
         // since all <use href="#id"> references then resolve same-document.
+        //
+        // IMPORTANT: setting innerHTML on a plain HTML <div> does NOT reliably build
+        // proper SVG-namespaced nodes — gradients/defs frequently get mangled or dropped
+        // because the div's parsing context is HTML, not SVG. Using DOMParser with
+        // "image/svg+xml" builds real SVG nodes, which we then import into this document.
         function injectSvgSprite() {
             return fetch('svgs.svg')
                 .then(res => res.text())
                 .then(svgText => {
-                    const wrapper = document.createElement('div');
-                    wrapper.style.display = 'none';
-                    wrapper.innerHTML = svgText;
-                    document.body.insertBefore(wrapper, document.body.firstChild);
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+                    const parseError = doc.querySelector('parsererror');
+                    if (parseError) {
+                        console.error('svgs.svg failed to parse as XML:', parseError.textContent);
+                        return;
+                    }
+                    const importedSvg = document.importNode(doc.documentElement, true);
+                    importedSvg.style.display = 'none';
+                    importedSvg.setAttribute('aria-hidden', 'true');
+                    document.body.insertBefore(importedSvg, document.body.firstChild);
                 })
                 .catch(err => {
                     console.error('Failed to load svgs.svg sprite sheet:', err);
