@@ -2455,311 +2455,8 @@ hammer: {
         // All SVGs use viewBox="0 0 20 20" (normalized) so they scale crisp at any size.
         // Root fill is always "none" — transparent background.
         function getTierSVG(tier, size) {
-            const P = {
-                0:  ['#6b7280','#9ca3af','#d1d5db'],
-                1:  ['#94a3b8','#cbd5e1','#e2e8f0'],
-                2:  ['#60a5fa','#93c5fd','#1d4ed8'],
-                3:  ['#34d399','#6ee7b7','#059669'],
-                4:  ['#2dd4bf','#5eead4','#0e7490'],
-                5:  ['#818cf8','#a5b4fc','#4338ca'],
-                6:  ['#a78bfa','#c4b5fd','#7c3aed'],
-                7:  ['#f472b6','#f9a8d4','#be185d'],
-                8:  ['#fb7185','#fda4af','#be123c'],
-                9:  ['#fbbf24','#fde68a','#b45309'],
-                10: ['#fde047','#fef08a','#ca8a04'],
-                11: ['#fdba74','#fed7aa','#c2410c'],
-                12: ['#ef4444','#fca5a5','#dc2626'],
-                13: ['#a855f7','#d8b4fe','#6b21a8'],
-                14: ['#7c3aed','#c4b5fd','#4c1d95'],
-                15: ['#fcd34d','#fef3c7','#d97706'],
-                16: ['#fb7185','#fda4af','#f43f5e'],
-                17: ['#4ade80','#86efac','#166534'],
-                18: ['#22d3ee','#67e8f9','#0e7490'],
-                19: ['#e879f9','#f0abfc','#86198f'],
-                20: ['#f472b6','#c084fc','#fde68a'],
-                21: ['#34d399','#60a5fa','#818cf8'],
-            };
-            const [ca, cb, cc] = P[tier] || P[0];
-            const V = 20; const M = 10; // viewBox size and midpoint
-            const id = `t${tier}x${Math.random().toString(36).slice(2,5)}`;
-            const attr = `xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${V} ${V}"`;
-
-            // TIER 0 — single dim square, no detail
-            if (tier === 0) return `<svg ${attr}><rect x="5" y="5" width="10" height="10" fill="${ca}" opacity="0.5"/></svg>`;
-
-            // TIER 1 — square with a thin border
-            if (tier === 1) return `<svg ${attr}><rect x="4" y="4" width="12" height="12" fill="${ca}" opacity="0.6"/><rect x="4" y="4" width="12" height="12" fill="none" stroke="${cb}" stroke-width="0.6" opacity="0.7"/></svg>`;
-
-            // TIER 2 — two nested squares, slight glow
-            if (tier === 2) return `<svg ${attr}><rect x="3" y="3" width="14" height="14" fill="${ca}" opacity="0.55"/><rect x="6" y="6" width="8" height="8" fill="${cb}" opacity="0.5"/></svg>`;
-
-            // TIER 3 — diamond (rotated square) with border
-            if (tier === 3) {
-                return `<svg ${attr}>
-                    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></linearGradient></defs>
-                    <rect x="5.5" y="5.5" width="9" height="9" transform="rotate(45 ${M} ${M})" fill="url(#${id})" stroke="${cc}" stroke-width="0.6"/>
-                </svg>`;
-            }
-
-            // TIER 4 — cross / plus shape
-            if (tier === 4) {
-                return `<svg ${attr}>
-                    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></linearGradient></defs>
-                    <rect x="7" y="2" width="6" height="16" rx="1" fill="url(#${id})"/>
-                    <rect x="2" y="7" width="16" height="6" rx="1" fill="url(#${id})"/>
-                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.8"/>
-                </svg>`;
-            }
-
-            // TIER 5 — three concentric squares
-            if (tier === 5) {
-                return `<svg ${attr}>
-                    <rect x="2" y="2" width="16" height="16" fill="none" stroke="${ca}" stroke-width="1"/>
-                    <rect x="5" y="5" width="10" height="10" fill="${cb}" opacity="0.45" stroke="${cb}" stroke-width="0.7"/>
-                    <rect x="7.5" y="7.5" width="5" height="5" fill="${cc}" opacity="0.8"/>
-                </svg>`;
-            }
-
-            // TIER 6 — square with X + inner diamond
-            if (tier === 6) {
-                return `<svg ${attr}>
-                    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></linearGradient></defs>
-                    <rect x="2.5" y="2.5" width="15" height="15" fill="url(#${id})" opacity="0.7" stroke="${cc}" stroke-width="0.8"/>
-                    <line x1="2.5" y1="2.5" x2="17.5" y2="17.5" stroke="${cc}" stroke-width="0.7" opacity="0.6"/>
-                    <line x1="17.5" y1="2.5" x2="2.5" y2="17.5" stroke="${cc}" stroke-width="0.7" opacity="0.6"/>
-                    <rect x="7" y="7" width="6" height="6" transform="rotate(45 ${M} ${M})" fill="${cc}" opacity="0.9"/>
-                </svg>`;
-            }
-
-            // TIER 7 — 6-point star (hexagram)
-            if (tier === 7) {
-                let pts1='', pts2='';
-                for(let i=0;i<3;i++){const a=(2*Math.PI/3)*i-Math.PI/2; pts1+=`${M+7.5*Math.cos(a)},${M+7.5*Math.sin(a)} `;}
-                for(let i=0;i<3;i++){const a=(2*Math.PI/3)*i+Math.PI/6; pts2+=`${M+7.5*Math.cos(a)},${M+7.5*Math.sin(a)} `;}
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
-                    <polygon points="${pts1}" fill="url(#${id})" stroke="${cc}" stroke-width="0.5" opacity="0.9"/>
-                    <polygon points="${pts2}" fill="${cb}" stroke="${cc}" stroke-width="0.5" opacity="0.75"/>
-                    <circle cx="${M}" cy="${M}" r="2.5" fill="${cc}"/>
-                </svg>`;
-            }
-
-            // TIER 8 — 8-point starburst
-            if (tier === 8) {
-                let pts='';
-                for(let i=0;i<16;i++){const a=(Math.PI/8)*i-Math.PI/2; const r=i%2===0?8:3.5; pts+=`${M+r*Math.cos(a)},${M+r*Math.sin(a)} `;}
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
-                    <polygon points="${pts}" fill="url(#${id})" stroke="${cc}" stroke-width="0.5"/>
-                    <circle cx="${M}" cy="${M}" r="3" fill="${cc}" opacity="0.9"/>
-                    <circle cx="${M}" cy="${M}" r="1.2" fill="white" opacity="0.6"/>
-                </svg>`;
-            }
-
-            // TIER 9 — pentagon with inner pentagon
-            if (tier === 9) {
-                let outer='', inner='';
-                for(let i=0;i<5;i++){const a=(2*Math.PI/5)*i-Math.PI/2; outer+=`${M+8*Math.cos(a)},${M+8*Math.sin(a)} `; inner+=`${M+4*Math.cos(a)},${M+4*Math.sin(a)} `;}
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
-                    <polygon points="${outer}" fill="url(#${id})" stroke="${cc}" stroke-width="0.6"/>
-                    <polygon points="${inner}" fill="${cc}" opacity="0.8"/>
-                    <circle cx="${M}" cy="${M}" r="1.5" fill="white" opacity="0.7"/>
-                </svg>`;
-            }
-
-            // TIER 10 — sunburst: filled circle + radiating lines
-            if (tier === 10) {
-                let lines='';
-                for(let i=0;i<12;i++){const a=(2*Math.PI/12)*i; const r1=5.5,r2=9; lines+=`<line x1="${M+r1*Math.cos(a)}" y1="${M+r1*Math.sin(a)}" x2="${M+r2*Math.cos(a)}" y2="${M+r2*Math.sin(a)}" stroke="${i%2===0?ca:cb}" stroke-width="${i%3===0?1.2:0.6}" opacity="0.9"/>`;}
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.3"/></radialGradient></defs>
-                    ${lines}
-                    <circle cx="${M}" cy="${M}" r="5" fill="url(#${id})"/>
-                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.9"/>
-                </svg>`;
-            }
-
-            // TIER 11 — eye / vesica shape
-            if (tier === 11) {
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.4"/></radialGradient></defs>
-                    <ellipse cx="${M}" cy="${M}" rx="8.5" ry="4.5" fill="url(#${id})" stroke="${cc}" stroke-width="0.7"/>
-                    <ellipse cx="${M}" cy="${M}" rx="4" ry="4" fill="${cc}" opacity="0.8"/>
-                    <circle cx="${M}" cy="${M}" r="1.8" fill="${ca}" opacity="0.9"/>
-                    <circle cx="${M-1}" cy="${M-1}" r="0.7" fill="white" opacity="0.7"/>
-                    <path d="M3.5,${M} Q${M},${M-9} 16.5,${M} Q${M},${M+9} 3.5,${M}Z" fill="none" stroke="${cb}" stroke-width="0.5" opacity="0.6"/>
-                </svg>`;
-            }
-
-            // TIER 12 — double helix / DNA rings
-            if (tier === 12) {
-                let rings='';
-                [8,6.2,4.5,2.8].forEach((r,i)=>{ rings+=`<circle cx="${M}" cy="${M}" r="${r}" fill="none" stroke="${i%2===0?ca:cb}" stroke-width="${1.2-i*0.15}" opacity="${0.9-i*0.1}"/>`; });
-                let dots='';
-                for(let i=0;i<8;i++){const a=(2*Math.PI/8)*i; dots+=`<circle cx="${M+5.5*Math.cos(a)}" cy="${M+5.5*Math.sin(a)}" r="1.1" fill="${i%2===0?ca:cc}" opacity="0.9"/>`;}
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}" stop-opacity="0.7"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.1"/></radialGradient></defs>
-                    <circle cx="${M}" cy="${M}" r="9.5" fill="url(#${id})"/>
-                    ${rings}${dots}
-                    <circle cx="${M}" cy="${M}" r="1.5" fill="white" opacity="0.8"/>
-                </svg>`;
-            }
-
-            // TIER 13 — 12-point star with inner glow ring
-            if (tier === 13) {
-                let pts='';
-                for(let i=0;i<24;i++){const a=(Math.PI/12)*i-Math.PI/2; const r=i%2===0?8.5:4.2; pts+=`${M+r*Math.cos(a)},${M+r*Math.sin(a)} `;}
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="70%" stop-color="${cb}"/><stop offset="100%" stop-color="${cc}" stop-opacity="0.3"/></radialGradient></defs>
-                    <polygon points="${pts}" fill="url(#${id})" stroke="${cc}" stroke-width="0.4" opacity="0.95"/>
-                    <circle cx="${M}" cy="${M}" r="4" fill="none" stroke="${ca}" stroke-width="1" opacity="0.7"/>
-                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.9"/>
-                    <circle cx="${M}" cy="${M}" r="0.8" fill="white" opacity="0.9"/>
-                </svg>`;
-            }
-
-            // TIER 14 — hexagon tile with inner fractal hexagons
-            if (tier === 14) {
-                let hex=(cx,cy,r,fill,sw,so)=>{let p=''; for(let i=0;i<6;i++){const a=(Math.PI/3)*i-Math.PI/6; p+=`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)} `;} return `<polygon points="${p}" fill="${fill}" stroke="${cc}" stroke-width="${sw}" opacity="${so}"/>`;};
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.5"/></radialGradient></defs>
-                    ${hex(M,M,8.5,`url(#${id})`,0.6,0.95)}
-                    ${hex(M,M,5.5,'none',0.8,0.7)}
-                    ${hex(M,M,3,cc,0.4,0.8)}
-                    <circle cx="${M}" cy="${M}" r="1.3" fill="white" opacity="0.8"/>
-                </svg>`;
-            }
-
-            // TIER 15 — ornate compass rose (N/S/E/W points + diagonals)
-            if (tier === 15) {
-                let pts1='',pts2='';
-                [0,90,180,270].forEach(d=>{const a=d*Math.PI/180; pts1+=`${M+9*Math.cos(a)},${M+9*Math.sin(a)} ${M+2.5*Math.cos(a+Math.PI/6)},${M+2.5*Math.sin(a+Math.PI/6)} `;});
-                [45,135,225,315].forEach(d=>{const a=d*Math.PI/180; pts2+=`${M+6*Math.cos(a)},${M+6*Math.sin(a)} ${M+2*Math.cos(a+Math.PI/6)},${M+2*Math.sin(a+Math.PI/6)} `;});
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}"/></radialGradient></defs>
-                    <polygon points="${pts1}" fill="url(#${id})" stroke="${cc}" stroke-width="0.5"/>
-                    <polygon points="${pts2}" fill="${cb}" opacity="0.8" stroke="${cc}" stroke-width="0.4"/>
-                    <circle cx="${M}" cy="${M}" r="2.5" fill="${cc}"/>
-                    <circle cx="${M}" cy="${M}" r="1" fill="white" opacity="0.9"/>
-                </svg>`;
-            }
-
-            // TIER 16 — atom: nucleus + 3 orbital ellipses
-            if (tier === 16) {
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.2"/></radialGradient></defs>
-                    <ellipse cx="${M}" cy="${M}" rx="9" ry="3.5" fill="none" stroke="${ca}" stroke-width="0.8" opacity="0.8"/>
-                    <ellipse cx="${M}" cy="${M}" rx="9" ry="3.5" fill="none" stroke="${cb}" stroke-width="0.8" opacity="0.8" transform="rotate(60 ${M} ${M})"/>
-                    <ellipse cx="${M}" cy="${M}" rx="9" ry="3.5" fill="none" stroke="${cc}" stroke-width="0.8" opacity="0.8" transform="rotate(120 ${M} ${M})"/>
-                    <circle cx="${M}" cy="${M}" r="2.8" fill="url(#${id})"/>
-                    <circle cx="${M}" cy="${M}" r="1.1" fill="white" opacity="0.85"/>
-                    <circle cx="${M+9}" cy="${M}" r="1" fill="${ca}" opacity="0.9"/>
-                    <circle cx="${M-4.5}" cy="${M+7.8}" r="1" fill="${cb}" opacity="0.9"/>
-                    <circle cx="${M-4.5}" cy="${M-7.8}" r="1" fill="${cc}" opacity="0.9"/>
-                </svg>`;
-            }
-
-            // TIER 17 — fractal snowflake (6 arms, each with sub-branches)
-            if (tier === 17) {
-                let arms='';
-                for(let i=0;i<6;i++){
-                    const a=(Math.PI/3)*i;
-                    const x2=M+8.5*Math.cos(a), y2=M+8.5*Math.sin(a);
-                    arms+=`<line x1="${M}" y1="${M}" x2="${x2}" y2="${y2}" stroke="${ca}" stroke-width="1" opacity="0.9"/>`;
-                    for(let j=1;j<=3;j++){
-                        const frac=j/4; const bx=M+8.5*frac*Math.cos(a); const by=M+8.5*frac*Math.sin(a);
-                        const bl=2.5-j*0.5;
-                        arms+=`<line x1="${bx}" y1="${by}" x2="${bx+bl*Math.cos(a+Math.PI/3)}" y2="${by+bl*Math.sin(a+Math.PI/3)}" stroke="${cb}" stroke-width="0.6" opacity="0.8"/>`;
-                        arms+=`<line x1="${bx}" y1="${by}" x2="${bx+bl*Math.cos(a-Math.PI/3)}" y2="${by+bl*Math.sin(a-Math.PI/3)}" stroke="${cb}" stroke-width="0.6" opacity="0.8"/>`;
-                    }
-                }
-                return `<svg ${attr}>
-                    ${arms}
-                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.9"/>
-                    <circle cx="${M}" cy="${M}" r="0.8" fill="white" opacity="0.9"/>
-                </svg>`;
-            }
-
-            // TIER 18 — spiral galaxy (3 arms curling outward + outer dot ring)
-            if (tier === 18) {
-                let spiral='';
-                for(let arm=0;arm<3;arm++){
-                    const base=(2*Math.PI/3)*arm;
-                    for(let t=0;t<20;t++){
-                        const frac=t/19; const ang=base+frac*Math.PI*1.6; const dist=1+8*frac;
-                        spiral+=`<circle cx="${M+dist*Math.cos(ang)}" cy="${M+dist*Math.sin(ang)}" r="${0.9-frac*0.5}" fill="${t%2===0?ca:cb}" opacity="${0.95-frac*0.4}"/>`;
-                    }
-                }
-                let ring='';
-                for(let i=0;i<18;i++){const a=(2*Math.PI/18)*i; ring+=`<circle cx="${M+9*Math.cos(a)}" cy="${M+9*Math.sin(a)}" r="${i%3===0?0.9:0.5}" fill="${i%3===0?cc:ca}" opacity="0.85"/>`;}
-                return `<svg ${attr}>
-                    <defs><radialGradient id="${id}"><stop offset="0%" stop-color="${ca}" stop-opacity="0.8"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
-                    <circle cx="${M}" cy="${M}" r="9.5" fill="url(#${id})"/>
-                    ${spiral}${ring}
-                    <circle cx="${M}" cy="${M}" r="1.5" fill="white" opacity="0.9"/>
-                </svg>`;
-            }
-
-            // TIER 19 — nested mandalas: 4 rings of orbiting dots + spoke lines
-            if (tier === 19) {
-                let mandala='';
-                [[3,6,ca],[5,8,cb],[7,10,cc],[8.5,12,ca]].forEach(([dist,count,col])=>{
-                    for(let i=0;i<count;i++){const a=(2*Math.PI/count)*i; mandala+=`<circle cx="${M+dist*Math.cos(a)}" cy="${M+dist*Math.sin(a)}" r="${0.8}" fill="${col}" opacity="0.85"/>`;}
-                    mandala+=`<circle cx="${M}" cy="${M}" r="${dist}" fill="none" stroke="${col}" stroke-width="0.4" opacity="0.35"/>`;
-                });
-                let spokes='';
-                for(let i=0;i<12;i++){const a=(Math.PI/6)*i; spokes+=`<line x1="${M+2*Math.cos(a)}" y1="${M+2*Math.sin(a)}" x2="${M+8.5*Math.cos(a)}" y2="${M+8.5*Math.sin(a)}" stroke="${i%2===0?ca:cb}" stroke-width="0.4" opacity="0.4"/>`;}
-                return `<svg ${attr}>
-                    ${spokes}${mandala}
-                    <circle cx="${M}" cy="${M}" r="1.8" fill="${cc}" opacity="0.95"/>
-                    <circle cx="${M}" cy="${M}" r="0.7" fill="white" opacity="1"/>
-                </svg>`;
-            }
-
-            // TIER 20 — cosmic web: random star field + connecting lines + central nova
-            if (tier === 20) {
-                // deterministic "random" using tier as seed so it's consistent
-                const seed = (n) => { let x=Math.sin(n*127.1+tier*311.7)*43758.5453; return x-Math.floor(x); };
-                let web=''; const nodes=[];
-                for(let i=0;i<12;i++){const x=1+seed(i)*18, y=1+seed(i+50)*18; nodes.push([x,y]);}
-                for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++){
-                    const dx=nodes[i][0]-nodes[j][0], dy=nodes[i][1]-nodes[j][1];
-                    if(Math.sqrt(dx*dx+dy*dy)<8) web+=`<line x1="${nodes[i][0]}" y1="${nodes[i][1]}" x2="${nodes[j][0]}" y2="${nodes[j][1]}" stroke="${ca}" stroke-width="0.4" opacity="0.4"/>`;
-                }
-                let stars='';
-                nodes.forEach(([x,y],i)=>{ stars+=`<circle cx="${x}" cy="${y}" r="${i%3===0?1.1:0.6}" fill="${i%2===0?ca:cb}" opacity="0.9"/>`;});
-                let nova='';
-                for(let i=0;i<8;i++){const a=(Math.PI/4)*i; nova+=`<line x1="${M}" y1="${M}" x2="${M+3.5*Math.cos(a)}" y2="${M+3.5*Math.sin(a)}" stroke="${cc}" stroke-width="0.8" opacity="0.9"/>`;}
-                return `<svg ${attr}>
-                    ${web}${stars}${nova}
-                    <circle cx="${M}" cy="${M}" r="2.2" fill="${cc}" opacity="0.95"/>
-                    <circle cx="${M}" cy="${M}" r="0.9" fill="white" opacity="1"/>
-                </svg>`;
-            }
-
-            // TIER 21 — sacred geometry: flower of life + 24 rays + 5 concentric rings + 36 outer dots
-            if (tier === 21) {
-                let rays='';
-                for(let i=0;i<24;i++){const a=(2*Math.PI/24)*i; rays+=`<line x1="${M}" y1="${M}" x2="${M+9.5*Math.cos(a)}" y2="${M+9.5*Math.sin(a)}" stroke="${i%3===0?ca:cb}" stroke-width="${i%6===0?0.8:0.35}" opacity="${i%3===0?0.85:0.35}"/>`;}
-                let rings='';
-                [9,7.2,5.4,3.6,1.8].forEach((r,i)=>{ rings+=`<circle cx="${M}" cy="${M}" r="${r}" fill="none" stroke="${i%2===0?ca:cc}" stroke-width="${0.7-i*0.08}" opacity="${0.5+i*0.08}"/>`; });
-                let petals='';
-                for(let i=0;i<6;i++){const a=(Math.PI/3)*i; petals+=`<circle cx="${M+3.6*Math.cos(a)}" cy="${M+3.6*Math.sin(a)}" r="3.6" fill="none" stroke="${cb}" stroke-width="0.55" opacity="0.5"/>`;}
-                let dots='';
-                for(let i=0;i<36;i++){const a=(2*Math.PI/36)*i; dots+=`<circle cx="${M+9.1*Math.cos(a)}" cy="${M+9.1*Math.sin(a)}" r="${i%3===0?0.85:0.45}" fill="${i%3===0?ca:cc}" opacity="${i%3===0?1:0.6}"/>`;}
-                return `<svg ${attr}>
-                    <defs>
-                        <radialGradient id="${id}"><stop offset="0%" stop-color="${ca}" stop-opacity="0.5"/><stop offset="100%" stop-color="${cb}" stop-opacity="0.05"/></radialGradient>
-                    </defs>
-                    <circle cx="${M}" cy="${M}" r="9.7" fill="url(#${id})"/>
-                    ${rays}${rings}${petals}${dots}
-                    <circle cx="${M}" cy="${M}" r="2" fill="${cc}" opacity="0.95"/>
-                    <circle cx="${M}" cy="${M}" r="0.8" fill="white" opacity="1"/>
-                </svg>`;
-            }
-
-            return `<svg ${attr}><circle cx="${M}" cy="${M}" r="5" fill="${ca}" opacity="0.5"/></svg>`;
+            const t = Math.max(0, Math.min(21, tier));
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><use href="#tier10n-${t}"/></svg>`;
         }
 
         // --- SCREEN FLASH ---
@@ -4830,8 +4527,8 @@ hammer: {
 
         // --- NIL AREA ---
         const NIL_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#nil-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#nil-1"/></svg>`
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#nil-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#nil-1"/></svg>`
         ];
 
         const NIL_TIERS = [
@@ -5073,11 +4770,11 @@ hammer: {
         // --- ANNOYING TIER SVGs ---
         // Each annoying tier has a unique SVG design
         const ANNOYING_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#annoying-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#annoying-1"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#annoying-2"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#annoying-3"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#annoying-4"/></svg>`
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#annoying-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#annoying-1"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#annoying-2"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#annoying-3"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#annoying-4"/></svg>`
         ];
 
         function initAnnoyingSVGs() {
@@ -5123,24 +4820,24 @@ hammer: {
 
         // SVG generators for all 18 serious tiers (svgIdx 0–17)
         const SERIOUS_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-1"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-2"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-3"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-4"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-5"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-6"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-7"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-8"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-9"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-10"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-11"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-12"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-13"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-14"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-15"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-16"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#serious-17"/></svg>`
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-1"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-2"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-3"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-4"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-5"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-6"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-7"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-8"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-9"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-10"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-11"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-12"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-13"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-14"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-15"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-16"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#serious-17"/></svg>`
         ];
 
         function renderSeriousTierList() {
@@ -5524,19 +5221,19 @@ hammer: {
         // --- EWW DISGUSTING AREA ---
         // SVGs indexed 0-12 matching EWW_TIERS order
         const EWW_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-1"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-2"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-3"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-4"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-5"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-6"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-7"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-8"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-9"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-10"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-11"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#eww-12"/></svg>`
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-1"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-2"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-3"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-4"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-5"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-6"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-7"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-8"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-9"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-10"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-11"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#eww-12"/></svg>`
         ];
 
         const EWW_TIERS = [
@@ -5681,47 +5378,13 @@ hammer: {
         // sizeMult: how much bigger each shape renders relative to the base grid cell,
         // per spec (red/green = baseline, blue x2, yellow x4, purple x5, orange x7.5)
         const RGB_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#rgb-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#rgb-1"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#rgb-2"/></svg>`,
-            (s) => {
-                const star = (cx, cy, r, fill, rot) => {
-                    let pts = '';
-                    for (let i = 0; i < 10; i++) {
-                        const ang = (Math.PI / 5) * i - Math.PI / 2;
-                        const rad = i % 2 === 0 ? r : r * 0.45;
-                        pts += `${cx + rad * Math.cos(ang)},${cy + rad * Math.sin(ang)} `;
-                    }
-                    return `<polygon points="${pts.trim()}" fill="${fill}" transform="rotate(${rot} ${cx} ${cy})"/>`;
-                };
-                const small1 = star(5, 5, 3, '#a16207', 12);
-                const small2 = star(15.5, 6, 2.5, '#ca8a04', -18);
-                const small3 = star(15, 15, 2.8, '#854d0e', 25);
-                const small4 = star(4.5, 15, 2.3, '#b45309', -10);
-                const main = star(10, 10, 8.5, '#facc15', 0);
-                return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20" overflow="visible">${small1}${small2}${small3}${small4}${main}<polygon points="${(()=>{let p='';for(let i=0;i<10;i++){const a=(Math.PI/5)*i-Math.PI/2;const r=i%2===0?5:2.3;p+=`${10+r*Math.cos(a)},${10+r*Math.sin(a)} `}return p.trim();})()}" fill="#fef9c3" opacity="0.85"/></svg>`;
-            },
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#rgb-4"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#rgb-5"/></svg>`,
-            (s) => {
-                const M = 10;
-                let spiral = '';
-                for (let arm = 0; arm < 3; arm++) {
-                    const base = (2 * Math.PI / 3) * arm;
-                    for (let t = 0; t < 16; t++) {
-                        const frac = t / 15; const ang = base + frac * Math.PI * 1.6; const dist = 1 + 8 * frac;
-                        spiral += `<circle cx="${M + dist * Math.cos(ang)}" cy="${M + dist * Math.sin(ang)}" r="${0.8 - frac * 0.4}" fill="${t % 2 === 0 ? '#ffffff' : '#e2e8f0'}" opacity="${0.95 - frac * 0.4}"/>`;
-                    }
-                }
-                let rays = '';
-                for (let i = 0; i < 24; i++) {
-                    const a = (2 * Math.PI / 24) * i;
-                    rays += `<line x1="${M}" y1="${M}" x2="${M + 9.5 * Math.cos(a)}" y2="${M + 9.5 * Math.sin(a)}" stroke="${i % 3 === 0 ? '#ffffff' : '#cbd5e1'}" stroke-width="${i % 6 === 0 ? 0.7 : 0.3}" opacity="${i % 3 === 0 ? 0.8 : 0.3}"/>`;
-                }
-                let rings = '';
-                [9, 7.2, 5.4, 3.6].forEach((r, i) => { rings += `<circle cx="${M}" cy="${M}" r="${r}" fill="none" stroke="#f8fafc" stroke-width="${0.6 - i * 0.08}" opacity="${0.4 + i * 0.08}"/>`; });
-                return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 20 20" overflow="visible"><defs><radialGradient id="rgbwhite${s}"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/></radialGradient></defs><circle cx="${M}" cy="${M}" r="9.7" fill="url(#rgbwhite${s})"/>${rays}${rings}${spiral}<circle cx="${M}" cy="${M}" r="1.6" fill="white"/></svg>`;
-            }
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#rgb-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#rgb-1"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#rgb-2"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#rgb-3"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#rgb-4"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#rgb-5"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#rgb-6"/></svg>`
         ];
 
         const RGB_TIERS = [
@@ -6019,22 +5682,22 @@ hammer: {
 
         // SVGs for all 16 element tiers (indices 0-15)
         const ELEMENTS_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-1"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-2"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-3"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-4"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-5"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-6"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-7"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-8"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-9"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-10"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-11"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-12"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-13"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-14"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#elements-15"/></svg>`
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-1"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-2"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-3"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-4"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-5"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-6"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-7"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-8"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-9"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-10"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-11"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-12"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-13"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-14"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#elements-15"/></svg>`
         ];
 
         // --- RATINGS AREA ---
@@ -6081,26 +5744,26 @@ hammer: {
 
         // RATINGS_SVG: squares with unique inner designs, one per tier
         const RATINGS_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-1"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-2"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-3"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-4"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-5"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-6"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-7"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-8"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-9"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-10"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-11"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-12"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-13"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-14"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-15"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-16"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-17"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-18"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#ratings-19"/></svg>`
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-1"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-2"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-3"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-4"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-5"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-6"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-7"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-8"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-9"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-10"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-11"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-12"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-13"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-14"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-15"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-16"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-17"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-18"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#ratings-19"/></svg>`
         ];
 
         function ratingsUnusualUnlocked() {
@@ -6255,31 +5918,31 @@ hammer: {
 
         // Space SVGs — minimalist space-themed squares/shapes
         const SPACE_SVG = [
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-0"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-1"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-2"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-3"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-4"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-5"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-6"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-7"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-8"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-9"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-10"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-11"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-12"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-13"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-14"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-15"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-16"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-17"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-18"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-19"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-20"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-21"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-22"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-23"/></svg>`,
-            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="svgs.svg#space-24"/></svg>`
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-0"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-1"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-2"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-3"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-4"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-5"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-6"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-7"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-8"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-9"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-10"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-11"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-12"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-13"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-14"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-15"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-16"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-17"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-18"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-19"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-20"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-21"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-22"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-23"/></svg>`,
+            (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><use href="#space-24"/></svg>`
         ];
 
         function getSpaceSvg(tier, size) {
@@ -6480,7 +6143,31 @@ hammer: {
         }
 
         // DOM Listeners
+        // Inject svgs.svg sprite sheet inline into the document.
+        // <use href="external.svg#id"> is unreliable across browsers for symbols
+        // containing gradients/defs — Safari and some Chrome builds fail to resolve
+        // url(#gradientId) when the symbol comes from a separately-fetched document.
+        // Fetching the file and inlining its <symbol> defs into THIS document fixes it,
+        // since all <use href="#id"> references then resolve same-document.
+        function injectSvgSprite() {
+            return fetch('svgs.svg')
+                .then(res => res.text())
+                .then(svgText => {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.display = 'none';
+                    wrapper.innerHTML = svgText;
+                    document.body.insertBefore(wrapper, document.body.firstChild);
+                })
+                .catch(err => {
+                    console.error('Failed to load svgs.svg sprite sheet:', err);
+                });
+        }
+
         window.onload = function() {
+            injectSvgSprite().then(initGame);
+        };
+
+        function initGame() {
             // Load previous progression state
             loadGame();
 
